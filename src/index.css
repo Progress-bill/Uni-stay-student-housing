@@ -1,0 +1,65 @@
+@import "tailwindcss";
+
+/* Custom Leaflet Map styling */
+.leaflet-container {
+  width: 100%;
+  height: 100%;
+  border-radius: 1rem;
+  z-index: 10;
+  font-family: inherit;
+}
+
+/* Custom price marker pin */
+.custom-price-pin {
+  background: #2563eb;
+  color: white;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-weight: 700;
+  font-size: 13px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+  border: 2px solid white;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.custom-price-pin:hover, .custom-price-pin.active {
+  background: #1e40af;
+  transform: scale(1.1);
+  box-shadow: 0 6px 20px rgba(37, 99, 235, 0.45);
+  z-index: 1000 !important;
+}
+
+.custom-price-pin.budget {
+  background: #059669;
+}
+.custom-price-pin.budget:hover, .custom-price-pin.budget.active {
+  background: #047857;
+}
+
+.custom-price-pin.premium {
+  background: #7c3aed;
+}
+.custom-price-pin.premium:hover, .custom-price-pin.premium.active {
+  background: #6d28d9;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}

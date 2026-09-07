@@ -1,0 +1,135 @@
+[
+  {
+    "id": "house-1",
+    "title": "Scholar Haven Budget PG",
+    "description": "Affordable student room with peaceful study vibe, study desk, 24/7 high-speed WiFi and friendly atmosphere. Close to colleges and local library.",
+    "rentAmount": 3200,
+    "electricityPerUnit": 7.5,
+    "priceGroup": "budget",
+    "landlordAtPG": false,
+    "electricityBackup": true,
+    "acRoom": false,
+    "waterGeyser": true,
+    "customCategories": [
+      "Single Room",
+      "Boys Only",
+      "Near Library",
+      "Walking to Metro"
+    ],
+    "latitude": 28.5355,
+    "longitude": 77.209,
+    "address": "Sector 4, Student Enclave, Near Metro Gate 2",
+    "videoUrl": "https://assets.mixkit.co/videos/preview/mixkit-living-room-in-a-modern-apartment-43391-large.mp4",
+    "images": [
+      "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1598928506311-c55ded91a20c?auto=format&fit=crop&w=800&q=80"
+    ],
+    "createdAt": "2026-09-01T10:00:00.000Z"
+  },
+  {
+    "id": "house-2",
+    "title": "Elite Comfort AC Studio PG",
+    "description": "Fully furnished studio room with cooling inverter AC, personal geyser, premium wooden wardrobe, and power backup. Ideal for students wanting complete privacy.",
+    "rentAmount": 7800,
+    "electricityPerUnit": 9,
+    "priceGroup": "premium",
+    "landlordAtPG": true,
+    "electricityBackup": true,
+    "acRoom": true,
+    "waterGeyser": true,
+    "customCategories": [
+      "AC Room",
+      "Private Studio",
+      "Girls PG",
+      "Balcony View"
+    ],
+    "latitude": 28.5492,
+    "longitude": 77.2155,
+    "address": "Pocket B, Sunrise Heights, University North Campus",
+    "videoUrl": "https://assets.mixkit.co/videos/preview/mixkit-modern-apartment-with-living-room-and-kitchen-43392-large.mp4",
+    "images": [
+      "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=800&q=80"
+    ],
+    "createdAt": "2026-09-02T12:30:00.000Z"
+  },
+  {
+    "id": "house-3",
+    "title": "MetroLink Twin Sharing Room",
+    "description": "Double sharing room with dedicated beds, separate charging points, high water pressure geyser, and 24hr power backup during load shedding.",
+    "rentAmount": 4800,
+    "electricityPerUnit": 8,
+    "priceGroup": "standard",
+    "landlordAtPG": false,
+    "electricityBackup": true,
+    "acRoom": false,
+    "waterGeyser": true,
+    "customCategories": [
+      "Double Sharing",
+      "Attached Washroom",
+      "Food Available",
+      "Co-ed Zone"
+    ],
+    "latitude": 28.541,
+    "longitude": 77.198,
+    "address": "Lane 3, Vidyarthi Nagar, Behind Central Coaching Center",
+    "videoUrl": "https://assets.mixkit.co/videos/preview/mixkit-interior-of-a-contemporary-flat-43393-large.mp4",
+    "images": [
+      "https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1540518614846-7ede433c4550?auto=format&fit=crop&w=800&q=80"
+    ],
+    "createdAt": "2026-09-03T15:15:00.000Z"
+  },
+  {
+    "id": "house-4",
+    "title": "Greenview Standard AC Residency",
+    "description": "Spacious and ventilated room with energy-saving Split AC, modern geyser bathroom, and no landlord interference. Great rooftop access for evening breaks.",
+    "rentAmount": 6200,
+    "electricityPerUnit": 8.5,
+    "priceGroup": "standard",
+    "landlordAtPG": false,
+    "electricityBackup": true,
+    "acRoom": true,
+    "waterGeyser": true,
+    "customCategories": [
+      "AC Room",
+      "Single Room",
+      "Rooftop Access",
+      "Boys PG"
+    ],
+    "latitude": 28.528,
+    "longitude": 77.2045,
+    "address": "42-B, Green Avenue, 5 mins from Engineering College",
+    "videoUrl": "https://assets.mixkit.co/videos/preview/mixkit-bright-kitchen-in-an-apartment-43394-large.mp4",
+    "images": [
+      "https://images.unsplash.com/photo-1512918728675-ed5a9ecdebfd?auto=format&fit=crop&w=800&q=80"
+    ],
+    "createdAt": "2026-09-04T09:40:00.000Z"
+  },
+  {
+    "id": "house-5",
+    "title": "Pocket-Friendly Scholar Stay",
+    "description": "Most affordable single occupancy room with natural sunlight, water geyser, ceiling fan, and filtered drinking water. Zero landlord disturbance.",
+    "rentAmount": 2800,
+    "electricityPerUnit": 7,
+    "priceGroup": "budget",
+    "landlordAtPG": false,
+    "electricityBackup": false,
+    "acRoom": false,
+    "waterGeyser": true,
+    "customCategories": [
+      "Budget Friendly",
+      "Single Room",
+      "Filtered RO Water",
+      "Coaching Hub"
+    ],
+    "latitude": 28.532,
+    "longitude": 77.218,
+    "address": "Gali 7, Old Student Colony, Near Science Campus",
+    "videoUrl": "https://assets.mixkit.co/videos/preview/mixkit-modern-hallway-in-an-apartment-43395-large.mp4",
+    "images": [
+      "https://images.unsplash.com/photo-1505691938895-1758d7feb511?auto=format&fit=crop&w=800&q=80"
+    ],
+    "createdAt": "2026-09-05T14:10:00.000Z"
+  }
+]

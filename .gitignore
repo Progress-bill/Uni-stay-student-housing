@@ -1,0 +1,11 @@
+node_modules
+dist
+dist-ssr
+*.local
+.vscode
+.idea
+.DS_Store
+
+# Uploads directory note: keeping directories tracked with gitkeep
+public/uploads/videos/*.tmp
+public/uploads/images/*.tmp
