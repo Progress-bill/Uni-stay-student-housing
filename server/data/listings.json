@@ -6,6 +6,7 @@
     "rentAmount": 3200,
     "electricityPerUnit": 7.5,
     "priceGroup": "budget",
+    "status": "available",
     "landlordAtPG": false,
     "electricityBackup": true,
     "acRoom": false,
@@ -24,7 +25,10 @@
       "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=800&q=80",
       "https://images.unsplash.com/photo-1598928506311-c55ded91a20c?auto=format&fit=crop&w=800&q=80"
     ],
-    "createdAt": "2026-09-01T10:00:00.000Z"
+    "agentId": "user-agent-1",
+    "agentName": "Alex - Campus Agent",
+    "createdAt": "2026-09-01T10:00:00.000Z",
+    "statusUpdatedAt": "2026-09-09T08:06:25.280Z"
   },
   {
     "id": "house-2",
@@ -33,6 +37,7 @@
     "rentAmount": 7800,
     "electricityPerUnit": 9,
     "priceGroup": "premium",
+    "status": "occupied",
     "landlordAtPG": true,
     "electricityBackup": true,
     "acRoom": true,
@@ -51,6 +56,8 @@
       "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=800&q=80",
       "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=800&q=80"
     ],
+    "agentId": "user-agent-1",
+    "agentName": "Alex - Campus Agent",
     "createdAt": "2026-09-02T12:30:00.000Z"
   },
   {
@@ -60,6 +67,7 @@
     "rentAmount": 4800,
     "electricityPerUnit": 8,
     "priceGroup": "standard",
+    "status": "available",
     "landlordAtPG": false,
     "electricityBackup": true,
     "acRoom": false,
@@ -78,6 +86,8 @@
       "https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?auto=format&fit=crop&w=800&q=80",
       "https://images.unsplash.com/photo-1540518614846-7ede433c4550?auto=format&fit=crop&w=800&q=80"
     ],
+    "agentId": "user-agent-1",
+    "agentName": "Alex - Campus Agent",
     "createdAt": "2026-09-03T15:15:00.000Z"
   },
   {
@@ -87,6 +97,7 @@
     "rentAmount": 6200,
     "electricityPerUnit": 8.5,
     "priceGroup": "standard",
+    "status": "reserved",
     "landlordAtPG": false,
     "electricityBackup": true,
     "acRoom": true,
@@ -104,6 +115,8 @@
     "images": [
       "https://images.unsplash.com/photo-1512918728675-ed5a9ecdebfd?auto=format&fit=crop&w=800&q=80"
     ],
+    "agentId": "user-agent-1",
+    "agentName": "Alex - Campus Agent",
     "createdAt": "2026-09-04T09:40:00.000Z"
   },
   {
@@ -113,6 +126,7 @@
     "rentAmount": 2800,
     "electricityPerUnit": 7,
     "priceGroup": "budget",
+    "status": "available",
     "landlordAtPG": false,
     "electricityBackup": false,
     "acRoom": false,
@@ -130,6 +144,8 @@
     "images": [
       "https://images.unsplash.com/photo-1505691938895-1758d7feb511?auto=format&fit=crop&w=800&q=80"
     ],
+    "agentId": "user-agent-1",
+    "agentName": "Alex - Campus Agent",
     "createdAt": "2026-09-05T14:10:00.000Z"
   }
 ]

@@ -15,15 +15,18 @@ import {
   AlertCircle 
 } from 'lucide-react';
 import MapView from './MapView';
+import { useAuth } from '../context/AuthContext';
 
 export default function AddRoomModal({ isOpen, onClose, onRoomAdded }) {
   if (!isOpen) return null;
 
+  const { user } = useAuth();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [rentAmount, setRentAmount] = useState('');
   const [electricityPerUnit, setElectricityPerUnit] = useState('8.0');
   const [priceGroup, setPriceGroup] = useState('auto');
+  const [status, setStatus] = useState('available');
   
   // Specific checkboxes
   const [landlordAtPG, setLandlordAtPG] = useState(false);
@@ -109,6 +112,9 @@ export default function AddRoomModal({ isOpen, onClose, onRoomAdded }) {
       formData.append('longitude', longitude);
       formData.append('address', address);
       formData.append('customCategories', tags.join(','));
+      formData.append('status', status);
+      formData.append('agentId', user?.id || 'user-admin-1');
+      formData.append('agentName', user?.name || 'UniStay Housing Desk');
 
       if (videoFile) {
         formData.append('video', videoFile);
@@ -216,29 +222,46 @@ export default function AddRoomModal({ isOpen, onClose, onRoomAdded }) {
               </div>
             </div>
 
-            <div>
-              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                Pricing Tier Group
-              </label>
-              <div className="grid grid-cols-3 gap-2">
-                {[
-                  { id: 'budget', label: 'Pocket-Friendly (< ₹4k)' },
-                  { id: 'standard', label: 'Standard (₹4k - ₹7k)' },
-                  { id: 'premium', label: 'Comfort / AC (> ₹7k)' }
-                ].map((tier) => (
-                  <button
-                    key={tier.id}
-                    type="button"
-                    onClick={() => setPriceGroup(tier.id)}
-                    className={`py-2 px-2.5 rounded-xl text-xs font-medium border text-center transition-all cursor-pointer ${
-                      priceGroup === tier.id 
-                        ? 'bg-blue-50 border-blue-500 text-blue-700 font-bold ring-2 ring-blue-500/20' 
-                        : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
-                    }`}
-                  >
-                    {tier.label}
-                  </button>
-                ))}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                  Pricing Tier Group
+                </label>
+                <div className="grid grid-cols-3 gap-1.5">
+                  {[
+                    { id: 'budget', label: '< ₹4k' },
+                    { id: 'standard', label: '₹4k-7k' },
+                    { id: 'premium', label: '> ₹7k' }
+                  ].map((tier) => (
+                    <button
+                      key={tier.id}
+                      type="button"
+                      onClick={() => setPriceGroup(tier.id)}
+                      className={`py-2 px-1 rounded-xl text-xs font-medium border text-center transition-all cursor-pointer ${
+                        priceGroup === tier.id 
+                          ? 'bg-blue-50 border-blue-500 text-blue-700 font-bold ring-2 ring-blue-500/20' 
+                          : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
+                      }`}
+                    >
+                      {tier.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                  Initial Room Status
+                </label>
+                <select
+                  value={status}
+                  onChange={(e) => setStatus(e.target.value)}
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:bg-white focus:ring-2 focus:ring-blue-500/20 outline-none cursor-pointer"
+                >
+                  <option value="available">🟢 Available for Rent</option>
+                  <option value="occupied">🔴 Booked / Occupied</option>
+                  <option value="reserved">🟡 Reserved / Token Paid</option>
+                </select>
               </div>
             </div>
 

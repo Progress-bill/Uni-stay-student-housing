@@ -8,19 +8,30 @@ import {
   UserCheck, 
   UserX, 
   MessageCircle, 
-  Phone, 
   Trash2, 
   Tag, 
-  ExternalLink 
+  CheckCircle,
+  AlertCircle,
+  Clock,
+  ShieldCheck,
+  User
 } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 export default function RoomCard({ 
   room, 
   onWatchVideo, 
   onSelectMapPin, 
   onDeleteListing,
+  onUpdateStatus,
   isSelected 
 }) {
+  const { user, isAdmin, isAgent } = useAuth();
+  const currentStatus = room.status || 'available';
+
+  // Check if current user can manage this listing (Main Admin or owner Agent)
+  const canManageListing = isAdmin || (isAgent && room.agentId === user?.id);
+
   const formatPrice = (amt) => {
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
@@ -32,7 +43,7 @@ export default function RoomCard({
   // WhatsApp Inquiry URL
   const getWhatsAppUrl = () => {
     const text = encodeURIComponent(
-      `Hello! I am a student interested in "${room.title}" listed for ${formatPrice(room.rentAmount)}/mo (Electricity: ₹${room.electricityPerUnit}/unit). Could you please share visit details?`
+      `Hello! I am a student interested in "${room.title}" (${currentStatus.toUpperCase()}) listed for ${formatPrice(room.rentAmount)}/mo (Electricity: ₹${room.electricityPerUnit}/unit). Could you please share visit details?`
     );
     return `https://wa.me/919876543210?text=${text}`;
   };
@@ -60,7 +71,7 @@ export default function RoomCard({
           </div>
         )}
 
-        {/* Video Tour Badge / Play Button */}
+        {/* Video Tour Play Button */}
         {room.videoUrl && (
           <button
             onClick={() => onWatchVideo(room)}
@@ -73,14 +84,19 @@ export default function RoomCard({
 
         {/* Top Badges */}
         <div className="absolute top-3 left-3 right-3 flex items-center justify-between pointer-events-none z-10">
-          <span className={`px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider backdrop-blur-md shadow-xs ${
-            room.priceGroup === 'budget' 
-              ? 'bg-emerald-600/90 text-white' 
-              : room.priceGroup === 'premium'
-              ? 'bg-violet-600/90 text-white'
-              : 'bg-blue-600/90 text-white'
+          
+          {/* Availability Status Badge */}
+          <span className={`px-2.5 py-1 rounded-full text-xs font-black uppercase tracking-wider backdrop-blur-md shadow-sm flex items-center gap-1.5 ${
+            currentStatus === 'available'
+              ? 'bg-emerald-600/95 text-white'
+              : currentStatus === 'occupied'
+              ? 'bg-rose-600/95 text-white'
+              : 'bg-amber-600/95 text-white'
           }`}>
-            {room.priceGroup === 'budget' ? 'Pocket-Friendly' : room.priceGroup === 'premium' ? 'Comfort / AC' : 'Standard'}
+            <span className={`h-2 w-2 rounded-full ${
+              currentStatus === 'available' ? 'bg-emerald-200 animate-pulse' : 'bg-white'
+            }`} />
+            {currentStatus === 'available' ? 'Available' : currentStatus === 'occupied' ? 'Booked' : 'Reserved'}
           </span>
 
           {room.videoUrl && (
@@ -91,7 +107,7 @@ export default function RoomCard({
           )}
         </div>
 
-        {/* Bottom gradient on image */}
+        {/* Bottom gradient */}
         <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/60 to-transparent pointer-events-none" />
       </div>
 
@@ -99,7 +115,7 @@ export default function RoomCard({
       <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between">
         <div>
           
-          {/* Rent & Electricity Per Unit Header */}
+          {/* Rent & Electricity Header */}
           <div className="flex items-start justify-between gap-2 mb-2">
             <div>
               <div className="flex items-baseline gap-1">
@@ -141,14 +157,21 @@ export default function RoomCard({
             </button>
           </div>
 
+          {/* Agent info badge */}
+          {room.agentName && (
+            <div className="mt-1.5 flex items-center gap-1 text-[11px] text-slate-400">
+              <ShieldCheck className="w-3 h-3 text-blue-500" />
+              <span>Listed by: <strong className="text-slate-600">{room.agentName}</strong></span>
+            </div>
+          )}
+
           {/* Description */}
-          <p className="mt-2.5 text-xs text-slate-600 line-clamp-2 leading-relaxed">
+          <p className="mt-2 text-xs text-slate-600 line-clamp-2 leading-relaxed">
             {room.description}
           </p>
 
           {/* Student Amenities Badges (Landlord, Backup, AC, Geyser) */}
-          <div className="mt-3.5 flex flex-wrap gap-1.5">
-            {/* Landlord badge */}
+          <div className="mt-3 flex flex-wrap gap-1.5">
             <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold border ${
               room.landlordAtPG
                 ? 'bg-amber-50 text-amber-800 border-amber-200'
@@ -167,7 +190,6 @@ export default function RoomCard({
               )}
             </span>
 
-            {/* Power Backup */}
             {room.electricityBackup && (
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-slate-100 text-slate-700 border border-slate-200">
                 <Zap className="w-3 h-3 text-amber-500 fill-amber-500" />
@@ -175,7 +197,6 @@ export default function RoomCard({
               </span>
             )}
 
-            {/* AC Room */}
             {room.acRoom && (
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-sky-50 text-sky-700 border border-sky-200">
                 <Wind className="w-3 h-3 text-sky-600" />
@@ -183,7 +204,6 @@ export default function RoomCard({
               </span>
             )}
 
-            {/* Water Geyser */}
             {room.waterGeyser && (
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-rose-50 text-rose-700 border border-rose-200">
                 <Flame className="w-3 h-3 text-rose-600" />
@@ -204,6 +224,30 @@ export default function RoomCard({
                   {cat}
                 </span>
               ))}
+            </div>
+          )}
+
+          {/* Main Admin / Owner Agent Status Control Strip */}
+          {canManageListing && onUpdateStatus && (
+            <div className="mt-3.5 p-2 bg-slate-50 border border-slate-200/80 rounded-xl flex items-center justify-between gap-2">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1">
+                {isAdmin ? '👑 Admin Status:' : '🏠 Agent Status:'}
+              </span>
+              <select
+                value={currentStatus}
+                onChange={(e) => onUpdateStatus(room.id, e.target.value)}
+                className={`text-[11px] font-bold rounded-lg px-2 py-1 border outline-none cursor-pointer ${
+                  currentStatus === 'available'
+                    ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
+                    : currentStatus === 'occupied'
+                    ? 'bg-rose-50 text-rose-800 border-rose-300'
+                    : 'bg-amber-50 text-amber-800 border-amber-300'
+                }`}
+              >
+                <option value="available">🟢 Available</option>
+                <option value="occupied">🔴 Booked</option>
+                <option value="reserved">🟡 Reserved</option>
+              </select>
             </div>
           )}
 
@@ -242,14 +286,16 @@ export default function RoomCard({
             <span>WhatsApp</span>
           </a>
 
-          {/* Agent Delete Listing */}
-          <button
-            onClick={() => onDeleteListing(room.id)}
-            className="p-2 rounded-xl text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
-            title="Delete Listing"
-          >
-            <Trash2 className="w-3.5 h-3.5" />
-          </button>
+          {/* Delete Listing (Only Admin or listing owner) */}
+          {canManageListing && (
+            <button
+              onClick={() => onDeleteListing(room.id)}
+              className="p-2 rounded-xl text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
+              title="Delete Listing"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
+          )}
 
         </div>
 

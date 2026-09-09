@@ -6,15 +6,22 @@ import MapView from './components/MapView';
 import AddRoomModal from './components/AddRoomModal';
 import VideoPlayerModal from './components/VideoPlayerModal';
 import FloatingAgentWidget from './components/FloatingAgentWidget';
+import AuthModal from './components/AuthModal';
+import BecomeAgentModal from './components/BecomeAgentModal';
+import AdminPanelModal from './components/AdminPanelModal';
+import { useAuth } from './context/AuthContext';
 import { Home, AlertCircle, RefreshCw, Sparkles, Filter } from 'lucide-react';
 
 export default function App() {
+  const { user, isAdmin, isAgent } = useAuth();
+
   const [listings, setListings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   // Filters state
   const [selectedBudget, setSelectedBudget] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('all'); // 'all' | 'available' | 'occupied'
   const [searchQuery, setSearchQuery] = useState('');
   const [maxRent, setMaxRent] = useState(12000);
   const [filters, setFilters] = useState({
@@ -28,7 +35,15 @@ export default function App() {
   const [viewMode, setViewMode] = useState('grid'); // 'grid' | 'split' | 'map'
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [activeVideoRoom, setActiveVideoRoom] = useState(null);
+
+  // Modals state
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [isBecomeAgentOpen, setIsBecomeAgentOpen] = useState(false);
+  const [isAdminPanelOpen, setIsAdminPanelOpen] = useState(false);
+
+  // Pending agent applications count for Admin badge
+  const [pendingAppsCount, setPendingAppsCount] = useState(0);
 
   // Fetch listings from API
   const fetchListings = async () => {
@@ -50,9 +65,29 @@ export default function App() {
     }
   };
 
+  // Fetch pending applications count if Admin
+  const fetchPendingCount = async () => {
+    try {
+      const res = await fetch('/api/agent-applications');
+      const data = await res.json();
+      if (data.success && Array.isArray(data.data)) {
+        const pending = data.data.filter(a => a.status === 'pending').length;
+        setPendingAppsCount(pending);
+      }
+    } catch {
+      // ignore
+    }
+  };
+
   useEffect(() => {
     fetchListings();
   }, []);
+
+  useEffect(() => {
+    if (isAdmin) {
+      fetchPendingCount();
+    }
+  }, [isAdmin, isAdminPanelOpen]);
 
   // Compute maximum available rent for the slider
   const maxAvailableRent = useMemo(() => {
@@ -72,6 +107,7 @@ export default function App() {
   const activeFilterCount = useMemo(() => {
     let count = 0;
     if (selectedBudget !== 'all') count++;
+    if (statusFilter !== 'all') count++;
     if (filters.noLandlordOnly) count++;
     if (filters.electricityBackup) count++;
     if (filters.acRoom) count++;
@@ -79,11 +115,12 @@ export default function App() {
     if (searchQuery.trim()) count++;
     if (maxRent < maxAvailableRent) count++;
     return count;
-  }, [selectedBudget, filters, searchQuery, maxRent, maxAvailableRent]);
+  }, [selectedBudget, statusFilter, filters, searchQuery, maxRent, maxAvailableRent]);
 
   // Reset filters
   const handleResetFilters = () => {
     setSelectedBudget('all');
+    setStatusFilter('all');
     setSearchQuery('');
     setMaxRent(maxAvailableRent);
     setFilters({
@@ -102,13 +139,21 @@ export default function App() {
         return false;
       }
 
-      // 2. Max Rent slider
+      // 2. Status filter
+      const roomStatus = room.status || 'available';
+      if (statusFilter === 'available' && roomStatus !== 'available') {
+        return false;
+      }
+      if (statusFilter === 'occupied' && roomStatus !== 'occupied' && roomStatus !== 'reserved') {
+        return false;
+      }
+
+      // 3. Max Rent slider
       if (room.rentAmount > maxRent) {
         return false;
       }
 
-      // 3. Specific student checkboxes
-      // If student asked for "No Landlord at PG", room.landlordAtPG must be false
+      // 4. Specific student checkboxes
       if (filters.noLandlordOnly && room.landlordAtPG === true) {
         return false;
       }
@@ -122,29 +167,55 @@ export default function App() {
         return false;
       }
 
-      // 4. Search query
+      // 5. Search query
       if (searchQuery.trim()) {
         const query = searchQuery.toLowerCase();
         const matchesTitle = room.title?.toLowerCase().includes(query);
         const matchesDesc = room.description?.toLowerCase().includes(query);
         const matchesAddress = room.address?.toLowerCase().includes(query);
+        const matchesAgent = room.agentName?.toLowerCase().includes(query);
         const matchesCategory = room.customCategories?.some(cat => 
           cat.toLowerCase().includes(query)
         );
 
-        if (!matchesTitle && !matchesDesc && !matchesAddress && !matchesCategory) {
+        if (!matchesTitle && !matchesDesc && !matchesAddress && !matchesCategory && !matchesAgent) {
           return false;
         }
       }
 
       return true;
     });
-  }, [listings, selectedBudget, filters, maxRent, searchQuery]);
+  }, [listings, selectedBudget, statusFilter, filters, maxRent, searchQuery]);
 
   // Handler when new room is added
   const handleRoomAdded = (newRoom) => {
     setListings(prev => [newRoom, ...prev]);
     setSelectedRoom(newRoom);
+  };
+
+  // Handler to update room status (Available / Occupied / Reserved)
+  const handleUpdateRoomStatus = async (roomId, newStatus) => {
+    try {
+      const res = await fetch(`/api/listings/${roomId}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setListings(prev =>
+          prev.map(item => (item.id === roomId ? { ...item, status: newStatus } : item))
+        );
+        if (selectedRoom?.id === roomId) {
+          setSelectedRoom(prev => (prev ? { ...prev, status: newStatus } : null));
+        }
+      } else {
+        alert(data.message || 'Error updating status');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Could not connect to server to update status');
+    }
   };
 
   // Handler for deleting a listing
@@ -183,19 +254,24 @@ export default function App() {
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col selection:bg-blue-100 selection:text-blue-900 pb-20">
       
-      {/* Top Navbar */}
+      {/* Top Navbar with Auth & Admin Controls */}
       <Navbar
         onOpenAddModal={() => setIsAddModalOpen(true)}
+        onOpenAuthModal={() => setIsAuthModalOpen(true)}
+        onOpenBecomeAgent={() => setIsBecomeAgentOpen(true)}
+        onOpenAdminPanel={() => setIsAdminPanelOpen(true)}
+        pendingApplicationsCount={pendingAppsCount}
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
         totalListings={listings.length}
-        activeFilterCount={activeFilterCount}
       />
 
       {/* Filter and Amenities Control Bar */}
       <FilterBar
         selectedBudget={selectedBudget}
         setSelectedBudget={setSelectedBudget}
+        statusFilter={statusFilter}
+        setStatusFilter={setStatusFilter}
         filters={filters}
         setFilters={setFilters}
         maxRent={maxRent}
@@ -239,7 +315,7 @@ export default function App() {
             </div>
             <h3 className="text-base font-bold text-slate-800">No rooms match your filters</h3>
             <p className="text-xs text-slate-500 mt-1 mb-4">
-              Try broadening your budget or unchecking some amenities.
+              Try broadening your budget, clearing status filters, or unchecking some amenities.
             </p>
             <button
               onClick={handleResetFilters}
@@ -255,7 +331,10 @@ export default function App() {
           <div>
             <div className="flex items-center justify-between mb-4">
               <p className="text-xs font-semibold text-slate-500">
-                Showing <strong className="text-slate-800">{filteredListings.length}</strong> student verified rooms
+                Showing <strong className="text-slate-800">{filteredListings.length}</strong> verified rooms
+                {statusFilter !== 'all' && (
+                  <span className="ml-1 text-blue-600 font-bold">({statusFilter.toUpperCase()})</span>
+                )}
               </p>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -267,6 +346,7 @@ export default function App() {
                   onWatchVideo={(r) => setActiveVideoRoom(r)}
                   onSelectMapPin={handleSelectMapPin}
                   onDeleteListing={handleDeleteListing}
+                  onUpdateStatus={handleUpdateRoomStatus}
                 />
               ))}
             </div>
@@ -289,6 +369,7 @@ export default function App() {
                   onWatchVideo={(r) => setActiveVideoRoom(r)}
                   onSelectMapPin={(r) => setSelectedRoom(r)}
                   onDeleteListing={handleDeleteListing}
+                  onUpdateStatus={handleUpdateRoomStatus}
                 />
               ))}
             </div>
@@ -321,7 +402,7 @@ export default function App() {
                 <div className="relative">
                   <button
                     onClick={() => setSelectedRoom(null)}
-                    className="absolute -top-2 -right-2 z-20 h-6 w-6 rounded-full bg-slate-900 text-white flex items-center justify-center text-xs shadow-md"
+                    className="absolute -top-2 -right-2 z-20 h-6 w-6 rounded-full bg-slate-900 text-white flex items-center justify-center text-xs shadow-md cursor-pointer"
                   >
                     ×
                   </button>
@@ -331,6 +412,7 @@ export default function App() {
                     onWatchVideo={(r) => setActiveVideoRoom(r)}
                     onSelectMapPin={() => {}}
                     onDeleteListing={handleDeleteListing}
+                    onUpdateStatus={handleUpdateRoomStatus}
                   />
                 </div>
               </div>
@@ -340,14 +422,17 @@ export default function App() {
 
       </main>
 
-      {/* Floating Agent Widgets (WhatsApp, View Mode Switcher, Calculator) */}
+      {/* Floating Widgets (WhatsApp, View Mode Switcher, Calculator) */}
       <FloatingAgentWidget
         viewMode={viewMode}
         setViewMode={setViewMode}
-        onOpenAddModal={() => setIsAddModalOpen(true)}
+        onOpenAddModal={() => {
+          if (!user) setIsAuthModalOpen(true);
+          else setIsAddModalOpen(true);
+        }}
       />
 
-      {/* Add Room Tour Modal (Agent Upload) */}
+      {/* Add Room Tour Modal (Agent / Admin Upload) */}
       <AddRoomModal
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
@@ -361,6 +446,31 @@ export default function App() {
           onClose={() => setActiveVideoRoom(null)}
         />
       )}
+
+      {/* Auth Modal (Sign in as Admin or Agent) */}
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        onOpenBecomeAgent={() => setIsBecomeAgentOpen(true)}
+      />
+
+      {/* Become a House Agent Modal (Public Application) */}
+      <BecomeAgentModal
+        isOpen={isBecomeAgentOpen}
+        onClose={() => setIsBecomeAgentOpen(false)}
+        onApplicationSubmitted={() => {
+          if (isAdmin) fetchPendingCount();
+        }}
+      />
+
+      {/* Main Admin Management Panel */}
+      <AdminPanelModal
+        isOpen={isAdminPanelOpen}
+        onClose={() => setIsAdminPanelOpen(false)}
+        listings={listings}
+        onUpdateRoomStatus={handleUpdateRoomStatus}
+        onRefreshListings={fetchListings}
+      />
 
     </div>
   );

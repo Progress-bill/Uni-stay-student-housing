@@ -1,0 +1,36 @@
+[
+  {
+    "id": "app-1788941185322",
+    "fullName": "Test Candidate Agent",
+    "email": "candidate-1788941185283@example.com",
+    "phone": "+919900112233",
+    "area": "Metro East Student Hub",
+    "experience": "Managed 8 student rooms",
+    "password": "candidatePass123",
+    "status": "approved",
+    "createdAt": "2026-09-09T08:06:25.322Z",
+    "reviewedAt": "2026-09-09T08:06:25.332Z"
+  },
+  {
+    "id": "app-101",
+    "fullName": "Priya Sharma",
+    "email": "priya.agent@example.com",
+    "phone": "+919811223344",
+    "area": "South Extension & Engineering College Vicinity",
+    "experience": "2 years local student housing agent managing 15+ student PG rooms with verified landlords.",
+    "password": "priya123password",
+    "status": "pending",
+    "createdAt": "2026-09-08T14:30:00.000Z"
+  },
+  {
+    "id": "app-102",
+    "fullName": "Rahul Verma",
+    "email": "rahul.stays@example.com",
+    "phone": "+919877001122",
+    "area": "Central University Ring Road",
+    "experience": "Student coordinator helping freshers find verified PGs near main metro line.",
+    "password": "rahul123password",
+    "status": "pending",
+    "createdAt": "2026-09-09T08:15:00.000Z"
+  }
+]
