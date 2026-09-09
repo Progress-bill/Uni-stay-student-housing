@@ -4,18 +4,17 @@ import {
   Maximize2, 
   Minimize2, 
   MessageCircle, 
-  Phone, 
   Zap, 
   MapPin, 
-  Wind, 
-  Flame, 
-  UserCheck, 
-  UserX 
+  Building2,
+  Lock 
 } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 export default function VideoPlayerModal({ room, onClose }) {
   if (!room || !room.videoUrl) return null;
 
+  const { isAdmin } = useAuth();
   const [isPip, setIsPip] = useState(false);
   const videoRef = useRef(null);
 
@@ -29,9 +28,9 @@ export default function VideoPlayerModal({ room, onClose }) {
 
   const getWhatsAppUrl = () => {
     const text = encodeURIComponent(
-      `Hi! I just watched the video tour of "${room.title}" (Rent: ${formatPrice(room.rentAmount)}/mo, Electricity: ₹${room.electricityPerUnit}/unit). I want to schedule a visit!`
+      `Hello Admin! I just watched the video tour of "${room.title}" (Rent: ${formatPrice(room.rentAmount)}/mo, Electricity: ₹${room.electricityPerUnit}/unit). I want to schedule a visit!`
     );
-    return `https://wa.me/919876543210?text=${text}`;
+    return `https://wa.me/919041543868?text=${text}`;
   };
 
   return (
@@ -87,7 +86,7 @@ export default function VideoPlayerModal({ room, onClose }) {
           </video>
         </div>
 
-        {/* Video Details & Booking Bar (shown if not minimized pip) */}
+        {/* Video Details Bar */}
         {!isPip && (
           <div className="p-4 sm:p-5 bg-slate-900 border-t border-slate-800 space-y-3">
             <div className="flex flex-wrap items-center justify-between gap-3">
@@ -102,13 +101,22 @@ export default function VideoPlayerModal({ room, onClose }) {
                     ₹{room.electricityPerUnit} / unit
                   </span>
                 </div>
-                <p className="text-xs text-slate-400 mt-1 flex items-center gap-1">
-                  <MapPin className="w-3.5 h-3.5 text-blue-400" />
-                  {room.address}
-                </p>
+
+                {/* Location: Shown to Admin, Hidden from Students */}
+                {isAdmin ? (
+                  <p className="text-xs text-slate-400 mt-1 flex items-center gap-1 font-mono">
+                    <MapPin className="w-3.5 h-3.5 text-blue-400" />
+                    {room.address}
+                  </p>
+                ) : (
+                  <p className="text-xs text-slate-400 mt-1 flex items-center gap-1">
+                    <Building2 className="w-3.5 h-3.5 text-emerald-400" />
+                    Verified Student Room Tour
+                  </p>
+                )}
               </div>
 
-              {/* Action Buttons */}
+              {/* Action Button to WhatsApp Admin (+91 9041543868) */}
               <div className="flex items-center gap-2">
                 <a
                   href={getWhatsAppUrl()}
@@ -117,7 +125,7 @@ export default function VideoPlayerModal({ room, onClose }) {
                   className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-lg shadow-emerald-600/30 transition-all cursor-pointer"
                 >
                   <MessageCircle className="w-4 h-4" />
-                  Book Visit on WhatsApp
+                  Book Visit on WhatsApp (+91 9041543868)
                 </a>
               </div>
             </div>

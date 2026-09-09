@@ -2,30 +2,18 @@
   {
     "id": "user-admin-1",
     "name": "Main Admin",
-    "email": "admin@unistay.com",
+    "phone": "9041543868",
     "password": "admin123",
     "role": "admin",
-    "phone": "+919876500001",
     "createdAt": "2026-09-01T00:00:00.000Z"
   },
   {
     "id": "user-agent-1",
     "name": "Alex - Campus Agent",
-    "email": "agent@unistay.com",
+    "phone": "9876543210",
     "password": "agent123",
     "role": "agent",
-    "phone": "+919876543210",
     "area": "North Campus & Student Hub",
     "createdAt": "2026-09-02T00:00:00.000Z"
-  },
-  {
-    "id": "user-agent-1788941185333",
-    "name": "Test Candidate Agent",
-    "email": "candidate-1788941185283@example.com",
-    "password": "candidatePass123",
-    "role": "agent",
-    "phone": "+919900112233",
-    "area": "Metro East Student Hub",
-    "createdAt": "2026-09-09T08:06:25.333Z"
   }
 ]

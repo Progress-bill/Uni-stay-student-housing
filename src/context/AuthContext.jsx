@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState } from 'react';
 
 const AuthContext = createContext(null);
 
@@ -12,11 +12,11 @@ export function AuthProvider({ children }) {
     }
   });
 
-  const login = async (email, password) => {
+  const login = async (phone, password) => {
     const res = await fetch('/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password })
+      body: JSON.stringify({ phone, password })
     });
 
     const data = await res.json();

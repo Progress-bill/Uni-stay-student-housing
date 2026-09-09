@@ -81,22 +81,33 @@ const writeJsonFile = (filePath, data) => {
   }
 };
 
+// Helper: normalize phone string
+const cleanPhone = (str) => {
+  if (!str) return '';
+  return String(str).replace(/[^\d]/g, '');
+};
+
 // ==========================================
-// 1. AUTHENTICATION ENDPOINTS
+// 1. AUTHENTICATION ENDPOINTS (Phone-First)
 // ==========================================
 
 // POST /api/auth/login
 app.post('/api/auth/login', (req, res) => {
-  const { email, password } = req.body;
-  if (!email || !password) {
-    return res.status(400).json({ success: false, message: 'Email and password are required' });
+  const { phone, password } = req.body;
+  if (!phone || !password) {
+    return res.status(400).json({ success: false, message: 'Phone number and password are required' });
   }
 
   const users = readJsonFile(usersFilePath);
-  const user = users.find(u => u.email.toLowerCase() === email.trim().toLowerCase());
+  const inputDigits = cleanPhone(phone);
+
+  const user = users.find(u => {
+    const userDigits = cleanPhone(u.phone);
+    return userDigits === inputDigits || userDigits.endsWith(inputDigits) || inputDigits.endsWith(userDigits);
+  });
 
   if (!user || user.password !== password) {
-    return res.status(401).json({ success: false, message: 'Invalid email or password' });
+    return res.status(401).json({ success: false, message: 'Invalid phone number or password' });
   }
 
   // Return user info without password
@@ -108,7 +119,7 @@ app.post('/api/auth/login', (req, res) => {
   });
 });
 
-// GET /api/auth/users (for Admin view)
+// GET /api/auth/users
 app.get('/api/auth/users', (req, res) => {
   const users = readJsonFile(usersFilePath);
   const safeUsers = users.map(({ password, ...rest }) => rest);
@@ -119,33 +130,33 @@ app.get('/api/auth/users', (req, res) => {
 // 2. BECOME A HOUSE AGENT (APPLICATIONS)
 // ==========================================
 
-// POST /api/agent-applications (Public user applies to become an agent)
+// POST /api/agent-applications
 app.post('/api/agent-applications', (req, res) => {
   try {
-    const { fullName, email, phone, area, experience, password } = req.body;
+    const { fullName, phone, area, experience, password } = req.body;
 
-    if (!fullName || !email || !phone) {
+    if (!fullName || !phone) {
       return res.status(400).json({
         success: false,
-        message: 'Full name, email, and phone number are required.'
+        message: 'Full name and phone number are required.'
       });
     }
 
     const applications = readJsonFile(applicationsFilePath);
+    const inputDigits = cleanPhone(phone);
 
-    // Check if application with email already exists
-    const existing = applications.find(a => a.email.toLowerCase() === email.trim().toLowerCase());
+    // Check if application with phone already exists
+    const existing = applications.find(a => cleanPhone(a.phone) === inputDigits);
     if (existing && existing.status === 'pending') {
       return res.status(400).json({
         success: false,
-        message: 'An application with this email is already pending Main Admin review.'
+        message: 'An application with this phone number is already pending Main Admin review.'
       });
     }
 
     const newApplication = {
       id: `app-${Date.now()}`,
       fullName: fullName.trim(),
-      email: email.trim().toLowerCase(),
       phone: phone.trim(),
       area: (area || 'City Student Hub').trim(),
       experience: (experience || 'Student PG Agent candidate').trim(),
@@ -199,15 +210,15 @@ app.patch('/api/agent-applications/:id', (req, res) => {
     // If approved, create or activate their House Agent account in users.json
     if (action === 'approve') {
       const users = readJsonFile(usersFilePath);
-      const existingUserIndex = users.findIndex(u => u.email.toLowerCase() === application.email.toLowerCase());
+      const appDigits = cleanPhone(application.phone);
+      const existingUserIndex = users.findIndex(u => cleanPhone(u.phone) === appDigits);
 
       const agentAccount = {
         id: `user-agent-${Date.now()}`,
         name: application.fullName,
-        email: application.email,
+        phone: application.phone,
         password: application.password || 'agent123',
         role: 'agent',
-        phone: application.phone,
         area: application.area,
         createdAt: new Date().toISOString()
       };
@@ -215,7 +226,6 @@ app.patch('/api/agent-applications/:id', (req, res) => {
       if (existingUserIndex >= 0) {
         users[existingUserIndex].role = 'agent';
         users[existingUserIndex].name = application.fullName;
-        users[existingUserIndex].phone = application.phone;
       } else {
         users.push(agentAccount);
       }
@@ -277,7 +287,7 @@ app.patch('/api/listings/:id/status', (req, res) => {
   }
 });
 
-// POST new listing with video and image upload support
+// POST new listing with video, photo, and Landlord Contact info
 app.post(
   '/api/listings',
   upload.fields([
@@ -294,6 +304,8 @@ app.post(
         priceGroup,
         status = 'available',
         landlordAtPG,
+        landlordName,
+        landlordPhone,
         electricityBackup,
         acRoom,
         waterGeyser,
@@ -311,7 +323,6 @@ app.post(
         return res.status(400).json({ success: false, message: 'Title and Rent amount are required' });
       }
 
-      // Check uploaded files or fallback URLs
       let finalVideoUrl = '';
       if (req.files && req.files['video'] && req.files['video'][0]) {
         finalVideoUrl = `/uploads/videos/${req.files['video'][0].filename}`;
@@ -328,7 +339,6 @@ app.post(
         finalImages.push('https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=800&q=80');
       }
 
-      // Parse custom categories
       let parsedCategories = [];
       if (Array.isArray(customCategories)) {
         parsedCategories = customCategories;
@@ -339,7 +349,6 @@ app.post(
           .filter(Boolean);
       }
 
-      // Automatically determine price group if not specified
       const rentNum = parseFloat(rentAmount);
       let calculatedPriceGroup = priceGroup;
       if (!calculatedPriceGroup || calculatedPriceGroup === 'auto') {
@@ -357,6 +366,8 @@ app.post(
         priceGroup: calculatedPriceGroup,
         status: ['available', 'occupied', 'reserved'].includes(status) ? status : 'available',
         landlordAtPG: landlordAtPG === 'true' || landlordAtPG === true,
+        landlordName: (landlordName || '').trim(),
+        landlordPhone: (landlordPhone || '').trim(),
         electricityBackup: electricityBackup === 'true' || electricityBackup === true,
         acRoom: acRoom === 'true' || acRoom === true,
         waterGeyser: waterGeyser === 'true' || waterGeyser === true,
@@ -387,7 +398,7 @@ app.post(
   }
 );
 
-// DELETE a listing (Agent or Admin)
+// DELETE a listing
 app.delete('/api/listings/:id', (req, res) => {
   try {
     const { id } = req.params;

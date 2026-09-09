@@ -30,6 +30,8 @@ export default function AddRoomModal({ isOpen, onClose, onRoomAdded }) {
   
   // Specific checkboxes
   const [landlordAtPG, setLandlordAtPG] = useState(false);
+  const [landlordName, setLandlordName] = useState('');
+  const [landlordPhone, setLandlordPhone] = useState('');
   const [electricityBackup, setElectricityBackup] = useState(true);
   const [acRoom, setAcRoom] = useState(false);
   const [waterGeyser, setWaterGeyser] = useState(true);
@@ -105,6 +107,8 @@ export default function AddRoomModal({ isOpen, onClose, onRoomAdded }) {
       formData.append('electricityPerUnit', electricityPerUnit);
       if (priceGroup !== 'auto') formData.append('priceGroup', priceGroup);
       formData.append('landlordAtPG', landlordAtPG);
+      formData.append('landlordName', landlordName);
+      formData.append('landlordPhone', landlordPhone);
       formData.append('electricityBackup', electricityBackup);
       formData.append('acRoom', acRoom);
       formData.append('waterGeyser', waterGeyser);
@@ -349,6 +353,48 @@ export default function AddRoomModal({ isOpen, onClose, onRoomAdded }) {
                   <p className="text-[11px] text-slate-500">Hot water geyser in bathroom</p>
                 </div>
               </label>
+            </div>
+          </div>
+
+          {/* Section 2B: Landlord Contact (Private - Admin Only) */}
+          <div className="p-4 bg-amber-50/60 rounded-2xl border border-amber-200/80 space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-xs font-bold text-amber-950 uppercase tracking-wider flex items-center gap-1.5">
+                  <UserCheck className="w-4 h-4 text-amber-600" /> Landlord / Property Owner (Private)
+                </h3>
+                <p className="text-[11px] text-amber-700">
+                  🔒 Strictly confidential for Main Admin. Students will never see these contact details.
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  Landlord Full Name
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. Ramesh Gupta"
+                  value={landlordName}
+                  onChange={(e) => setLandlordName(e.target.value)}
+                  className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-amber-500/20 outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  Landlord Phone Number *
+                </label>
+                <input
+                  type="tel"
+                  placeholder="e.g. +91 98101 23456"
+                  value={landlordPhone}
+                  onChange={(e) => setLandlordPhone(e.target.value)}
+                  className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-900 focus:ring-2 focus:ring-amber-500/20 outline-none"
+                />
+              </div>
             </div>
           </div>
 

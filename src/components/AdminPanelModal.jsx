@@ -9,11 +9,11 @@ import {
   Check, 
   Clock, 
   Phone, 
-  Mail, 
   MapPin, 
   RefreshCw, 
-  AlertCircle,
-  Tag
+  MessageCircle,
+  Building2,
+  Lock
 } from 'lucide-react';
 
 export default function AdminPanelModal({ 
@@ -87,7 +87,7 @@ export default function AdminPanelModal({
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-black/65 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6">
-      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-4xl overflow-hidden border border-slate-200 animate-in fade-in zoom-in-95 duration-200">
+      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-5xl overflow-hidden border border-slate-200 animate-in fade-in zoom-in-95 duration-200">
         
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100 bg-slate-900 text-white">
@@ -102,7 +102,7 @@ export default function AdminPanelModal({
                   Super Admin
                 </span>
               </div>
-              <p className="text-xs text-slate-400">Manage agent joining requests & live room statuses</p>
+              <p className="text-xs text-slate-400">Manage Landlord contacts, agent requests & room statuses</p>
             </div>
           </div>
           <button
@@ -169,7 +169,7 @@ export default function AdminPanelModal({
             }`}
           >
             <Home className="w-4 h-4" />
-            <span>Room Availability Control</span>
+            <span>Room Status & Landlord Management</span>
             <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600">
               {listings.length}
             </span>
@@ -184,7 +184,7 @@ export default function AdminPanelModal({
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <p className="text-xs text-slate-600 font-medium">
-                  Review candidates applying to list student rooms on your portal. You must accept their request to activate their agent privileges.
+                  Review agent candidates. You must accept their application to activate their account.
                 </p>
                 <button
                   onClick={fetchApplications}
@@ -232,22 +232,19 @@ export default function AdminPanelModal({
                             </span>
                           </div>
 
-                          <div className="flex flex-wrap items-center gap-3 text-xs text-slate-600">
-                            <span className="flex items-center gap-1">
-                              <Mail className="w-3.5 h-3.5 text-slate-400" /> {app.email}
-                            </span>
-                            <span className="flex items-center gap-1">
-                              <Phone className="w-3.5 h-3.5 text-slate-400" /> {app.phone}
+                          <div className="flex flex-wrap items-center gap-3 text-xs text-slate-600 font-mono">
+                            <span className="flex items-center gap-1 font-bold text-slate-800">
+                              <Phone className="w-3.5 h-3.5 text-slate-500" /> {app.phone}
                             </span>
                             {app.area && (
-                              <span className="flex items-center gap-1">
+                              <span className="flex items-center gap-1 font-sans text-slate-600">
                                 <MapPin className="w-3.5 h-3.5 text-slate-400" /> {app.area}
                               </span>
                             )}
                           </div>
 
                           {app.experience && (
-                            <p className="text-xs text-slate-600 mt-1.5 italic bg-white/70 p-2 rounded-xl border border-slate-200/60">
+                            <p className="text-xs text-slate-600 mt-1 italic bg-white/70 p-2 rounded-xl border border-slate-200/60">
                               "{app.experience}"
                             </p>
                           )}
@@ -292,28 +289,29 @@ export default function AdminPanelModal({
             </div>
           )}
 
-          {/* TAB 2: ROOM AVAILABILITY STATUS CONTROL */}
+          {/* TAB 2: ROOM STATUS & LANDLORD MANAGEMENT */}
           {activeTab === 'rooms' && (
             <div className="space-y-4">
               <p className="text-xs text-slate-600 font-medium">
-                As Main Admin, you have direct authority to update the live booking status of any room. Changes reflect immediately across all student devices.
+                Manage all rooms with their exact GPS addresses and <strong>private Landlord phone numbers</strong>. Update booking status with 1 click.
               </p>
 
-              <div className="divide-y divide-slate-100 border border-slate-200 rounded-2xl overflow-hidden bg-white shadow-xs">
+              <div className="divide-y divide-slate-200 border border-slate-200 rounded-2xl overflow-hidden bg-white shadow-xs">
                 {listings.map((room) => {
                   const currentStatus = room.status || 'available';
                   return (
-                    <div key={room.id} className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-slate-50/70 transition-colors">
+                    <div key={room.id} className="p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:bg-slate-50/70 transition-colors">
                       
-                      <div className="flex items-center gap-3">
+                      {/* Left: Thumbnail & Room Info */}
+                      <div className="flex items-start gap-3 flex-1">
                         {room.images && room.images[0] && (
                           <img
                             src={room.images[0]}
                             alt={room.title}
-                            className="w-14 h-14 rounded-xl object-cover shrink-0 border border-slate-200"
+                            className="w-16 h-16 rounded-xl object-cover shrink-0 border border-slate-200"
                           />
                         )}
-                        <div>
+                        <div className="space-y-1">
                           <div className="flex items-center gap-2">
                             <h4 className="text-xs font-bold text-slate-900 line-clamp-1">
                               {room.title}
@@ -328,19 +326,42 @@ export default function AdminPanelModal({
                               {currentStatus === 'available' ? 'Available' : currentStatus === 'occupied' ? 'Booked' : 'Reserved'}
                             </span>
                           </div>
-                          <div className="flex items-center gap-2 text-[11px] text-slate-500 mt-0.5">
+
+                          <div className="flex flex-wrap items-center gap-2 text-[11px] text-slate-500">
                             <span className="font-bold text-slate-800">₹{room.rentAmount?.toLocaleString()}/mo</span>
                             <span>•</span>
                             <span>⚡ ₹{room.electricityPerUnit}/unit</span>
                             <span>•</span>
-                            <span className="truncate max-w-[150px]">{room.address}</span>
+                            <span className="flex items-center gap-0.5 font-mono text-slate-600">
+                              <MapPin className="w-3 h-3 text-blue-500" /> {room.address}
+                            </span>
                           </div>
+
+                          {/* Private Landlord Contact Strip */}
+                          <div className="pt-1 flex items-center gap-2 text-xs">
+                            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-50 border border-amber-200 text-amber-950 font-medium">
+                              <Lock className="w-3 h-3 text-amber-600" />
+                              <span>Landlord: <strong>{room.landlordName || 'Owner'}</strong></span>
+                              <span className="font-mono font-bold text-slate-900 ml-1">
+                                {room.landlordPhone || 'No phone'}
+                              </span>
+                              {room.landlordPhone && (
+                                <a
+                                  href={`tel:${room.landlordPhone}`}
+                                  className="ml-1 text-blue-600 hover:underline font-bold"
+                                >
+                                  Call
+                                </a>
+                              )}
+                            </div>
+                          </div>
+
                         </div>
                       </div>
 
-                      {/* Status Update Quick Dropdown */}
-                      <div className="flex items-center gap-2 self-end sm:self-center">
-                        <span className="text-[11px] font-semibold text-slate-500">Change Status:</span>
+                      {/* Right: Change Status Dropdown */}
+                      <div className="flex items-center gap-2 self-end md:self-center shrink-0">
+                        <span className="text-[11px] font-semibold text-slate-500">Live Status:</span>
                         <select
                           value={currentStatus}
                           onChange={(e) => onUpdateRoomStatus(room.id, e.target.value)}
@@ -352,9 +373,9 @@ export default function AdminPanelModal({
                               : 'bg-amber-50 border-amber-300 text-amber-800'
                           }`}
                         >
-                          <option value="available">🟢 Available for Rent</option>
-                          <option value="occupied">🔴 Booked / Occupied</option>
-                          <option value="reserved">🟡 Reserved / Token Paid</option>
+                          <option value="available">🟢 Available</option>
+                          <option value="occupied">🔴 Booked</option>
+                          <option value="reserved">🟡 Reserved</option>
                         </select>
                       </div>
 

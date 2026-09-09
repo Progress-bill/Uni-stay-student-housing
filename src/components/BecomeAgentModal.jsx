@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
-import { X, UserPlus, Send, CheckCircle2, AlertCircle, ShieldCheck, MapPin, Phone, Mail, Lock } from 'lucide-react';
+import { X, UserPlus, Send, CheckCircle2, AlertCircle, ShieldCheck, MapPin, Phone, Lock, MessageCircle } from 'lucide-react';
 
 export default function BecomeAgentModal({ isOpen, onClose, onApplicationSubmitted }) {
   if (!isOpen) return null;
 
   const [fullName, setFullName] = useState('');
-  const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [area, setArea] = useState('');
   const [experience, setExperience] = useState('');
@@ -17,8 +16,8 @@ export default function BecomeAgentModal({ isOpen, onClose, onApplicationSubmitt
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!fullName.trim() || !email.trim() || !phone.trim()) {
-      setError('Please fill in your name, email, and phone number.');
+    if (!fullName.trim() || !phone.trim()) {
+      setError('Please fill in your full name and phone number.');
       return;
     }
 
@@ -31,7 +30,6 @@ export default function BecomeAgentModal({ isOpen, onClose, onApplicationSubmitt
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           fullName,
-          email,
           phone,
           area,
           experience,
@@ -57,13 +55,19 @@ export default function BecomeAgentModal({ isOpen, onClose, onApplicationSubmitt
   const resetAndClose = () => {
     setSubmittedSuccess(false);
     setFullName('');
-    setEmail('');
     setPhone('');
     setArea('');
     setExperience('');
     setPassword('');
     setError('');
     onClose();
+  };
+
+  const getAdminWhatsAppFastTrack = () => {
+    const text = encodeURIComponent(
+      `Hello Admin! I have just applied to become a verified House Agent on UniStay.\n\nName: ${fullName}\nPhone: ${phone}\nArea: ${area || 'Student Hub'}\n\nPlease approve my agent account!`
+    );
+    return `https://wa.me/919041543868?text=${text}`;
   };
 
   return (
@@ -97,23 +101,34 @@ export default function BecomeAgentModal({ isOpen, onClose, onApplicationSubmitt
             </div>
             <h3 className="text-lg font-extrabold text-slate-900">Application Submitted!</h3>
             <p className="text-xs text-slate-600 leading-relaxed max-w-sm mx-auto">
-              Thank you for applying to become a verified House Agent on UniStay. 
-              Your request is currently in the <strong>Pending Queue</strong>. 
-              The <strong>Main Admin</strong> will review and accept your application before your agent account is activated.
+              Thank you for applying to become a verified House Agent. 
+              Your request is currently in the <strong>Pending Queue</strong> awaiting <strong>Main Admin</strong> review.
             </p>
-            <div className="p-3.5 bg-amber-50 rounded-2xl border border-amber-200 text-left text-xs text-amber-800 space-y-1">
-              <span className="font-bold flex items-center gap-1 text-amber-900">
-                <ShieldCheck className="w-4 h-4 text-amber-600" /> Admin Approval Required:
+
+            {/* Fast Track WhatsApp message to Admin */}
+            <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-200 text-left text-xs text-emerald-900 space-y-2">
+              <span className="font-bold flex items-center gap-1.5 text-emerald-950">
+                <ShieldCheck className="w-4 h-4 text-emerald-600" /> Fast-Track Your Approval:
               </span>
-              <p className="text-[11px] text-amber-700">
-                Once the Main Admin clicks "Accept", you can sign in using your email <strong>({email})</strong>.
+              <p className="text-[11px] text-emerald-800">
+                You can directly message the Main Admin on WhatsApp at <strong>+91 9041543868</strong> with your application details:
               </p>
+              <a
+                href={getAdminWhatsAppFastTrack()}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full inline-flex items-center justify-center gap-2 py-2.5 px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold shadow-md shadow-emerald-600/30 transition-all cursor-pointer"
+              >
+                <MessageCircle className="w-4 h-4" />
+                <span>Message Admin on WhatsApp (+91 9041543868)</span>
+              </a>
             </div>
+
             <button
               onClick={resetAndClose}
-              className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl transition-all cursor-pointer"
+              className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-all cursor-pointer"
             >
-              Done
+              Close
             </button>
           </div>
         ) : (
@@ -128,7 +143,7 @@ export default function BecomeAgentModal({ isOpen, onClose, onApplicationSubmitt
             )}
 
             <div className="p-3 bg-blue-50/70 border border-blue-100 rounded-2xl text-xs text-blue-900 leading-relaxed">
-              💡 <strong>Why join UniStay?</strong> Upload room walkthrough videos, pin properties with GPS, and connect directly with verified students looking for budget rooms.
+              💡 <strong>Join the UniStay Agent Network:</strong> Upload room walkthrough videos, drop private GPS pins, and connect directly with verified students looking for budget rooms.
             </div>
 
             {/* Full Name */}
@@ -146,41 +161,25 @@ export default function BecomeAgentModal({ isOpen, onClose, onApplicationSubmitt
               />
             </div>
 
-            {/* Email & Phone */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1 flex items-center gap-1">
-                  <Mail className="w-3.5 h-3.5 text-slate-400" /> Email Address *
-                </label>
-                <input
-                  type="email"
-                  required
-                  placeholder="agent@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1 flex items-center gap-1">
-                  <Phone className="w-3.5 h-3.5 text-slate-400" /> Phone / WhatsApp *
-                </label>
-                <input
-                  type="tel"
-                  required
-                  placeholder="+91 98765 43210"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
-                />
-              </div>
+            {/* Phone / WhatsApp Number */}
+            <div>
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1 flex items-center gap-1">
+                <Phone className="w-3.5 h-3.5 text-slate-400" /> Phone / WhatsApp Number *
+              </label>
+              <input
+                type="tel"
+                required
+                placeholder="e.g. 9811223344"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
+              />
             </div>
 
             {/* Operating Area */}
             <div>
               <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1 flex items-center gap-1">
-                <MapPin className="w-3.5 h-3.5 text-slate-400" /> Preferred Operating Area / Colleges
+                <MapPin className="w-3.5 h-3.5 text-slate-400" /> Operating Area / Target Colleges
               </label>
               <input
                 type="text"
@@ -194,11 +193,11 @@ export default function BecomeAgentModal({ isOpen, onClose, onApplicationSubmitt
             {/* Desired Password */}
             <div>
               <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1 flex items-center gap-1">
-                <Lock className="w-3.5 h-3.5 text-slate-400" /> Set Password for Your Agent Account
+                <Lock className="w-3.5 h-3.5 text-slate-400" /> Create Account Password
               </label>
               <input
                 type="password"
-                placeholder="Create a password (min 6 characters)"
+                placeholder="Choose a password for your agent login"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
@@ -212,7 +211,7 @@ export default function BecomeAgentModal({ isOpen, onClose, onApplicationSubmitt
               </label>
               <textarea
                 rows={2}
-                placeholder="Share how many rooms you manage or why you want to list verified rooms on UniStay..."
+                placeholder="How many rooms or PG locations do you manage?"
                 value={experience}
                 onChange={(e) => setExperience(e.target.value)}
                 className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:bg-white focus:ring-2 focus:ring-blue-500/20 outline-none"

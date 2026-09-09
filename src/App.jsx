@@ -243,13 +243,17 @@ export default function App() {
     }
   };
 
-  // Handle pin select on map
+  // Handle pin select on map (Admin only)
   const handleSelectMapPin = (room) => {
+    if (!isAdmin) return;
     setSelectedRoom(room);
     if (viewMode === 'grid') {
       setViewMode('split');
     }
   };
+
+  // Only Main Admin has access to interactive map view modes
+  const effectiveViewMode = isAdmin ? viewMode : 'grid';
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col selection:bg-blue-100 selection:text-blue-900 pb-20">
@@ -327,7 +331,7 @@ export default function App() {
         )}
 
         {/* Listings Display: GRID VIEW */}
-        {!loading && !error && filteredListings.length > 0 && viewMode === 'grid' && (
+        {!loading && !error && filteredListings.length > 0 && effectiveViewMode === 'grid' && (
           <div>
             <div className="flex items-center justify-between mb-4">
               <p className="text-xs font-semibold text-slate-500">
@@ -353,8 +357,8 @@ export default function App() {
           </div>
         )}
 
-        {/* Listings Display: SPLIT VIEW (List + Interactive Map) */}
-        {!loading && !error && filteredListings.length > 0 && viewMode === 'split' && (
+        {/* Listings Display: SPLIT VIEW (List + Interactive Map) - Admin Only */}
+        {!loading && !error && filteredListings.length > 0 && effectiveViewMode === 'split' && (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-[calc(100vh-220px)] min-h-[500px]">
             {/* Scrollable Room Cards (Left) */}
             <div className="lg:col-span-6 overflow-y-auto pr-2 space-y-4">
@@ -386,8 +390,8 @@ export default function App() {
           </div>
         )}
 
-        {/* Listings Display: FULL MAP VIEW */}
-        {!loading && !error && viewMode === 'map' && (
+        {/* Listings Display: FULL MAP VIEW - Admin Only */}
+        {!loading && !error && effectiveViewMode === 'map' && (
           <div className="h-[calc(100vh-220px)] min-h-[550px] relative">
             <MapView
               rooms={filteredListings}

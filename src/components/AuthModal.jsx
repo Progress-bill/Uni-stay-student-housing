@@ -1,27 +1,27 @@
 import React, { useState } from 'react';
-import { X, Lock, Mail, ShieldAlert, Sparkles, UserCheck, KeyRound } from 'lucide-react';
+import { X, Lock, Phone, ShieldAlert, Sparkles, KeyRound } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export default function AuthModal({ isOpen, onClose, onOpenBecomeAgent }) {
   if (!isOpen) return null;
 
   const { login } = useAuth();
-  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!email || !password) {
-      setError('Please fill in both email and password.');
+    if (!phone || !password) {
+      setError('Please enter your phone number and password.');
       return;
     }
 
     setLoading(true);
     setError('');
 
-    const res = await login(email, password);
+    const res = await login(phone, password);
     setLoading(false);
 
     if (res.success) {
@@ -31,8 +31,8 @@ export default function AuthModal({ isOpen, onClose, onOpenBecomeAgent }) {
     }
   };
 
-  const handleQuickLogin = (demoEmail, demoPassword) => {
-    setEmail(demoEmail);
+  const handleQuickLogin = (demoPhone, demoPassword) => {
+    setPhone(demoPhone);
     setPassword(demoPassword);
     setError('');
   };
@@ -79,37 +79,37 @@ export default function AuthModal({ isOpen, onClose, onOpenBecomeAgent }) {
             <div className="grid grid-cols-2 gap-2">
               <button
                 type="button"
-                onClick={() => handleQuickLogin('admin@unistay.com', 'admin123')}
-                className="py-1.5 px-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-800 border border-indigo-200 rounded-xl text-xs font-semibold transition-all cursor-pointer text-left"
+                onClick={() => handleQuickLogin('9041543868', 'admin123')}
+                className="py-1.5 px-2.5 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 rounded-xl text-xs font-semibold transition-all cursor-pointer text-left"
               >
                 👑 Main Admin
-                <span className="block text-[10px] text-indigo-500 font-normal">Full Status & Approvals</span>
+                <span className="block text-[10px] text-amber-700 font-normal">9041543868</span>
               </button>
               <button
                 type="button"
-                onClick={() => handleQuickLogin('agent@unistay.com', 'agent123')}
-                className="py-1.5 px-2 bg-blue-50 hover:bg-blue-100 text-blue-800 border border-blue-200 rounded-xl text-xs font-semibold transition-all cursor-pointer text-left"
+                onClick={() => handleQuickLogin('9876543210', 'agent123')}
+                className="py-1.5 px-2.5 bg-blue-50 hover:bg-blue-100 text-blue-900 border border-blue-200 rounded-xl text-xs font-semibold transition-all cursor-pointer text-left"
               >
                 🏠 House Agent
-                <span className="block text-[10px] text-blue-500 font-normal">Upload & Manage Rooms</span>
+                <span className="block text-[10px] text-blue-700 font-normal">9876543210</span>
               </button>
             </div>
           </div>
 
           <div>
             <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-              Email Address
+              Phone Number
             </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                <Mail className="h-4 w-4" />
+                <Phone className="h-4 w-4" />
               </div>
               <input
-                type="email"
+                type="tel"
                 required
-                placeholder="admin@unistay.com or agent@unistay.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                placeholder="e.g. 9041543868"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
                 className="w-full pl-10 pr-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
               />
             </div>
@@ -139,7 +139,7 @@ export default function AuthModal({ isOpen, onClose, onOpenBecomeAgent }) {
             disabled={loading}
             className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-xl shadow-md shadow-blue-600/25 transition-all cursor-pointer disabled:opacity-50"
           >
-            {loading ? 'Authenticating...' : 'Sign In'}
+            {loading ? 'Signing In...' : 'Sign In'}
           </button>
 
           <div className="pt-2 text-center text-xs text-slate-500">

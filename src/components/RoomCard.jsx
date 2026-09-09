@@ -10,11 +10,10 @@ import {
   MessageCircle, 
   Trash2, 
   Tag, 
-  CheckCircle,
-  AlertCircle,
-  Clock,
+  Phone,
   ShieldCheck,
-  User
+  Building2,
+  Lock
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
@@ -40,12 +39,20 @@ export default function RoomCard({
     }).format(amt);
   };
 
-  // WhatsApp Inquiry URL
+  // WhatsApp Inquiry URL -> Direct to Main Admin WhatsApp +91 9041543868
   const getWhatsAppUrl = () => {
     const text = encodeURIComponent(
-      `Hello! I am a student interested in "${room.title}" (${currentStatus.toUpperCase()}) listed for ${formatPrice(room.rentAmount)}/mo (Electricity: ₹${room.electricityPerUnit}/unit). Could you please share visit details?`
+      `Hello Admin! I am a student interested in "${room.title}" (${currentStatus.toUpperCase()}) listed for ${formatPrice(room.rentAmount)}/mo (Electricity: ₹${room.electricityPerUnit}/unit). Could you please share visit details?`
     );
-    return `https://wa.me/919876543210?text=${text}`;
+    return `https://wa.me/919041543868?text=${text}`;
+  };
+
+  // Direct WhatsApp to Landlord (Admin only)
+  const getLandlordWhatsAppUrl = () => {
+    if (!room.landlordPhone) return '#';
+    const cleanDigits = room.landlordPhone.replace(/[^\d]/g, '');
+    const text = encodeURIComponent(`Hello ${room.landlordName || 'Landlord'}, regarding your room listing "${room.title}" on UniStay:`);
+    return `https://wa.me/${cleanDigits}?text=${text}`;
   };
 
   return (
@@ -143,19 +150,29 @@ export default function RoomCard({
             {room.title}
           </h3>
 
-          {/* Location & GPS Pin trigger */}
-          <div className="mt-1 flex items-center justify-between text-xs text-slate-500">
-            <span className="truncate flex items-center gap-1">
-              <MapPin className="w-3.5 h-3.5 text-blue-500 shrink-0" />
-              {room.address || 'Central Student Hub'}
-            </span>
-            <button
-              onClick={() => onSelectMapPin(room)}
-              className="text-blue-600 hover:text-blue-700 font-semibold text-[11px] whitespace-nowrap ml-2 cursor-pointer flex items-center gap-0.5"
-            >
-              Pin on Map
-            </button>
-          </div>
+          {/* Location / Privacy Logic:
+              - Admin sees exact address and GPS pin trigger.
+              - Students/Guests see only general verified badge (NO address or GPS pin).
+          */}
+          {isAdmin ? (
+            <div className="mt-1 flex items-center justify-between text-xs text-slate-500 bg-slate-50 px-2 py-1 rounded-lg border border-slate-200/60">
+              <span className="truncate flex items-center gap-1 font-mono text-[11px] text-slate-700">
+                <MapPin className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                {room.address || 'Student Hub Location'}
+              </span>
+              <button
+                onClick={() => onSelectMapPin(room)}
+                className="text-blue-600 hover:text-blue-700 font-bold text-[11px] whitespace-nowrap ml-2 cursor-pointer flex items-center gap-0.5"
+              >
+                Pin on Map
+              </button>
+            </div>
+          ) : (
+            <div className="mt-1 flex items-center gap-1.5 text-xs text-slate-500 font-medium">
+              <Building2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+              <span>Verified Student PG Room</span>
+            </div>
+          )}
 
           {/* Agent info badge */}
           {room.agentName && (
@@ -170,7 +187,7 @@ export default function RoomCard({
             {room.description}
           </p>
 
-          {/* Student Amenities Badges (Landlord, Backup, AC, Geyser) */}
+          {/* Student Amenities Badges (Landlord Presence, Backup, AC, Geyser) */}
           <div className="mt-3 flex flex-wrap gap-1.5">
             <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold border ${
               room.landlordAtPG
@@ -227,9 +244,48 @@ export default function RoomCard({
             </div>
           )}
 
+          {/* MAIN ADMIN ONLY: Private Landlord Contact Card */}
+          {isAdmin && (
+            <div className="mt-3 p-2.5 bg-amber-50/80 border border-amber-200/90 rounded-xl space-y-1.5 text-xs text-amber-950">
+              <div className="flex items-center justify-between">
+                <span className="font-extrabold text-[10px] uppercase tracking-wider text-amber-800 flex items-center gap-1">
+                  <Lock className="w-3 h-3 text-amber-600" /> Landlord (Private):
+                </span>
+                <span className="font-semibold text-slate-700 text-[11px]">
+                  {room.landlordName || 'Owner'}
+                </span>
+              </div>
+              <div className="flex items-center justify-between gap-2 pt-1 border-t border-amber-200/60">
+                <span className="font-mono font-bold text-slate-900 text-xs">
+                  {room.landlordPhone || 'No phone set'}
+                </span>
+                {room.landlordPhone && (
+                  <div className="flex items-center gap-1.5">
+                    <a
+                      href={`tel:${room.landlordPhone}`}
+                      className="p-1 px-2 rounded-lg bg-white border border-amber-300 hover:bg-amber-100 text-amber-900 text-[11px] font-bold flex items-center gap-1"
+                      title="Call Landlord"
+                    >
+                      <Phone className="w-3 h-3" /> Call
+                    </a>
+                    <a
+                      href={getLandlordWhatsAppUrl()}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-1 px-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold flex items-center gap-1"
+                      title="WhatsApp Landlord"
+                    >
+                      <MessageCircle className="w-3 h-3" /> WA
+                    </a>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Main Admin / Owner Agent Status Control Strip */}
           {canManageListing && onUpdateStatus && (
-            <div className="mt-3.5 p-2 bg-slate-50 border border-slate-200/80 rounded-xl flex items-center justify-between gap-2">
+            <div className="mt-3 p-2 bg-slate-50 border border-slate-200/80 rounded-xl flex items-center justify-between gap-2">
               <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1">
                 {isAdmin ? '👑 Admin Status:' : '🏠 Agent Status:'}
               </span>
@@ -257,7 +313,7 @@ export default function RoomCard({
         <div className="mt-4 pt-3.5 border-t border-slate-100 flex items-center justify-between gap-2">
           
           {/* Watch Video Button */}
-          {room.videoUrl ? (
+          {room.videoUrl && (
             <button
               onClick={() => onWatchVideo(room)}
               className="flex-1 inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-bold transition-all cursor-pointer"
@@ -265,17 +321,9 @@ export default function RoomCard({
               <Video className="w-3.5 h-3.5" />
               <span>Tour Video</span>
             </button>
-          ) : (
-            <button
-              onClick={() => onSelectMapPin(room)}
-              className="flex-1 inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition-all cursor-pointer"
-            >
-              <MapPin className="w-3.5 h-3.5 text-slate-500" />
-              <span>View Map</span>
-            </button>
           )}
 
-          {/* WhatsApp Direct Connect */}
+          {/* WhatsApp Direct Connect to Admin (+91 9041543868) */}
           <a
             href={getWhatsAppUrl()}
             target="_blank"
@@ -283,7 +331,7 @@ export default function RoomCard({
             className="flex-1 inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-sm shadow-emerald-600/20 transition-all cursor-pointer"
           >
             <MessageCircle className="w-3.5 h-3.5" />
-            <span>WhatsApp</span>
+            <span>WhatsApp Agent</span>
           </a>
 
           {/* Delete Listing (Only Admin or listing owner) */}
