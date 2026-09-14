@@ -15,5 +15,14 @@
     "role": "agent",
     "area": "North Campus & Student Hub",
     "createdAt": "2026-09-02T00:00:00.000Z"
+  },
+  {
+    "id": "user-agent-1789375583251",
+    "name": "Dollar",
+    "phone": "7087941543",
+    "password": "Dollar@123",
+    "role": "agent",
+    "area": "LPU ,CT",
+    "createdAt": "2026-09-14T08:46:23.251Z"
   }
 ]

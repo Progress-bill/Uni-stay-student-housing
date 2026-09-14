@@ -13,7 +13,9 @@ import {
   Phone,
   ShieldCheck,
   Building2,
-  Lock
+  Lock,
+  AlertTriangle,
+  Clock
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
@@ -22,6 +24,7 @@ export default function RoomCard({
   onWatchVideo, 
   onSelectMapPin, 
   onDeleteListing,
+  onRequestDeleteListing,
   onUpdateStatus,
   isSelected 
 }) {
@@ -122,6 +125,13 @@ export default function RoomCard({
       <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between">
         <div>
           
+          {room.hasPendingDeleteRequest && (
+            <div className="mb-2.5 p-2 bg-amber-50 border border-amber-300 rounded-xl flex items-center gap-1.5 text-xs font-bold text-amber-900">
+              <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+              <span>Deletion Pending Admin Review</span>
+            </div>
+          )}
+
           {/* Rent & Electricity Header */}
           <div className="flex items-start justify-between gap-2 mb-2">
             <div>
@@ -334,15 +344,36 @@ export default function RoomCard({
             <span>WhatsApp Agent</span>
           </a>
 
-          {/* Delete Listing (Only Admin or listing owner) */}
-          {canManageListing && (
+          {/* Delete Listing Action */}
+          {isAdmin && (
             <button
               onClick={() => onDeleteListing(room.id)}
               className="p-2 rounded-xl text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
-              title="Delete Listing"
+              title="Delete Listing (Admin Direct Delete)"
             >
               <Trash2 className="w-3.5 h-3.5" />
             </button>
+          )}
+
+          {!isAdmin && isAgent && room.agentId === user?.id && (
+            room.hasPendingDeleteRequest ? (
+              <span 
+                className="px-2.5 py-1 text-[10px] font-bold text-amber-800 bg-amber-50 border border-amber-200 rounded-xl flex items-center gap-1"
+                title="Deletion request submitted and awaiting Main Admin approval"
+              >
+                <Clock className="w-3 h-3 text-amber-600 shrink-0" />
+                <span>Pending Delete</span>
+              </span>
+            ) : (
+              <button
+                onClick={() => onRequestDeleteListing && onRequestDeleteListing(room)}
+                className="p-2 rounded-xl text-slate-400 hover:text-amber-700 hover:bg-amber-50 transition-colors cursor-pointer flex items-center gap-1"
+                title="Request Listing Deletion (Requires Main Admin Approval)"
+              >
+                <Trash2 className="w-3.5 h-3.5 text-amber-600" />
+                <span className="text-[10px] text-amber-800 font-bold hidden sm:inline">Req Delete</span>
+              </button>
+            )
           )}
 
         </div>

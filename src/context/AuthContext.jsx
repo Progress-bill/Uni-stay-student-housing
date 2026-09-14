@@ -13,19 +13,28 @@ export function AuthProvider({ children }) {
   });
 
   const login = async (phone, password) => {
-    const res = await fetch('/api/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ phone, password })
-    });
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone, password })
+      });
 
-    const data = await res.json();
-    if (data.success && data.user) {
-      setUser(data.user);
-      localStorage.setItem('unistay_user', JSON.stringify(data.user));
-      return { success: true, user: data.user };
-    } else {
-      return { success: false, message: data.message || 'Login failed' };
+      const data = await res.json();
+      if (data.success && data.user) {
+        setUser(data.user);
+        localStorage.setItem('unistay_user', JSON.stringify(data.user));
+        return { success: true, user: data.user };
+      } else {
+        return { 
+          success: false, 
+          message: data.message || 'Login failed',
+          status: data.status || (res.status === 403 ? 'pending_approval' : 'error')
+        };
+      }
+    } catch (err) {
+      console.error(err);
+      return { success: false, message: 'Could not connect to authentication server' };
     }
   };
 

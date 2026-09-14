@@ -9,6 +9,7 @@ import FloatingAgentWidget from './components/FloatingAgentWidget';
 import AuthModal from './components/AuthModal';
 import BecomeAgentModal from './components/BecomeAgentModal';
 import AdminPanelModal from './components/AdminPanelModal';
+import DeleteRequestModal from './components/DeleteRequestModal';
 import { useAuth } from './context/AuthContext';
 import { Home, AlertCircle, RefreshCw, Sparkles, Filter } from 'lucide-react';
 
@@ -41,8 +42,9 @@ export default function App() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isBecomeAgentOpen, setIsBecomeAgentOpen] = useState(false);
   const [isAdminPanelOpen, setIsAdminPanelOpen] = useState(false);
+  const [roomToDeleteRequest, setRoomToDeleteRequest] = useState(null);
 
-  // Pending agent applications count for Admin badge
+  // Pending agent applications & deletion requests count for Admin badge
   const [pendingAppsCount, setPendingAppsCount] = useState(0);
 
   // Fetch listings from API
@@ -65,15 +67,25 @@ export default function App() {
     }
   };
 
-  // Fetch pending applications count if Admin
+  // Fetch pending applications & deletion requests count if Admin
   const fetchPendingCount = async () => {
     try {
-      const res = await fetch('/api/agent-applications');
-      const data = await res.json();
-      if (data.success && Array.isArray(data.data)) {
-        const pending = data.data.filter(a => a.status === 'pending').length;
-        setPendingAppsCount(pending);
+      const [appsRes, delRes] = await Promise.all([
+        fetch('/api/agent-applications'),
+        fetch('/api/delete-requests')
+      ]);
+      const [appsData, delData] = await Promise.all([
+        appsRes.json(),
+        delRes.json()
+      ]);
+      let total = 0;
+      if (appsData.success && Array.isArray(appsData.data)) {
+        total += appsData.data.filter(a => a.status === 'pending').length;
       }
+      if (delData.success && Array.isArray(delData.data)) {
+        total += delData.data.filter(r => r.status === 'pending').length;
+      }
+      setPendingAppsCount(total);
     } catch {
       // ignore
     }
@@ -243,6 +255,20 @@ export default function App() {
     }
   };
 
+  // Agent Deletion Request Handlers
+  const handleOpenDeleteRequest = (room) => {
+    setRoomToDeleteRequest(room);
+  };
+
+  const handleDeleteRequestSubmitted = (roomId, newRequest) => {
+    setListings(prev =>
+      prev.map(item => item.id === roomId ? { ...item, hasPendingDeleteRequest: true } : item)
+    );
+    if (isAdmin) {
+      fetchPendingCount();
+    }
+  };
+
   // Handle pin select on map (Admin only)
   const handleSelectMapPin = (room) => {
     if (!isAdmin) return;
@@ -350,6 +376,7 @@ export default function App() {
                   onWatchVideo={(r) => setActiveVideoRoom(r)}
                   onSelectMapPin={handleSelectMapPin}
                   onDeleteListing={handleDeleteListing}
+                  onRequestDeleteListing={handleOpenDeleteRequest}
                   onUpdateStatus={handleUpdateRoomStatus}
                 />
               ))}
@@ -373,6 +400,7 @@ export default function App() {
                   onWatchVideo={(r) => setActiveVideoRoom(r)}
                   onSelectMapPin={(r) => setSelectedRoom(r)}
                   onDeleteListing={handleDeleteListing}
+                  onRequestDeleteListing={handleOpenDeleteRequest}
                   onUpdateStatus={handleUpdateRoomStatus}
                 />
               ))}
@@ -474,6 +502,14 @@ export default function App() {
         listings={listings}
         onUpdateRoomStatus={handleUpdateRoomStatus}
         onRefreshListings={fetchListings}
+      />
+
+      {/* Delete Request Modal (Agent Deletion Approval Workflow) */}
+      <DeleteRequestModal
+        isOpen={!!roomToDeleteRequest}
+        onClose={() => setRoomToDeleteRequest(null)}
+        room={roomToDeleteRequest}
+        onRequestSubmitted={handleDeleteRequestSubmitted}
       />
 
     </div>

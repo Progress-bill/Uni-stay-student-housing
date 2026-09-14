@@ -13,7 +13,9 @@ import {
   RefreshCw, 
   MessageCircle,
   Building2,
-  Lock
+  Lock,
+  Trash2,
+  AlertTriangle
 } from 'lucide-react';
 
 export default function AdminPanelModal({ 
@@ -25,11 +27,16 @@ export default function AdminPanelModal({
 }) {
   if (!isOpen) return null;
 
-  const [activeTab, setActiveTab] = useState('applications'); // 'applications' | 'rooms'
+  const [activeTab, setActiveTab] = useState('applications'); // 'applications' | 'del_requests' | 'rooms'
   const [applications, setApplications] = useState([]);
   const [loadingApps, setLoadingApps] = useState(false);
   const [appError, setAppError] = useState('');
   const [actionInProgress, setActionInProgress] = useState(null);
+
+  // Listing Deletion Requests state
+  const [deleteRequests, setDeleteRequests] = useState([]);
+  const [loadingDelRequests, setLoadingDelRequests] = useState(false);
+  const [delReqActionInProgress, setDelReqActionInProgress] = useState(null);
 
   // Fetch applications
   const fetchApplications = async () => {
@@ -50,13 +57,30 @@ export default function AdminPanelModal({
     }
   };
 
+  // Fetch deletion requests
+  const fetchDeleteRequests = async () => {
+    setLoadingDelRequests(true);
+    try {
+      const res = await fetch('/api/delete-requests');
+      const data = await res.json();
+      if (data.success) {
+        setDeleteRequests(data.data || []);
+      }
+    } catch (err) {
+      console.error('Error fetching deletion requests:', err);
+    } finally {
+      setLoadingDelRequests(false);
+    }
+  };
+
   useEffect(() => {
     if (isOpen) {
       fetchApplications();
+      fetchDeleteRequests();
     }
   }, [isOpen]);
 
-  // Handle Approve or Reject
+  // Handle Approve or Reject for Agent Application
   const handleApplicationAction = async (appId, action) => {
     setActionInProgress(appId);
     try {
@@ -80,10 +104,47 @@ export default function AdminPanelModal({
     }
   };
 
-  const pendingCount = applications.filter(a => a.status === 'pending').length;
+  // Handle Approve or Reject for Listing Deletion Request
+  const handleDeleteRequestAction = async (reqId, action) => {
+    setDelReqActionInProgress(reqId);
+    try {
+      const res = await fetch(`/api/delete-requests/${reqId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setDeleteRequests(prev =>
+          prev.map(r => (r.id === reqId ? data.data : r))
+        );
+        if (action === 'approve' && onRefreshListings) {
+          onRefreshListings();
+        }
+      } else {
+        alert(data.message || 'Action failed');
+      }
+    } catch (err) {
+      alert('Error updating deletion request');
+    } finally {
+      setDelReqActionInProgress(null);
+    }
+  };
+
+  // Format WhatsApp message to send to Agent upon approval
+  const getAgentApprovalWhatsAppUrl = (app) => {
+    if (!app?.phone) return '#';
+    const cleanDigits = app.phone.replace(/[^\d]/g, '');
+    const message = encodeURIComponent(
+      `Hello ${app.fullName}! 🎉\n\nYour House Agent application for UniStay has been APPROVED by the Main Admin. Your account credentials are now active.\n\nYou can now sign in at the portal with your phone number (${app.phone}) to list student PG rooms and manage walkthrough video tours.`
+    );
+    return `https://wa.me/${cleanDigits}?text=${message}`;
+  };
+
+  const pendingAppsCount = applications.filter(a => a.status === 'pending').length;
+  const pendingDelReqCount = deleteRequests.filter(r => r.status === 'pending').length;
   const availableCount = listings.filter(l => l.status === 'available' || !l.status).length;
   const occupiedCount = listings.filter(l => l.status === 'occupied').length;
-  const reservedCount = listings.filter(l => l.status === 'reserved').length;
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-black/65 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6">
@@ -118,7 +179,13 @@ export default function AdminPanelModal({
           <div className="p-2.5 bg-white rounded-xl border border-slate-200">
             <span className="text-slate-500 font-medium">Pending Agent Requests</span>
             <div className="text-lg font-black text-amber-600 flex items-center gap-1.5">
-              <Clock className="w-4 h-4" /> {pendingCount}
+              <Clock className="w-4 h-4" /> {pendingAppsCount}
+            </div>
+          </div>
+          <div className="p-2.5 bg-white rounded-xl border border-slate-200">
+            <span className="text-slate-500 font-medium">Pending Delete Requests</span>
+            <div className="text-lg font-black text-rose-600 flex items-center gap-1.5">
+              <Trash2 className="w-4 h-4" /> {pendingDelReqCount}
             </div>
           </div>
           <div className="p-2.5 bg-white rounded-xl border border-slate-200">
@@ -129,23 +196,17 @@ export default function AdminPanelModal({
           </div>
           <div className="p-2.5 bg-white rounded-xl border border-slate-200">
             <span className="text-slate-500 font-medium">Booked / Occupied</span>
-            <div className="text-lg font-black text-rose-600 flex items-center gap-1.5">
-              <span className="h-2.5 w-2.5 rounded-full bg-rose-500" /> {occupiedCount}
-            </div>
-          </div>
-          <div className="p-2.5 bg-white rounded-xl border border-slate-200">
-            <span className="text-slate-500 font-medium">Reserved / Token Paid</span>
-            <div className="text-lg font-black text-amber-600 flex items-center gap-1.5">
-              <span className="h-2.5 w-2.5 rounded-full bg-amber-500" /> {reservedCount}
+            <div className="text-lg font-black text-slate-700 flex items-center gap-1.5">
+              <span className="h-2.5 w-2.5 rounded-full bg-slate-500" /> {occupiedCount}
             </div>
           </div>
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex border-b border-slate-200 px-6 pt-3 bg-white gap-4">
+        <div className="flex border-b border-slate-200 px-6 pt-3 bg-white gap-3 sm:gap-6 overflow-x-auto">
           <button
             onClick={() => setActiveTab('applications')}
-            className={`pb-3 text-xs font-bold uppercase tracking-wider flex items-center gap-2 border-b-2 transition-all cursor-pointer ${
+            className={`pb-3 text-xs font-bold uppercase tracking-wider flex items-center gap-2 border-b-2 whitespace-nowrap transition-all cursor-pointer ${
               activeTab === 'applications'
                 ? 'border-blue-600 text-blue-600'
                 : 'border-transparent text-slate-500 hover:text-slate-800'
@@ -153,16 +214,33 @@ export default function AdminPanelModal({
           >
             <Users className="w-4 h-4" />
             <span>Agent Join Requests</span>
-            {pendingCount > 0 && (
+            {pendingAppsCount > 0 && (
               <span className="px-1.5 py-0.5 rounded-full text-[10px] font-extrabold bg-red-500 text-white animate-pulse">
-                {pendingCount}
+                {pendingAppsCount}
+              </span>
+            )}
+          </button>
+
+          <button
+            onClick={() => setActiveTab('del_requests')}
+            className={`pb-3 text-xs font-bold uppercase tracking-wider flex items-center gap-2 border-b-2 whitespace-nowrap transition-all cursor-pointer ${
+              activeTab === 'del_requests'
+                ? 'border-red-600 text-red-600'
+                : 'border-transparent text-slate-500 hover:text-slate-800'
+            }`}
+          >
+            <Trash2 className="w-4 h-4" />
+            <span>Listing Deletion Requests</span>
+            {pendingDelReqCount > 0 && (
+              <span className="px-1.5 py-0.5 rounded-full text-[10px] font-extrabold bg-red-500 text-white animate-pulse">
+                {pendingDelReqCount}
               </span>
             )}
           </button>
 
           <button
             onClick={() => setActiveTab('rooms')}
-            className={`pb-3 text-xs font-bold uppercase tracking-wider flex items-center gap-2 border-b-2 transition-all cursor-pointer ${
+            className={`pb-3 text-xs font-bold uppercase tracking-wider flex items-center gap-2 border-b-2 whitespace-nowrap transition-all cursor-pointer ${
               activeTab === 'rooms'
                 ? 'border-blue-600 text-blue-600'
                 : 'border-transparent text-slate-500 hover:text-slate-800'
@@ -272,9 +350,21 @@ export default function AdminPanelModal({
                               </button>
                             </>
                           ) : app.status === 'approved' ? (
-                            <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-700 bg-emerald-100 px-3 py-1 rounded-xl">
-                              <Check className="w-3.5 h-3.5" /> Account Activated
-                            </span>
+                            <div className="flex flex-col sm:flex-row items-end sm:items-center gap-2">
+                              <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-700 bg-emerald-100 px-3 py-1.5 rounded-xl">
+                                <Check className="w-3.5 h-3.5" /> Account Activated
+                              </span>
+                              <a
+                                href={getAgentApprovalWhatsAppUrl(app)}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs transition-all cursor-pointer"
+                                title="Send approval WhatsApp notification to agent"
+                              >
+                                <MessageCircle className="w-3.5 h-3.5" />
+                                <span>Send Approval WhatsApp</span>
+                              </a>
+                            </div>
                           ) : (
                             <span className="text-xs font-semibold text-slate-500 bg-slate-200 px-2.5 py-1 rounded-xl">
                               Rejected
@@ -289,7 +379,143 @@ export default function AdminPanelModal({
             </div>
           )}
 
-          {/* TAB 2: ROOM STATUS & LANDLORD MANAGEMENT */}
+          {/* TAB 2: LISTING DELETION REQUESTS */}
+          {activeTab === 'del_requests' && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <p className="text-xs text-slate-600 font-medium">
+                  Review deletion requests from house agents. Agents cannot delete listings directly without your approval.
+                </p>
+                <button
+                  onClick={fetchDeleteRequests}
+                  className="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg cursor-pointer"
+                  title="Refresh"
+                >
+                  <RefreshCw className={`w-4 h-4 ${loadingDelRequests ? 'animate-spin' : ''}`} />
+                </button>
+              </div>
+
+              {loadingDelRequests ? (
+                <div className="text-center py-12 text-slate-400 text-xs">
+                  <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-blue-600" />
+                  Loading deletion requests...
+                </div>
+              ) : deleteRequests.length === 0 ? (
+                <div className="text-center py-12 bg-slate-50 rounded-2xl border border-slate-200 text-xs text-slate-500">
+                  No listing deletion requests received yet.
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {deleteRequests.map((req) => (
+                    <div
+                      key={req.id}
+                      className={`p-4 rounded-2xl border transition-all ${
+                        req.status === 'pending'
+                          ? 'bg-rose-50/40 border-rose-200 shadow-xs'
+                          : req.status === 'approved'
+                          ? 'bg-emerald-50/30 border-emerald-200'
+                          : 'bg-slate-50 border-slate-200 opacity-70'
+                      }`}
+                    >
+                      <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+                        {/* Left: Thumbnail & Info */}
+                        <div className="flex items-start gap-3 flex-1">
+                          {req.listingImage ? (
+                            <img
+                              src={req.listingImage}
+                              alt={req.listingTitle}
+                              className="w-16 h-16 rounded-xl object-cover shrink-0 border border-slate-200"
+                            />
+                          ) : (
+                            <div className="w-16 h-16 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-400 text-[10px] shrink-0 font-bold">
+                              No Image
+                            </div>
+                          )}
+
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2">
+                              <h4 className="text-sm font-bold text-slate-900">{req.listingTitle}</h4>
+                              <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                                req.status === 'pending'
+                                  ? 'bg-rose-100 text-rose-800'
+                                  : req.status === 'approved'
+                                  ? 'bg-emerald-100 text-emerald-800'
+                                  : 'bg-slate-200 text-slate-700'
+                              }`}>
+                                {req.status === 'pending' ? 'Needs Your Approval' : req.status === 'approved' ? 'Approved & Deleted' : 'Rejected'}
+                              </span>
+                            </div>
+
+                            <div className="flex flex-wrap items-center gap-2 text-[11px] text-slate-500">
+                              {req.listingRent && <span className="font-bold text-slate-800">₹{req.listingRent?.toLocaleString()}/mo</span>}
+                              {req.listingAddress && (
+                                <>
+                                  <span>•</span>
+                                  <span className="flex items-center gap-0.5 text-slate-600">
+                                    <MapPin className="w-3 h-3 text-blue-500" /> {req.listingAddress}
+                                  </span>
+                                </>
+                              )}
+                              <span>•</span>
+                              <span>Agent: <strong className="text-slate-700">{req.agentName}</strong> {req.agentPhone && `(${req.agentPhone})`}</span>
+                            </div>
+
+                            {/* Required Reason Text Box Content */}
+                            <div className="mt-2 p-2.5 bg-white/90 rounded-xl border border-rose-200/70 text-xs">
+                              <div className="text-[10px] font-bold uppercase tracking-wider text-rose-700 flex items-center gap-1 mb-0.5">
+                                <AlertTriangle className="w-3 h-3 text-rose-600" /> Agent's Reason for Deletion:
+                              </div>
+                              <p className="text-slate-800 font-medium italic">
+                                "{req.reason}"
+                              </p>
+                            </div>
+
+                            <p className="text-[10px] text-slate-400 font-mono mt-1">
+                              Requested on: {new Date(req.createdAt).toLocaleString()}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Right: Actions */}
+                        <div className="flex items-center gap-2 self-end md:self-center shrink-0">
+                          {req.status === 'pending' ? (
+                            <>
+                              <button
+                                onClick={() => handleDeleteRequestAction(req.id, 'approve')}
+                                disabled={delReqActionInProgress === req.id}
+                                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold shadow-sm shadow-red-600/30 transition-all cursor-pointer disabled:opacity-50"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                                <span>Approve & Delete</span>
+                              </button>
+                              <button
+                                onClick={() => handleDeleteRequestAction(req.id, 'reject')}
+                                disabled={delReqActionInProgress === req.id}
+                                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition-all cursor-pointer disabled:opacity-50"
+                              >
+                                <span>Reject</span>
+                              </button>
+                            </>
+                          ) : req.status === 'approved' ? (
+                            <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-700 bg-emerald-100 px-3 py-1.5 rounded-xl">
+                              <Check className="w-3.5 h-3.5" /> Listing Deleted
+                            </span>
+                          ) : (
+                            <span className="text-xs font-semibold text-slate-500 bg-slate-200 px-2.5 py-1 rounded-xl">
+                              Rejected
+                            </span>
+                          )}
+                        </div>
+
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* TAB 3: ROOM STATUS & LANDLORD MANAGEMENT */}
           {activeTab === 'rooms' && (
             <div className="space-y-4">
               <p className="text-xs text-slate-600 font-medium">

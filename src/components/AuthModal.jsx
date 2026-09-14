@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { X, Lock, Phone, ShieldAlert, Sparkles, KeyRound } from 'lucide-react';
+import { X, Lock, ShieldAlert, KeyRound, Eye, EyeOff, Clock, MessageCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import CountryPhoneInput from './CountryPhoneInput';
 
 export default function AuthModal({ isOpen, onClose, onOpenBecomeAgent }) {
   if (!isOpen) return null;
@@ -8,18 +9,21 @@ export default function AuthModal({ isOpen, onClose, onOpenBecomeAgent }) {
   const { login } = useAuth();
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [pendingApproval, setPendingApproval] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!phone || !password) {
+    if (!phone.trim() || !password) {
       setError('Please enter your phone number and password.');
       return;
     }
 
     setLoading(true);
     setError('');
+    setPendingApproval(false);
 
     const res = await login(phone, password);
     setLoading(false);
@@ -27,14 +31,12 @@ export default function AuthModal({ isOpen, onClose, onOpenBecomeAgent }) {
     if (res.success) {
       onClose();
     } else {
-      setError(res.message);
+      if (res.status === 'pending_approval' || res.message?.includes('Waiting for Admin approval')) {
+        setPendingApproval(true);
+      } else {
+        setError(res.message);
+      }
     }
-  };
-
-  const handleQuickLogin = (demoPhone, demoPassword) => {
-    setPhone(demoPhone);
-    setPassword(demoPassword);
-    setError('');
   };
 
   return (
@@ -63,56 +65,48 @@ export default function AuthModal({ isOpen, onClose, onOpenBecomeAgent }) {
         {/* Form Body */}
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           
-          {error && (
+          {pendingApproval ? (
+            <div className="p-4 bg-amber-50 border-2 border-amber-300 rounded-2xl space-y-3 animate-in fade-in duration-200">
+              <div className="flex items-start gap-2.5 text-amber-900">
+                <Clock className="w-5 h-5 text-amber-600 shrink-0 mt-0.5 animate-pulse" />
+                <div>
+                  <div className="font-extrabold text-xs tracking-tight">
+                    Waiting for Admin approval maximum time 2hrs
+                  </div>
+                  <p className="text-[11px] text-amber-800 mt-1 leading-relaxed">
+                    Your credentials are under review by the Main Admin. Once approved, you can sign in here to manage your listings.
+                  </p>
+                </div>
+              </div>
+              <a
+                href={`https://wa.me/919041543868?text=${encodeURIComponent(
+                  `Hello Admin! I have submitted my application to become a House Agent on UniStay (Phone: ${phone}). Please review and approve my account credentials.`
+                )}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center gap-2 w-full py-2 px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-xs transition-all cursor-pointer"
+              >
+                <MessageCircle className="w-4 h-4" />
+                <span>WhatsApp Admin to Fast-Track (+91 9041543868)</span>
+              </a>
+            </div>
+          ) : error && (
             <div className="p-3 bg-red-50 border border-red-200 rounded-xl flex items-center gap-2 text-xs font-semibold text-red-700">
               <ShieldAlert className="w-4 h-4 shrink-0" />
               <span>{error}</span>
             </div>
           )}
 
-          {/* Quick Demo Switcher */}
-          <div className="p-3 bg-slate-50 border border-slate-200/80 rounded-2xl space-y-2">
-            <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1">
-              <Sparkles className="w-3.5 h-3.5 text-blue-600" />
-              Quick 1-Click Credentials:
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                type="button"
-                onClick={() => handleQuickLogin('9041543868', 'admin123')}
-                className="py-1.5 px-2.5 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 rounded-xl text-xs font-semibold transition-all cursor-pointer text-left"
-              >
-                👑 Main Admin
-                <span className="block text-[10px] text-amber-700 font-normal">9041543868</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => handleQuickLogin('9876543210', 'agent123')}
-                className="py-1.5 px-2.5 bg-blue-50 hover:bg-blue-100 text-blue-900 border border-blue-200 rounded-xl text-xs font-semibold transition-all cursor-pointer text-left"
-              >
-                🏠 House Agent
-                <span className="block text-[10px] text-blue-700 font-normal">9876543210</span>
-              </button>
-            </div>
-          </div>
-
           <div>
             <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
               Phone Number
             </label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                <Phone className="h-4 w-4" />
-              </div>
-              <input
-                type="tel"
-                required
-                placeholder="e.g. 9041543868"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                className="w-full pl-10 pr-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
-              />
-            </div>
+            <CountryPhoneInput
+              value={phone}
+              onChange={setPhone}
+              placeholder="98765 43210"
+              required
+            />
           </div>
 
           <div>
@@ -124,13 +118,21 @@ export default function AuthModal({ isOpen, onClose, onOpenBecomeAgent }) {
                 <Lock className="h-4 w-4" />
               </div>
               <input
-                type="password"
+                type={showPassword ? 'text' : 'password'}
                 required
-                placeholder="••••••••"
+                placeholder="Enter password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full pl-10 pr-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
+                className="w-full pl-10 pr-10 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 cursor-pointer"
+                title={showPassword ? 'Hide Password' : 'Show Password'}
+              >
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
             </div>
           </div>
 

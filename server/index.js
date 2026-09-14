@@ -16,6 +16,7 @@ const dataDir = path.join(__dirname, 'data');
 const listingsFilePath = path.join(dataDir, 'listings.json');
 const usersFilePath = path.join(dataDir, 'users.json');
 const applicationsFilePath = path.join(dataDir, 'agent_applications.json');
+const deleteRequestsFilePath = path.join(dataDir, 'delete_requests.json');
 
 const uploadsDir = path.join(__dirname, '..', 'public', 'uploads');
 const videoUploadsDir = path.join(uploadsDir, 'videos');
@@ -87,6 +88,18 @@ const cleanPhone = (str) => {
   return String(str).replace(/[^\d]/g, '');
 };
 
+const isPhoneMatch = (p1, p2) => {
+  const d1 = cleanPhone(p1);
+  const d2 = cleanPhone(p2);
+  if (!d1 || !d2) return false;
+  if (d1 === d2) return true;
+  // If at least 10 digits, compare the last 10 digits (handles country code prefixes like 91 or +91)
+  if (d1.length >= 10 && d2.length >= 10) {
+    return d1.slice(-10) === d2.slice(-10);
+  }
+  return false;
+};
+
 // ==========================================
 // 1. AUTHENTICATION ENDPOINTS (Phone-First)
 // ==========================================
@@ -99,14 +112,33 @@ app.post('/api/auth/login', (req, res) => {
   }
 
   const users = readJsonFile(usersFilePath);
-  const inputDigits = cleanPhone(phone);
+  const user = users.find(u => isPhoneMatch(u.phone, phone));
 
-  const user = users.find(u => {
-    const userDigits = cleanPhone(u.phone);
-    return userDigits === inputDigits || userDigits.endsWith(inputDigits) || inputDigits.endsWith(userDigits);
-  });
+  if (!user) {
+    // Check if user is a pending or rejected agent applicant
+    const applications = readJsonFile(applicationsFilePath);
+    const applicant = applications.find(a => isPhoneMatch(a.phone, phone));
 
-  if (!user || user.password !== password) {
+    if (applicant) {
+      if (applicant.status === 'pending') {
+        return res.status(403).json({
+          success: false,
+          status: 'pending_approval',
+          message: 'Waiting for Admin approval maximum time 2hrs. Your credentials are under review.'
+        });
+      } else if (applicant.status === 'rejected') {
+        return res.status(403).json({
+          success: false,
+          status: 'rejected',
+          message: 'Your agent application was reviewed and not approved by Main Admin.'
+        });
+      }
+    }
+
+    return res.status(401).json({ success: false, message: 'Invalid phone number or password' });
+  }
+
+  if (user.password !== password) {
     return res.status(401).json({ success: false, message: 'Invalid phone number or password' });
   }
 
@@ -142,16 +174,56 @@ app.post('/api/agent-applications', (req, res) => {
       });
     }
 
-    const applications = readJsonFile(applicationsFilePath);
-    const inputDigits = cleanPhone(phone);
-
-    // Check if application with phone already exists
-    const existing = applications.find(a => cleanPhone(a.phone) === inputDigits);
-    if (existing && existing.status === 'pending') {
+    const cleanInput = cleanPhone(phone);
+    if (cleanInput.length < 8) {
       return res.status(400).json({
         success: false,
-        message: 'An application with this phone number is already pending Main Admin review.'
+        message: 'Please enter a valid phone number.'
       });
+    }
+
+    // Check if user is already an active user
+    const users = readJsonFile(usersFilePath);
+    const existingUser = users.find(u => isPhoneMatch(u.phone, phone));
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        message: existingUser.role === 'admin'
+          ? 'This phone number belongs to the Main Admin. Please sign in directly.'
+          : 'An active House Agent account already exists for this phone number. Please sign in directly.'
+      });
+    }
+
+    const applications = readJsonFile(applicationsFilePath);
+    const existingAppIndex = applications.findIndex(a => isPhoneMatch(a.phone, phone));
+
+    if (existingAppIndex >= 0) {
+      const existingApp = applications[existingAppIndex];
+      if (existingApp.status === 'pending') {
+        return res.status(400).json({
+          success: false,
+          message: 'An application with this phone number is already pending Main Admin review. Maximum review time: 2 hours.'
+        });
+      } else {
+        // Re-apply if previously rejected
+        existingApp.fullName = fullName.trim();
+        existingApp.phone = phone.trim();
+        existingApp.area = (area || 'City Student Hub').trim();
+        existingApp.experience = (experience || 'Student PG Agent candidate').trim();
+        existingApp.password = password || existingApp.password || 'agent123';
+        existingApp.status = 'pending';
+        existingApp.createdAt = new Date().toISOString();
+        delete existingApp.reviewedAt;
+
+        applications[existingAppIndex] = existingApp;
+        writeJsonFile(applicationsFilePath, applications);
+
+        return res.status(200).json({
+          success: true,
+          message: 'Your application has been submitted for Main Admin approval. Waiting for Admin approval maximum time 2hrs.',
+          data: existingApp
+        });
+      }
     }
 
     const newApplication = {
@@ -170,7 +242,7 @@ app.post('/api/agent-applications', (req, res) => {
 
     res.status(201).json({
       success: true,
-      message: 'Your application has been submitted successfully! The Main Admin will review and approve your account.',
+      message: 'Your application has been submitted successfully! Waiting for Admin approval maximum time 2hrs.',
       data: newApplication
     });
   } catch (err) {
@@ -210,8 +282,7 @@ app.patch('/api/agent-applications/:id', (req, res) => {
     // If approved, create or activate their House Agent account in users.json
     if (action === 'approve') {
       const users = readJsonFile(usersFilePath);
-      const appDigits = cleanPhone(application.phone);
-      const existingUserIndex = users.findIndex(u => cleanPhone(u.phone) === appDigits);
+      const existingUserIndex = users.findIndex(u => isPhoneMatch(u.phone, application.phone));
 
       const agentAccount = {
         id: `user-agent-${Date.now()}`,
@@ -226,11 +297,18 @@ app.patch('/api/agent-applications/:id', (req, res) => {
       if (existingUserIndex >= 0) {
         users[existingUserIndex].role = 'agent';
         users[existingUserIndex].name = application.fullName;
+        if (application.password) users[existingUserIndex].password = application.password;
+        if (application.area) users[existingUserIndex].area = application.area;
       } else {
         users.push(agentAccount);
       }
 
       writeJsonFile(usersFilePath, users);
+    } else if (action === 'reject') {
+      // If rejected, remove any active agent account so they cannot log in
+      const users = readJsonFile(usersFilePath);
+      const updatedUsers = users.filter(u => !(isPhoneMatch(u.phone, application.phone) && u.role !== 'admin'));
+      writeJsonFile(usersFilePath, updatedUsers);
     }
 
     res.json({
@@ -250,7 +328,15 @@ app.patch('/api/agent-applications/:id', (req, res) => {
 // GET all listings
 app.get('/api/listings', (req, res) => {
   const listings = readJsonFile(listingsFilePath);
-  res.json({ success: true, count: listings.length, data: listings });
+  const deleteRequests = readJsonFile(deleteRequestsFilePath);
+  const pendingListingIds = new Set(
+    deleteRequests.filter(r => r.status === 'pending').map(r => r.listingId)
+  );
+  const listingsWithStatus = listings.map(l => ({
+    ...l,
+    hasPendingDeleteRequest: pendingListingIds.has(l.id)
+  }));
+  res.json({ success: true, count: listingsWithStatus.length, data: listingsWithStatus });
 });
 
 // PATCH /api/listings/:id/status (Main Admin or Agent updates room status)
@@ -398,7 +484,7 @@ app.post(
   }
 );
 
-// DELETE a listing
+// DELETE a listing (Main Admin or Direct Delete)
 app.delete('/api/listings/:id', (req, res) => {
   try {
     const { id } = req.params;
@@ -409,9 +495,127 @@ app.delete('/api/listings/:id', (req, res) => {
     }
     listings = listings.filter(l => l.id !== id);
     writeJsonFile(listingsFilePath, listings);
+
+    // Also mark any pending delete request for this listing as approved
+    const deleteRequests = readJsonFile(deleteRequestsFilePath);
+    let updatedRequests = false;
+    deleteRequests.forEach(r => {
+      if (r.listingId === id && r.status === 'pending') {
+        r.status = 'approved';
+        r.reviewedAt = new Date().toISOString();
+        updatedRequests = true;
+      }
+    });
+    if (updatedRequests) {
+      writeJsonFile(deleteRequestsFilePath, deleteRequests);
+    }
+
     res.json({ success: true, message: 'Listing deleted successfully' });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Error deleting listing', error: err.message });
+  }
+});
+
+// ==========================================
+// 4. LISTING DELETION REQUESTS (AGENT -> ADMIN)
+// ==========================================
+
+// POST /api/listings/:id/delete-request (Agent submits deletion request with reason)
+app.post('/api/listings/:id/delete-request', (req, res) => {
+  try {
+    const { id } = req.params;
+    const { reason, agentId, agentName, agentPhone } = req.body;
+
+    if (!reason || !reason.trim()) {
+      return res.status(400).json({ success: false, message: 'Reason for deletion is required.' });
+    }
+
+    const listings = readJsonFile(listingsFilePath);
+    const listing = listings.find(l => l.id === id);
+    if (!listing) {
+      return res.status(404).json({ success: false, message: 'Listing not found.' });
+    }
+
+    const deleteRequests = readJsonFile(deleteRequestsFilePath);
+    const existingPending = deleteRequests.find(r => r.listingId === id && r.status === 'pending');
+    if (existingPending) {
+      return res.status(400).json({
+        success: false,
+        message: 'A deletion request for this listing is already pending Main Admin approval.'
+      });
+    }
+
+    const newRequest = {
+      id: `del-req-${Date.now()}`,
+      listingId: id,
+      listingTitle: listing.title,
+      listingRent: listing.rentAmount,
+      listingAddress: listing.address,
+      listingImage: listing.images && listing.images[0] ? listing.images[0] : '',
+      agentId: agentId || listing.agentId || '',
+      agentName: agentName || listing.agentName || 'House Agent',
+      agentPhone: agentPhone || '',
+      reason: reason.trim(),
+      status: 'pending', // 'pending' | 'approved' | 'rejected'
+      createdAt: new Date().toISOString()
+    };
+
+    deleteRequests.unshift(newRequest);
+    writeJsonFile(deleteRequestsFilePath, deleteRequests);
+
+    res.status(201).json({
+      success: true,
+      message: 'Deletion request submitted for Main Admin approval.',
+      data: newRequest
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Error creating deletion request', error: err.message });
+  }
+});
+
+// GET /api/delete-requests (Main Admin views all deletion requests)
+app.get('/api/delete-requests', (req, res) => {
+  const deleteRequests = readJsonFile(deleteRequestsFilePath);
+  res.json({ success: true, count: deleteRequests.length, data: deleteRequests });
+});
+
+// PATCH /api/delete-requests/:id (Main Admin approves or rejects deletion request)
+app.patch('/api/delete-requests/:id', (req, res) => {
+  try {
+    const { id } = req.params;
+    const { action } = req.body; // 'approve' | 'reject'
+
+    if (!['approve', 'reject'].includes(action)) {
+      return res.status(400).json({ success: false, message: 'Action must be "approve" or "reject"' });
+    }
+
+    const deleteRequests = readJsonFile(deleteRequestsFilePath);
+    const reqIndex = deleteRequests.findIndex(r => r.id === id);
+
+    if (reqIndex === -1) {
+      return res.status(404).json({ success: false, message: 'Deletion request not found' });
+    }
+
+    const deleteReq = deleteRequests[reqIndex];
+    deleteReq.status = action === 'approve' ? 'approved' : 'rejected';
+    deleteReq.reviewedAt = new Date().toISOString();
+    deleteRequests[reqIndex] = deleteReq;
+    writeJsonFile(deleteRequestsFilePath, deleteRequests);
+
+    // If approved, delete the listing from listings.json
+    if (action === 'approve') {
+      let listings = readJsonFile(listingsFilePath);
+      listings = listings.filter(l => l.id !== deleteReq.listingId);
+      writeJsonFile(listingsFilePath, listings);
+    }
+
+    res.json({
+      success: true,
+      message: `Listing deletion request ${action === 'approve' ? 'Approved (Listing removed)' : 'Rejected'} successfully.`,
+      data: deleteReq
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Error processing deletion request', error: err.message });
   }
 });
 
