@@ -15,7 +15,8 @@ import {
   Building2,
   Lock,
   AlertTriangle,
-  Clock
+  Clock,
+  Compass
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
@@ -161,21 +162,41 @@ export default function RoomCard({
           </h3>
 
           {/* Location / Privacy Logic:
-              - Admin sees exact address and GPS pin trigger.
+              - Admin and Agent see exact address, GPS pin trigger, and Navigation directions.
               - Students/Guests see only general verified badge (NO address or GPS pin).
           */}
-          {isAdmin ? (
-            <div className="mt-1 flex items-center justify-between text-xs text-slate-500 bg-slate-50 px-2 py-1 rounded-lg border border-slate-200/60">
-              <span className="truncate flex items-center gap-1 font-mono text-[11px] text-slate-700">
-                <MapPin className="w-3.5 h-3.5 text-blue-600 shrink-0" />
-                {room.address || 'Student Hub Location'}
-              </span>
-              <button
-                onClick={() => onSelectMapPin(room)}
-                className="text-blue-600 hover:text-blue-700 font-bold text-[11px] whitespace-nowrap ml-2 cursor-pointer flex items-center gap-0.5"
-              >
-                Pin on Map
-              </button>
+          {(isAdmin || isAgent) ? (
+            <div className="mt-1 flex flex-col gap-1.5 text-xs text-slate-500 bg-slate-50 p-2 rounded-xl border border-slate-200/60">
+              <div className="flex items-center justify-between gap-2">
+                <span className="truncate flex items-center gap-1 font-mono text-[11px] text-slate-700">
+                  <MapPin className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                  {room.address || 'Student Hub Location'}
+                </span>
+                <button
+                  onClick={() => onSelectMapPin(room)}
+                  className="text-blue-600 hover:text-blue-700 font-bold text-[11px] whitespace-nowrap ml-1 cursor-pointer flex items-center gap-0.5"
+                >
+                  Pin on Map
+                </button>
+              </div>
+
+              {room.latitude && room.longitude && (
+                <div className="flex items-center justify-between pt-1 border-t border-slate-200/50 text-[10px]">
+                  <span className="text-slate-400 font-mono">
+                    GPS: {Number(room.latitude).toFixed(4)}, {Number(room.longitude).toFixed(4)}
+                  </span>
+                  <a
+                    href={`https://www.google.com/maps/dir/?api=1&destination=${room.latitude},${room.longitude}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-emerald-600 hover:text-emerald-700 font-bold hover:underline"
+                    title="Open Live Turn-by-Turn GPS Directions in Google Maps"
+                  >
+                    <Compass className="w-3 h-3" />
+                    <span>Get Directions</span>
+                  </a>
+                </div>
+              )}
             </div>
           ) : (
             <div className="mt-1 flex items-center gap-1.5 text-xs text-slate-500 font-medium">

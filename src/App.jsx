@@ -269,17 +269,18 @@ export default function App() {
     }
   };
 
-  // Handle pin select on map (Admin only)
+  // Handle pin select on map (Admin & House Agent)
   const handleSelectMapPin = (room) => {
-    if (!isAdmin) return;
+    if (!isAdmin && !isAgent) return;
     setSelectedRoom(room);
     if (viewMode === 'grid') {
       setViewMode('split');
     }
   };
 
-  // Only Main Admin has access to interactive map view modes
-  const effectiveViewMode = isAdmin ? viewMode : 'grid';
+  // Main Admin & House Agent have access to interactive map view modes
+  const canAccessMap = isAdmin || isAgent;
+  const effectiveViewMode = canAccessMap ? viewMode : 'grid';
 
   return (
     <div className={`min-h-screen flex flex-col selection:bg-blue-100 selection:text-blue-900 pb-20 transition-colors duration-500 ${
@@ -416,7 +417,7 @@ export default function App() {
           </div>
         )}
 
-        {/* Listings Display: SPLIT VIEW (List + Interactive Map) - Admin Only */}
+        {/* Listings Display: SPLIT VIEW (List + Interactive Map) - Admin & House Agent */}
         {!loading && !error && filteredListings.length > 0 && effectiveViewMode === 'split' && (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-[calc(100vh-220px)] min-h-[500px]">
             {/* Scrollable Room Cards (Left) */}
@@ -450,7 +451,7 @@ export default function App() {
           </div>
         )}
 
-        {/* Listings Display: FULL MAP VIEW - Admin Only */}
+        {/* Listings Display: FULL MAP VIEW - Admin & House Agent */}
         {!loading && !error && effectiveViewMode === 'map' && (
           <div className="h-[calc(100vh-220px)] min-h-[550px] relative">
             <MapView

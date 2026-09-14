@@ -12,7 +12,8 @@ import {
   Plus, 
   Check, 
   LocateFixed, 
-  AlertCircle 
+  AlertCircle,
+  Loader2 
 } from 'lucide-react';
 import MapView from './MapView';
 import { useAuth } from '../context/AuthContext';
@@ -40,6 +41,7 @@ export default function AddRoomModal({ isOpen, onClose, onRoomAdded }) {
   const [address, setAddress] = useState('');
   const [latitude, setLatitude] = useState(28.5355);
   const [longitude, setLongitude] = useState(77.2090);
+  const [fetchingAddress, setFetchingAddress] = useState(false);
 
   // Custom tags
   const [tagInput, setTagInput] = useState('');
@@ -53,6 +55,34 @@ export default function AddRoomModal({ isOpen, onClose, onRoomAdded }) {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+
+  // Reverse geocoding helper via OpenStreetMap Nominatim
+  const fetchAddressForCoords = async (lat, lng) => {
+    setFetchingAddress(true);
+    try {
+      const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`, {
+        headers: {
+          'Accept-Language': 'en'
+        }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.display_name) {
+          // Format a clean, human-readable address
+          const road = data.address?.road || data.address?.pedestrian || data.address?.footway || data.address?.neighbourhood || '';
+          const suburb = data.address?.suburb || data.address?.city_district || data.address?.residential || '';
+          const city = data.address?.city || data.address?.town || data.address?.county || '';
+          const cleanAddr = [road, suburb, city].filter(Boolean).join(', ');
+
+          setAddress(cleanAddr || data.display_name);
+        }
+      }
+    } catch (err) {
+      console.warn('Reverse geocoding error:', err);
+    } finally {
+      setFetchingAddress(false);
+    }
+  };
 
   // Add tag
   const handleAddTag = () => {
@@ -69,13 +99,18 @@ export default function AddRoomModal({ isOpen, onClose, onRoomAdded }) {
   // Geolocation
   const handleGetCurrentLocation = () => {
     if ('geolocation' in navigator) {
+      setFetchingAddress(true);
       navigator.geolocation.getCurrentPosition(
         (pos) => {
-          setLatitude(parseFloat(pos.coords.latitude.toFixed(5)));
-          setLongitude(parseFloat(pos.coords.longitude.toFixed(5)));
+          const lat = parseFloat(pos.coords.latitude.toFixed(5));
+          const lng = parseFloat(pos.coords.longitude.toFixed(5));
+          setLatitude(lat);
+          setLongitude(lng);
+          fetchAddressForCoords(lat, lng);
         },
         (err) => {
           console.warn('Geolocation error:', err);
+          setFetchingAddress(false);
           alert('Could not access current location. Please click on the map to place the GPS pin.');
         }
       );
@@ -84,8 +119,11 @@ export default function AddRoomModal({ isOpen, onClose, onRoomAdded }) {
 
   // Handle map click in modal
   const handleLocationSelect = (lat, lng) => {
-    setLatitude(parseFloat(lat.toFixed(5)));
-    setLongitude(parseFloat(lng.toFixed(5)));
+    const rLat = parseFloat(lat.toFixed(5));
+    const rLng = parseFloat(lng.toFixed(5));
+    setLatitude(rLat);
+    setLongitude(rLng);
+    fetchAddressForCoords(rLat, rLng);
   };
 
   // Submit listing
@@ -533,9 +571,16 @@ export default function AddRoomModal({ isOpen, onClose, onRoomAdded }) {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-600 mb-1">
-                House Address / Landmark
-              </label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-xs font-semibold text-slate-600">
+                  House Address / Landmark
+                </label>
+                {fetchingAddress && (
+                  <span className="flex items-center gap-1 text-[10px] text-blue-600 font-medium animate-pulse">
+                    <Loader2 className="w-3 h-3 animate-spin" /> Fetching street name...
+                  </span>
+                )}
+              </div>
               <input
                 type="text"
                 placeholder="e.g. House #14, Lane 2, Near Engineering Campus Gate"

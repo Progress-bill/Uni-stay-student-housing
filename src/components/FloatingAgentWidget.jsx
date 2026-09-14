@@ -12,15 +12,16 @@ export default function FloatingAgentWidget({
   viewMode, 
   setViewMode 
 }) {
-  const { isAdmin } = useAuth();
+  const { isAdmin, isAgent } = useAuth();
+  const canAccessMap = isAdmin || isAgent;
 
   return (
     <>
-      {/* Floating View Switcher Bar (Only visible to Main Admin) */}
-      {isAdmin && (
+      {/* Floating View Switcher Bar (Visible to Admin and House Agent) */}
+      {canAccessMap && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-slate-900/95 text-white backdrop-blur-md px-2.5 py-1.5 rounded-full shadow-2xl border border-slate-700/80 flex items-center gap-1.5 animate-in fade-in">
           <span className="text-[10px] font-bold uppercase tracking-wider text-amber-400 pl-1 pr-1 flex items-center gap-1">
-            <Crown className="w-3 h-3" /> Map:
+            {isAdmin ? <Crown className="w-3 h-3" /> : <Map className="w-3 h-3 text-sky-400" />} {isAdmin ? 'Admin Map:' : 'Agent Map:'}
           </span>
           <button
             onClick={() => setViewMode('grid')}
