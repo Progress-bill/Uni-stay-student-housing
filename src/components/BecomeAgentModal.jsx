@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   X, 
   UserPlus, 
@@ -32,6 +32,26 @@ export default function BecomeAgentModal({ isOpen, onClose, onApplicationSubmitt
   const [error, setError] = useState('');
   const [submittedSuccess, setSubmittedSuccess] = useState(false);
   const [copiedDraft, setCopiedDraft] = useState(false);
+  const [holdSeconds, setHoldSeconds] = useState(5);
+
+  // 5-second hold countdown effect
+  useEffect(() => {
+    let timer;
+    if (submittedSuccess && holdSeconds > 0) {
+      timer = setInterval(() => {
+        setHoldSeconds(prev => {
+          if (prev <= 1) {
+            clearInterval(timer);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+    return () => {
+      if (timer) clearInterval(timer);
+    };
+  }, [submittedSuccess, holdSeconds]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -58,6 +78,7 @@ export default function BecomeAgentModal({ isOpen, onClose, onApplicationSubmitt
 
       const data = await res.json();
       if (data.success) {
+        setHoldSeconds(5);
         setSubmittedSuccess(true);
         if (onApplicationSubmitted) onApplicationSubmitted();
       } else {
@@ -72,7 +93,9 @@ export default function BecomeAgentModal({ isOpen, onClose, onApplicationSubmitt
   };
 
   const resetAndClose = () => {
+    if (submittedSuccess && holdSeconds > 0) return; // hold for 5s
     setSubmittedSuccess(false);
+    setHoldSeconds(5);
     setCopiedDraft(false);
     setFullName('');
     setPhone('');
@@ -112,15 +135,54 @@ export default function BecomeAgentModal({ isOpen, onClose, onApplicationSubmitt
           </div>
           <button
             onClick={resetAndClose}
-            className="p-1.5 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 cursor-pointer"
+            disabled={submittedSuccess && holdSeconds > 0}
+            className={`p-1.5 rounded-full transition-all ${
+              submittedSuccess && holdSeconds > 0
+                ? 'opacity-30 cursor-not-allowed text-slate-400'
+                : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100 cursor-pointer'
+            }`}
+            title={submittedSuccess && holdSeconds > 0 ? `Holding for ${holdSeconds}s` : 'Close'}
           >
-            <X className="w-5 h-5" />
+            {submittedSuccess && holdSeconds > 0 ? (
+              <span className="text-[10px] font-black font-mono px-1.5 py-0.5 rounded-full bg-amber-200 text-amber-900">
+                {holdSeconds}s
+              </span>
+            ) : (
+              <X className="w-5 h-5" />
+            )}
           </button>
         </div>
 
         {/* Success View */}
         {submittedSuccess ? (
           <div className="p-6 sm:p-8 text-center space-y-4">
+            
+            {/* 5-second Hold Banner */}
+            {holdSeconds > 0 ? (
+              <div className="p-3 bg-indigo-50 border-2 border-indigo-200 rounded-2xl space-y-2 animate-in fade-in duration-200">
+                <div className="flex items-center justify-between text-xs font-bold text-indigo-950">
+                  <span className="flex items-center gap-1.5">
+                    <Clock className="w-4 h-4 text-indigo-600 animate-spin" />
+                    Holding widget for confirmation review...
+                  </span>
+                  <span className="px-2 py-0.5 rounded-full bg-indigo-600 text-white font-mono font-black text-xs animate-pulse">
+                    {holdSeconds}s left
+                  </span>
+                </div>
+                <div className="w-full bg-indigo-200/80 h-1.5 rounded-full overflow-hidden">
+                  <div 
+                    className="bg-indigo-600 h-full transition-all duration-1000 ease-linear rounded-full"
+                    style={{ width: `${((5 - holdSeconds) / 5) * 100}%` }}
+                  />
+                </div>
+              </div>
+            ) : (
+              <div className="p-2 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center justify-center gap-1.5 text-xs text-emerald-800 font-bold animate-in fade-in">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                <span>Notice confirmed. You can now dismiss or contact Admin.</span>
+              </div>
+            )}
+
             <div className="h-14 w-14 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto shadow-inner">
               <CheckCircle2 className="w-7 h-7" />
             </div>
@@ -128,13 +190,18 @@ export default function BecomeAgentModal({ isOpen, onClose, onApplicationSubmitt
             <h3 className="text-lg font-extrabold text-slate-900">Application Submitted!</h3>
             
             {/* Prominent Required Waiting Message */}
-            <div className="p-3.5 bg-amber-50 rounded-2xl border-2 border-amber-300 flex items-center justify-center gap-2 text-amber-900 font-extrabold text-sm shadow-xs">
-              <Clock className="w-5 h-5 text-amber-600 shrink-0 animate-pulse" />
-              <span>Waiting for Admin approval maximum time 2hrs</span>
+            <div className="p-4 bg-amber-50 rounded-2xl border-2 border-amber-300 text-center space-y-1.5 shadow-xs">
+              <div className="flex items-center justify-center gap-2 text-amber-950 font-black text-sm">
+                <Clock className="w-5 h-5 text-amber-600 shrink-0 animate-pulse" />
+                <span>Waiting for Admin approval maximum time 2hrs</span>
+              </div>
+              <p className="text-xs text-amber-900/90 font-semibold leading-relaxed">
+                Your credentials are under review. You cannot log in until the Main Admin accepts your application.
+              </p>
             </div>
 
             <p className="text-xs text-slate-600 leading-relaxed max-w-sm mx-auto">
-              Your credentials are under review. Once the Main Admin approves your account, an approval confirmation WhatsApp message will be sent to your phone.
+              Once the Main Admin approves your account, your login will be activated and an approval confirmation WhatsApp message will be sent to your phone.
             </p>
 
             {/* WhatsApp Draft Box for Faster Confirmation */}
@@ -182,9 +249,14 @@ export default function BecomeAgentModal({ isOpen, onClose, onApplicationSubmitt
 
             <button
               onClick={resetAndClose}
-              className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-all cursor-pointer"
+              disabled={holdSeconds > 0}
+              className={`w-full py-2.5 rounded-xl text-xs font-bold transition-all ${
+                holdSeconds > 0
+                  ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                  : 'bg-slate-900 hover:bg-slate-800 text-white shadow-md cursor-pointer'
+              }`}
             >
-              Done & Return to Rooms
+              {holdSeconds > 0 ? `Please wait (${holdSeconds}s remaining)...` : 'Done & Return to Rooms'}
             </button>
           </div>
         ) : (

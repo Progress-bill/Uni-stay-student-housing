@@ -1,5 +1,27 @@
 [
   {
+    "id": "app-1789392094371",
+    "fullName": "Dollar",
+    "phone": "246810123",
+    "area": "lawgate",
+    "experience": "2",
+    "password": "456",
+    "status": "approved",
+    "createdAt": "2026-09-14T13:21:34.371Z",
+    "reviewedAt": "2026-09-14T13:22:23.696Z"
+  },
+  {
+    "id": "app-1789392041348",
+    "fullName": "Dollar",
+    "phone": "123456789",
+    "area": "Ramamandi",
+    "experience": "5",
+    "password": "123",
+    "status": "rejected",
+    "createdAt": "2026-09-14T13:20:41.348Z",
+    "reviewedAt": "2026-09-14T13:22:12.241Z"
+  },
+  {
     "id": "app-1789020089816",
     "fullName": "Murau",
     "phone": "1234567890",
@@ -17,9 +39,9 @@
     "area": "LPU ,CT",
     "experience": "managing lawgate rooms and Ramamandi side",
     "password": "Dollar@123",
-    "status": "approved",
+    "status": "rejected",
     "createdAt": "2026-09-09T12:20:36.959Z",
-    "reviewedAt": "2026-09-14T08:46:23.248Z"
+    "reviewedAt": "2026-09-14T09:14:32.361Z"
   },
   {
     "id": "app-1788947035605",

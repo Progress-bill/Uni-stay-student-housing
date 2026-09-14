@@ -282,7 +282,9 @@ export default function App() {
   const effectiveViewMode = isAdmin ? viewMode : 'grid';
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col selection:bg-blue-100 selection:text-blue-900 pb-20">
+    <div className={`min-h-screen flex flex-col selection:bg-blue-100 selection:text-blue-900 pb-20 transition-colors duration-500 ${
+      isAgent ? 'bg-sky-50/80 text-slate-900' : 'bg-slate-50'
+    }`}>
       
       {/* Top Navbar with Auth & Admin Controls */}
       <Navbar
@@ -295,6 +297,36 @@ export default function App() {
         setSearchQuery={setSearchQuery}
         totalListings={listings.length}
       />
+
+      {/* Agent Active Workspace Banner with Glowing Agent Name */}
+      {isAgent && (
+        <div className="bg-gradient-to-r from-blue-700 via-sky-600 to-indigo-700 text-white text-xs px-4 py-2 border-b border-sky-300/40 shadow-xs animate-in fade-in duration-300">
+          <div className="max-w-7xl mx-auto flex items-center justify-between flex-wrap gap-2">
+            <div className="flex items-center gap-2">
+              <span className="relative flex h-2.5 w-2.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-200 opacity-80"></span>
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-white shadow-[0_0_8px_#ffffff]"></span>
+              </span>
+              <span className="font-bold">
+                Logged in as House Agent:{' '}
+                <span className="font-black text-white px-2 py-0.5 rounded-md bg-white/20 border border-white/30 drop-shadow-[0_0_10px_rgba(255,255,255,0.95)] animate-pulse">
+                  {user?.name}
+                </span>
+              </span>
+              <span className="hidden md:inline text-sky-200">•</span>
+              <span className="hidden md:inline text-sky-100 font-medium">
+                Light Blue Agent Workspace active. You have permissions to add video room tours & manage room availability.
+              </span>
+            </div>
+            <button
+              onClick={() => setIsAddModalOpen(true)}
+              className="px-3 py-1 bg-white hover:bg-sky-50 text-blue-900 font-black rounded-lg text-[11px] shadow-sm transition-all cursor-pointer flex items-center gap-1.5"
+            >
+              <span>+ Add Room Tour</span>
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Filter and Amenities Control Bar */}
       <FilterBar

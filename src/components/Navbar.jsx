@@ -36,7 +36,11 @@ export default function Navbar({
   };
 
   return (
-    <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200/80 shadow-xs">
+    <header className={`sticky top-0 z-40 backdrop-blur-md border-b transition-colors duration-500 shadow-xs ${
+      isAgent 
+        ? 'bg-sky-50/95 border-sky-200/90' 
+        : 'bg-white/95 border-slate-200/80'
+    }`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
           
@@ -124,16 +128,36 @@ export default function Navbar({
 
             {/* 4. Auth State / Login & Logout */}
             {isAuthenticated ? (
-              <div className="flex items-center gap-1.5 pl-1">
-                <div className={`px-2.5 py-1.5 rounded-xl border text-xs font-bold flex items-center gap-1.5 ${
-                  isAdmin 
-                    ? 'bg-amber-50 border-amber-300 text-amber-900' 
-                    : 'bg-blue-50 border-blue-200 text-blue-900'
-                }`}>
-                  {isAdmin ? <Crown className="w-3 h-3 text-amber-600" /> : <Briefcase className="w-3 h-3 text-blue-600" />}
-                  <span className="hidden lg:inline">{user.name}</span>
-                  <span className="lg:hidden">{isAdmin ? 'Admin' : 'Agent'}</span>
-                </div>
+              <div className="flex items-center gap-2 pl-1">
+                {isAdmin ? (
+                  <div className="px-2.5 py-1.5 rounded-xl border border-amber-300 bg-amber-50 text-amber-900 text-xs font-bold flex items-center gap-1.5">
+                    <Crown className="w-3.5 h-3.5 text-amber-600" />
+                    <span className="hidden sm:inline">{user.name}</span>
+                    <span className="sm:hidden">Admin</span>
+                  </div>
+                ) : (
+                  /* Glowing House Agent Name & Badge */
+                  <div className="relative group">
+                    {/* Pulsing neon halo glow effect */}
+                    <div className="absolute -inset-1 rounded-2xl bg-gradient-to-r from-sky-400 via-blue-500 to-indigo-500 opacity-80 blur-xs animate-pulse group-hover:opacity-100 transition duration-300" />
+                    
+                    {/* Glowing Agent Badge Container */}
+                    <div className="relative px-3 py-1.5 rounded-xl bg-gradient-to-r from-blue-600 via-sky-600 to-indigo-600 text-white border-2 border-sky-200 shadow-[0_0_15px_rgba(14,165,233,0.75)] flex items-center gap-2">
+                      <span className="relative flex h-2 w-2">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-85"></span>
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-sky-200"></span>
+                      </span>
+                      <Briefcase className="w-3.5 h-3.5 text-sky-200 shrink-0" />
+                      <span className="font-black tracking-wide text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.95)] animate-pulse text-xs">
+                        {user.name}
+                      </span>
+                      <span className="text-[10px] uppercase font-black px-1.5 py-0.5 rounded-md bg-white/20 text-sky-100 border border-white/30 tracking-wider">
+                        AGENT
+                      </span>
+                    </div>
+                  </div>
+                )}
+                
                 <button
                   onClick={logout}
                   className="p-2 rounded-xl text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
