@@ -39,8 +39,9 @@
     "area": "South Extension & Engineering College Vicinity",
     "experience": "2 years local student housing agent managing 15+ student PG rooms with verified landlords.",
     "password": "priya123password",
-    "status": "pending",
-    "createdAt": "2026-09-08T14:30:00.000Z"
+    "status": "rejected",
+    "createdAt": "2026-09-08T14:30:00.000Z",
+    "reviewedAt": "2026-09-14T08:57:49.749Z"
   },
   {
     "id": "app-102",
@@ -49,7 +50,8 @@
     "area": "Central University Ring Road",
     "experience": "Student coordinator helping freshers find verified PGs near main metro line.",
     "password": "rahul123password",
-    "status": "pending",
-    "createdAt": "2026-09-09T08:15:00.000Z"
+    "status": "rejected",
+    "createdAt": "2026-09-09T08:15:00.000Z",
+    "reviewedAt": "2026-09-14T08:57:54.088Z"
   }
 ]

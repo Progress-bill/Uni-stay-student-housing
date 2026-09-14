@@ -13,6 +13,7 @@ export default function AuthModal({ isOpen, onClose, onOpenBecomeAgent }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [pendingApproval, setPendingApproval] = useState(false);
+  const [suspensionInfo, setSuspensionInfo] = useState(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -24,6 +25,7 @@ export default function AuthModal({ isOpen, onClose, onOpenBecomeAgent }) {
     setLoading(true);
     setError('');
     setPendingApproval(false);
+    setSuspensionInfo(null);
 
     const res = await login(phone, password);
     setLoading(false);
@@ -31,7 +33,13 @@ export default function AuthModal({ isOpen, onClose, onOpenBecomeAgent }) {
     if (res.success) {
       onClose();
     } else {
-      if (res.status === 'pending_approval' || res.message?.includes('Waiting for Admin approval')) {
+      if (res.status === 'suspended') {
+        setSuspensionInfo({
+          until: res.suspendedUntil,
+          reason: res.reason,
+          message: res.message
+        });
+      } else if (res.status === 'pending_approval' || res.message?.includes('Waiting for Admin approval')) {
         setPendingApproval(true);
       } else {
         setError(res.message);
@@ -65,7 +73,38 @@ export default function AuthModal({ isOpen, onClose, onOpenBecomeAgent }) {
         {/* Form Body */}
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           
-          {pendingApproval ? (
+          {suspensionInfo ? (
+            <div className="p-4 bg-red-50 border-2 border-red-300 rounded-2xl space-y-3 animate-in fade-in duration-200">
+              <div className="flex items-start gap-2.5 text-red-900">
+                <ShieldAlert className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
+                <div className="w-full">
+                  <div className="font-extrabold text-xs tracking-tight">
+                    Agent Account Suspended
+                  </div>
+                  <p className="text-[11px] text-red-800 mt-1 leading-relaxed">
+                    Your account has been temporarily suspended until{' '}
+                    <strong>{new Date(suspensionInfo.until).toLocaleString()}</strong> for wrong-doing.
+                  </p>
+                  {suspensionInfo.reason && (
+                    <div className="mt-2 p-2.5 bg-white/90 rounded-xl border border-red-200 text-[11px] font-mono text-red-900 leading-snug">
+                      <strong>Reason:</strong> {suspensionInfo.reason}
+                    </div>
+                  )}
+                </div>
+              </div>
+              <a
+                href={`https://wa.me/919041543868?text=${encodeURIComponent(
+                  `Hello Admin, my agent account (${phone}) has been suspended. I would like to resolve this issue and discuss my status.`
+                )}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center gap-2 w-full py-2 px-3 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold shadow-xs transition-all cursor-pointer"
+              >
+                <MessageCircle className="w-4 h-4" />
+                <span>Appeal with Main Admin (+91 9041543868)</span>
+              </a>
+            </div>
+          ) : pendingApproval ? (
             <div className="p-4 bg-amber-50 border-2 border-amber-300 rounded-2xl space-y-3 animate-in fade-in duration-200">
               <div className="flex items-start gap-2.5 text-amber-900">
                 <Clock className="w-5 h-5 text-amber-600 shrink-0 mt-0.5 animate-pulse" />

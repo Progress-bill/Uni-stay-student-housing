@@ -61,10 +61,13 @@ app.use('/uploads', express.static(uploadsDir));
 const readJsonFile = (filePath, fallback = []) => {
   try {
     if (!fs.existsSync(filePath)) {
-      fs.writeFileSync(filePath, JSON.stringify(fallback, null, 2));
+      fs.writeFileSync(filePath, JSON.stringify(fallback, null, 2), 'utf8');
       return fallback;
     }
-    const data = fs.readFileSync(filePath, 'utf8');
+    let data = fs.readFileSync(filePath, 'utf8');
+    if (data) {
+      data = data.replace(/^\uFEFF/, '').trim();
+    }
     return JSON.parse(data || '[]');
   } catch (err) {
     console.error(`Error reading ${filePath}:`, err);
@@ -140,6 +143,30 @@ app.post('/api/auth/login', (req, res) => {
 
   if (user.password !== password) {
     return res.status(401).json({ success: false, message: 'Invalid phone number or password' });
+  }
+
+  // Check if agent is currently suspended
+  if (user.role === 'agent' && user.status === 'suspended') {
+    const now = new Date();
+    const until = user.suspendedUntil ? new Date(user.suspendedUntil) : null;
+    
+    // If suspension is still active
+    if (until && until > now) {
+      return res.status(403).json({
+        success: false,
+        status: 'suspended',
+        suspendedUntil: user.suspendedUntil,
+        reason: user.suspensionReason || 'Violation of portal guidelines',
+        message: `Your agent account is suspended until ${until.toLocaleString()}. Reason: ${user.suspensionReason || 'Violation of portal guidelines'}. Contact Main Admin (+91 9041543868).`
+      });
+    } else {
+      // Suspension expired: auto-reactivate account
+      user.status = 'active';
+      delete user.suspendedUntil;
+      delete user.suspensionReason;
+      delete user.suspendedAt;
+      writeJsonFile(usersFilePath, users);
+    }
   }
 
   // Return user info without password
@@ -318,6 +345,161 @@ app.patch('/api/agent-applications/:id', (req, res) => {
     });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Error processing application', error: err.message });
+  }
+});
+
+// ==========================================
+// 2B. MANAGE REGISTERED AGENTS (ADMIN ONLY)
+// ==========================================
+
+// GET /api/admin/agents (Get all registered agents with active/suspended status and room count)
+app.get('/api/admin/agents', (req, res) => {
+  try {
+    const users = readJsonFile(usersFilePath);
+    const listings = readJsonFile(listingsFilePath);
+    const now = new Date();
+
+    let modified = false;
+    const agents = users
+      .filter(u => u.role === 'agent')
+      .map(u => {
+        // Auto-check expired suspension
+        if (u.status === 'suspended' && u.suspendedUntil && new Date(u.suspendedUntil) <= now) {
+          u.status = 'active';
+          delete u.suspendedUntil;
+          delete u.suspensionReason;
+          delete u.suspendedAt;
+          modified = true;
+        }
+
+        const agentPhone = cleanPhone(u.phone);
+        const roomCount = listings.filter(l => {
+          if (l.agentId && l.agentId === u.id) return true;
+          if (l.agentPhone && cleanPhone(l.agentPhone) === agentPhone) return true;
+          return false;
+        }).length;
+
+        const { password: _, ...safeAgent } = u;
+        return {
+          ...safeAgent,
+          status: safeAgent.status || 'active',
+          roomCount
+        };
+      });
+
+    if (modified) {
+      writeJsonFile(usersFilePath, users);
+    }
+
+    res.json({ success: true, count: agents.length, data: agents });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Error fetching agents', error: err.message });
+  }
+});
+
+// PATCH /api/admin/agents/:id/suspend (Suspend agent for specified duration)
+app.patch('/api/admin/agents/:id/suspend', (req, res) => {
+  try {
+    const { id } = req.params;
+    const { durationHours, reason } = req.body;
+
+    const hours = parseFloat(durationHours);
+    if (isNaN(hours) || hours <= 0) {
+      return res.status(400).json({ success: false, message: 'Valid duration in hours is required' });
+    }
+
+    const users = readJsonFile(usersFilePath);
+    const agentIndex = users.findIndex(u => u.id === id && u.role === 'agent');
+
+    if (agentIndex === -1) {
+      return res.status(404).json({ success: false, message: 'Agent not found' });
+    }
+
+    const suspendedUntil = new Date(Date.now() + hours * 3600 * 1000).toISOString();
+    const suspensionReason = (reason || 'Misconduct or violation of housing guidelines').trim();
+
+    users[agentIndex].status = 'suspended';
+    users[agentIndex].suspendedUntil = suspendedUntil;
+    users[agentIndex].suspensionReason = suspensionReason;
+    users[agentIndex].suspendedAt = new Date().toISOString();
+
+    writeJsonFile(usersFilePath, users);
+
+    const { password: _, ...safeAgent } = users[agentIndex];
+    res.json({
+      success: true,
+      message: `Agent ${safeAgent.name} suspended until ${new Date(suspendedUntil).toLocaleString()}`,
+      data: safeAgent
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Error suspending agent', error: err.message });
+  }
+});
+
+// PATCH /api/admin/agents/:id/unsuspend (Lift suspension immediately)
+app.patch('/api/admin/agents/:id/unsuspend', (req, res) => {
+  try {
+    const { id } = req.params;
+    const users = readJsonFile(usersFilePath);
+    const agentIndex = users.findIndex(u => u.id === id && u.role === 'agent');
+
+    if (agentIndex === -1) {
+      return res.status(404).json({ success: false, message: 'Agent not found' });
+    }
+
+    users[agentIndex].status = 'active';
+    delete users[agentIndex].suspendedUntil;
+    delete users[agentIndex].suspensionReason;
+    delete users[agentIndex].suspendedAt;
+
+    writeJsonFile(usersFilePath, users);
+
+    const { password: _, ...safeAgent } = users[agentIndex];
+    res.json({
+      success: true,
+      message: `Suspension lifted for agent ${safeAgent.name}. Account is now active.`,
+      data: safeAgent
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Error lifting suspension', error: err.message });
+  }
+});
+
+// DELETE /api/admin/agents/:id (Permanently delete agent account)
+app.delete('/api/admin/agents/:id', (req, res) => {
+  try {
+    const { id } = req.params;
+    const users = readJsonFile(usersFilePath);
+    const agentToDelete = users.find(u => u.id === id);
+
+    if (!agentToDelete) {
+      return res.status(404).json({ success: false, message: 'Agent not found' });
+    }
+
+    if (agentToDelete.role === 'admin') {
+      return res.status(403).json({ success: false, message: 'Main Admin account cannot be deleted' });
+    }
+
+    const updatedUsers = users.filter(u => u.id !== id);
+    writeJsonFile(usersFilePath, updatedUsers);
+
+    // Also update agent_applications.json so it is marked rejected/removed
+    const applications = readJsonFile(applicationsFilePath);
+    const updatedApps = applications.map(a => {
+      if (isPhoneMatch(a.phone, agentToDelete.phone)) {
+        return { ...a, status: 'rejected', reviewedAt: new Date().toISOString() };
+      }
+      return a;
+    });
+    writeJsonFile(applicationsFilePath, updatedApps);
+
+    res.json({
+      success: true,
+      message: `Agent ${agentToDelete.name} (${agentToDelete.phone}) has been permanently deleted.`,
+      data: { id: agentToDelete.id, name: agentToDelete.name, phone: agentToDelete.phone }
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Error deleting agent', error: err.message });
   }
 });
 

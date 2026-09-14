@@ -29,7 +29,9 @@ export function AuthProvider({ children }) {
         return { 
           success: false, 
           message: data.message || 'Login failed',
-          status: data.status || (res.status === 403 ? 'pending_approval' : 'error')
+          status: data.status || (res.status === 403 ? 'pending_approval' : 'error'),
+          suspendedUntil: data.suspendedUntil,
+          reason: data.reason
         };
       }
     } catch (err) {
