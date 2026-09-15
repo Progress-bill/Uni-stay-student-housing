@@ -6,6 +6,10 @@ dist-ssr
 .idea
 .DS_Store
 
+# Environment variables
+.env
+.env*.local
+
 # Uploads directory note: keeping directories tracked with gitkeep
 public/uploads/videos/*.tmp
 public/uploads/images/*.tmp

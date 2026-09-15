@@ -4,12 +4,61 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
+import dotenv from 'dotenv';
+import { v2 as cloudinary } from 'cloudinary';
+
+dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+
+// Configure Cloudinary for permanent cloud video & image storage
+const isCloudinaryConfigured = Boolean(
+  process.env.CLOUDINARY_CLOUD_NAME &&
+  process.env.CLOUDINARY_API_KEY &&
+  process.env.CLOUDINARY_API_SECRET
+);
+
+if (isCloudinaryConfigured) {
+  cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
+    secure: true
+  });
+  console.log(`[Cloudinary] Connected to cloud: ${process.env.CLOUDINARY_CLOUD_NAME}`);
+} else {
+  console.log('[Cloudinary] Missing credentials, using local disk uploads.');
+}
+
+// Cloudinary upload helper
+const uploadFileToCloudinary = async (localFilePath, resourceType = 'auto', folder = 'unistay_rooms') => {
+  if (!isCloudinaryConfigured || !fs.existsSync(localFilePath)) {
+    return null;
+  }
+  try {
+    const uploadResult = await cloudinary.uploader.upload(localFilePath, {
+      resource_type: resourceType,
+      folder: folder,
+      chunk_size: 6000000
+    });
+    // Remove local temp file after cloud upload succeeds
+    try {
+      if (fs.existsSync(localFilePath)) {
+        fs.unlinkSync(localFilePath);
+      }
+    } catch (e) {
+      console.warn('Could not remove temporary local upload:', e.message);
+    }
+    return uploadResult.secure_url;
+  } catch (err) {
+    console.error(`[Cloudinary] Upload failed for ${localFilePath}:`, err);
+    return null;
+  }
+};
 
 // Ensure directories exist
 const dataDir = path.join(__dirname, 'data');
@@ -562,7 +611,7 @@ app.post(
     { name: 'video', maxCount: 1 },
     { name: 'image', maxCount: 1 }
   ]),
-  (req, res) => {
+  async (req, res) => {
     try {
       const {
         title,
@@ -593,14 +642,30 @@ app.post(
 
       let finalVideoUrl = '';
       if (req.files && req.files['video'] && req.files['video'][0]) {
-        finalVideoUrl = `/uploads/videos/${req.files['video'][0].filename}`;
+        const videoFile = req.files['video'][0];
+        // Stream video directly to Cloudinary for permanent hosting
+        const cloudVideoUrl = await uploadFileToCloudinary(videoFile.path, 'video', 'unistay_rooms/videos');
+        if (cloudVideoUrl) {
+          finalVideoUrl = cloudVideoUrl;
+          console.log(`[Cloudinary] Video tour stored permanently at: ${cloudVideoUrl}`);
+        } else {
+          finalVideoUrl = `/uploads/videos/${videoFile.filename}`;
+        }
       } else if (fallbackVideoUrl) {
         finalVideoUrl = fallbackVideoUrl;
       }
 
       let finalImages = [];
       if (req.files && req.files['image'] && req.files['image'][0]) {
-        finalImages.push(`/uploads/images/${req.files['image'][0].filename}`);
+        const imageFile = req.files['image'][0];
+        // Stream image to Cloudinary
+        const cloudImageUrl = await uploadFileToCloudinary(imageFile.path, 'image', 'unistay_rooms/images');
+        if (cloudImageUrl) {
+          finalImages.push(cloudImageUrl);
+          console.log(`[Cloudinary] Cover photo stored permanently at: ${cloudImageUrl}`);
+        } else {
+          finalImages.push(`/uploads/images/${imageFile.filename}`);
+        }
       } else if (fallbackImageUrl) {
         finalImages.push(fallbackImageUrl);
       } else {
