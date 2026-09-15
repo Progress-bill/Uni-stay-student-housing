@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "start": "node server/index.js",
     "server": "node server/index.js",
     "client": "vite",
     "dev": "concurrently \"npm run server\" \"npm run client\"",
