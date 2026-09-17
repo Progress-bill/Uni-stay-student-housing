@@ -153,6 +153,125 @@ const isPhoneMatch = (p1, p2) => {
 };
 
 // ==========================================
+// SESSION & TOKEN REVOCATION SYSTEM
+// ==========================================
+
+// Session token generation helper
+const generateSessionToken = (userId, version) => {
+  const randomPart = Math.random().toString(36).substring(2, 12) + Math.random().toString(36).substring(2, 12);
+  return `agt_sess_${userId}_v${version}_${Date.now()}_${randomPart}`;
+};
+
+// Extract token from request headers or query
+const extractToken = (req) => {
+  const authHeader = req.headers.authorization || req.headers.Authorization;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    return authHeader.substring(7).trim();
+  }
+  if (req.headers['x-session-token']) {
+    return String(req.headers['x-session-token']).trim();
+  }
+  if (req.query && req.query.token) {
+    return String(req.query.token).trim();
+  }
+  return null;
+};
+
+// Server-side Authorization Middleware:
+// Validates token against database, detects suspension or removal, and enforces immediate revocation
+const requireAuth = (req, res, next) => {
+  const token = extractToken(req);
+  if (!token) {
+    return res.status(401).json({
+      success: false,
+      code: 'UNAUTHORIZED',
+      message: 'Authentication required. Please log in.'
+    });
+  }
+
+  // Parse token format: agt_sess_<userId>_v<version>_...
+  let tokenUserId = null;
+  const match = token.match(/^agt_sess_(.+?)_v(\d+)_/);
+  if (match) {
+    tokenUserId = match[1];
+  }
+
+  const users = readJsonFile(usersFilePath);
+  // Find user by current active sessionToken or by token userId
+  let user = users.find(u => u.sessionToken === token);
+  if (!user && tokenUserId) {
+    user = users.find(u => u.id === tokenUserId);
+  }
+
+  // If user does not exist in database (deleted)
+  if (!user) {
+    return res.status(401).json({
+      success: false,
+      code: 'ACCOUNT_REMOVED',
+      message: 'Your agent account has been removed by the Main Admin.'
+    });
+  }
+
+  // Check if agent status is 'removed'
+  if (user.status === 'removed') {
+    return res.status(403).json({
+      success: false,
+      code: 'ACCOUNT_REMOVED',
+      message: 'Your agent account has been removed by the Main Admin.'
+    });
+  }
+
+  // Check if agent is currently suspended
+  if (user.role === 'agent' && user.status === 'suspended') {
+    const now = new Date();
+    const until = user.suspendedUntil ? new Date(user.suspendedUntil) : null;
+    if (until && until > now) {
+      return res.status(403).json({
+        success: false,
+        code: 'ACCOUNT_SUSPENDED',
+        status: 'suspended',
+        suspendedUntil: user.suspendedUntil,
+        reason: user.suspensionReason || 'Violation of housing guidelines',
+        message: `Your agent account is suspended until ${until.toLocaleString()}. Reason: ${user.suspensionReason || 'Violation of housing guidelines'}. Contact Main Admin (+91 9041543868).`
+      });
+    } else {
+      // Suspension expired: auto-reactivate account
+      user.status = 'active';
+      delete user.suspendedUntil;
+      delete user.suspensionReason;
+      delete user.suspendedAt;
+      writeJsonFile(usersFilePath, users);
+    }
+  }
+
+  // Check if session token matches current active session (version revocation check)
+  if (user.sessionToken !== token) {
+    return res.status(401).json({
+      success: false,
+      code: 'SESSION_REVOKED',
+      message: 'Your session was revoked due to an account update or password reset. Please log in again.'
+    });
+  }
+
+  req.user = user;
+  next();
+};
+
+// Admin-only guard middleware
+const requireAdmin = (req, res, next) => {
+  requireAuth(req, res, () => {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        code: 'ADMIN_ONLY',
+        message: 'Access restricted to Main Admin only.'
+      });
+    }
+    next();
+  });
+};
+
+// ==========================================
 // 1. AUTHENTICATION ENDPOINTS (Phone-First)
 // ==========================================
 
@@ -164,9 +283,9 @@ app.post('/api/auth/login', (req, res) => {
   }
 
   const users = readJsonFile(usersFilePath);
-  const user = users.find(u => isPhoneMatch(u.phone, phone));
+  const userIndex = users.findIndex(u => isPhoneMatch(u.phone, phone));
 
-  if (!user) {
+  if (userIndex === -1) {
     // Check if user is a pending or rejected agent applicant
     const applications = readJsonFile(applicationsFilePath);
     const applicant = applications.find(a => isPhoneMatch(a.phone, phone));
@@ -176,18 +295,32 @@ app.post('/api/auth/login', (req, res) => {
         return res.status(403).json({
           success: false,
           status: 'pending_approval',
+          code: 'PENDING_APPROVAL',
           message: 'Waiting for Admin approval maximum time 2hrs. Your credentials are under review.'
         });
       } else if (applicant.status === 'rejected') {
         return res.status(403).json({
           success: false,
           status: 'rejected',
+          code: 'APPLICATION_REJECTED',
           message: 'Your agent application was reviewed and not approved by Main Admin.'
         });
       }
     }
 
     return res.status(401).json({ success: false, message: 'Invalid phone number or password' });
+  }
+
+  const user = users[userIndex];
+
+  // Check if agent was removed
+  if (user.status === 'removed') {
+    return res.status(403).json({
+      success: false,
+      status: 'removed',
+      code: 'ACCOUNT_REMOVED',
+      message: 'This agent account has been removed by the Main Admin.'
+    });
   }
 
   if (user.password !== password) {
@@ -204,6 +337,7 @@ app.post('/api/auth/login', (req, res) => {
       return res.status(403).json({
         success: false,
         status: 'suspended',
+        code: 'ACCOUNT_SUSPENDED',
         suspendedUntil: user.suspendedUntil,
         reason: user.suspensionReason || 'Violation of portal guidelines',
         message: `Your agent account is suspended until ${until.toLocaleString()}. Reason: ${user.suspensionReason || 'Violation of portal guidelines'}. Contact Main Admin (+91 9041543868).`
@@ -214,23 +348,49 @@ app.post('/api/auth/login', (req, res) => {
       delete user.suspendedUntil;
       delete user.suspensionReason;
       delete user.suspendedAt;
-      writeJsonFile(usersFilePath, users);
     }
   }
 
-  // Return user info without password
-  const { password: _, ...userInfo } = user;
+  // Generate new session token & increment version
+  const newVersion = (user.tokenVersion || 0) + 1;
+  const sessionToken = generateSessionToken(user.id, newVersion);
+
+  user.tokenVersion = newVersion;
+  user.sessionToken = sessionToken;
+  user.lastLoginAt = new Date().toISOString();
+
+  users[userIndex] = user;
+  writeJsonFile(usersFilePath, users);
+
+  // Return user info and session token (without password)
+  const { password: _pw, sessionToken: _tok, ...userInfo } = user;
   res.json({
     success: true,
     message: `Logged in as ${user.role === 'admin' ? 'Main Admin' : 'House Agent'}`,
-    user: userInfo
+    token: sessionToken,
+    user: {
+      ...userInfo,
+      tokenVersion: newVersion
+    }
+  });
+});
+
+// GET /api/auth/verify-session (Live status and session version check for active browser)
+app.get('/api/auth/verify-session', requireAuth, (req, res) => {
+  const { password: _pw, sessionToken: _tok, ...safeUser } = req.user;
+  res.json({
+    success: true,
+    status: safeUser.status || 'active',
+    user: safeUser
   });
 });
 
 // GET /api/auth/users
 app.get('/api/auth/users', (req, res) => {
   const users = readJsonFile(usersFilePath);
-  const safeUsers = users.map(({ password, ...rest }) => rest);
+  const safeUsers = users
+    .filter(u => u.status !== 'removed')
+    .map(({ password, sessionToken, ...rest }) => rest);
   res.json({ success: true, count: safeUsers.length, data: safeUsers });
 });
 
@@ -410,7 +570,7 @@ app.get('/api/admin/agents', (req, res) => {
 
     let modified = false;
     const agents = users
-      .filter(u => u.role === 'agent')
+      .filter(u => u.role === 'agent' && u.status !== 'removed')
       .map(u => {
         // Auto-check expired suspension
         if (u.status === 'suspended' && u.suspendedUntil && new Date(u.suspendedUntil) <= now) {
@@ -471,10 +631,13 @@ app.patch('/api/admin/agents/:id/suspend', (req, res) => {
     users[agentIndex].suspendedUntil = suspendedUntil;
     users[agentIndex].suspensionReason = suspensionReason;
     users[agentIndex].suspendedAt = new Date().toISOString();
+    // Invalidate active browser session immediately (version += 1)
+    users[agentIndex].tokenVersion = (users[agentIndex].tokenVersion || 1) + 1;
+    delete users[agentIndex].sessionToken;
 
     writeJsonFile(usersFilePath, users);
 
-    const { password: _, ...safeAgent } = users[agentIndex];
+    const { password: _pw, sessionToken: _tok, ...safeAgent } = users[agentIndex];
     res.json({
       success: true,
       message: `Agent ${safeAgent.name} suspended until ${new Date(suspendedUntil).toLocaleString()}`,
@@ -500,10 +663,13 @@ app.patch('/api/admin/agents/:id/unsuspend', (req, res) => {
     delete users[agentIndex].suspendedUntil;
     delete users[agentIndex].suspensionReason;
     delete users[agentIndex].suspendedAt;
+    // Version increment ensures old suspended tokens remain revoked
+    users[agentIndex].tokenVersion = (users[agentIndex].tokenVersion || 1) + 1;
+    delete users[agentIndex].sessionToken;
 
     writeJsonFile(usersFilePath, users);
 
-    const { password: _, ...safeAgent } = users[agentIndex];
+    const { password: _pw, sessionToken: _tok, ...safeAgent } = users[agentIndex];
     res.json({
       success: true,
       message: `Suspension lifted for agent ${safeAgent.name}. Account is now active.`,
@@ -514,23 +680,30 @@ app.patch('/api/admin/agents/:id/unsuspend', (req, res) => {
   }
 });
 
-// DELETE /api/admin/agents/:id (Permanently delete agent account)
+// DELETE /api/admin/agents/:id (Permanently remove agent account and revoke session)
 app.delete('/api/admin/agents/:id', (req, res) => {
   try {
     const { id } = req.params;
     const users = readJsonFile(usersFilePath);
-    const agentToDelete = users.find(u => u.id === id);
+    const agentIndex = users.findIndex(u => u.id === id);
 
-    if (!agentToDelete) {
+    if (agentIndex === -1) {
       return res.status(404).json({ success: false, message: 'Agent not found' });
     }
+
+    const agentToDelete = users[agentIndex];
 
     if (agentToDelete.role === 'admin') {
       return res.status(403).json({ success: false, message: 'Main Admin account cannot be deleted' });
     }
 
-    const updatedUsers = users.filter(u => u.id !== id);
-    writeJsonFile(usersFilePath, updatedUsers);
+    // Mark as status: 'removed', increment version, and invalidate session token
+    users[agentIndex].status = 'removed';
+    users[agentIndex].removedAt = new Date().toISOString();
+    users[agentIndex].tokenVersion = (users[agentIndex].tokenVersion || 1) + 1;
+    delete users[agentIndex].sessionToken;
+
+    writeJsonFile(usersFilePath, users);
 
     // Also update agent_applications.json so it is marked rejected/removed
     const applications = readJsonFile(applicationsFilePath);
@@ -544,8 +717,8 @@ app.delete('/api/admin/agents/:id', (req, res) => {
 
     res.json({
       success: true,
-      message: `Agent ${agentToDelete.name} (${agentToDelete.phone}) has been permanently deleted.`,
-      data: { id: agentToDelete.id, name: agentToDelete.name, phone: agentToDelete.phone }
+      message: `Agent ${agentToDelete.name} (${agentToDelete.phone}) has been removed. All active sessions revoked.`,
+      data: { id: agentToDelete.id, name: agentToDelete.name, phone: agentToDelete.phone, status: 'removed' }
     });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Error deleting agent', error: err.message });
@@ -571,7 +744,7 @@ app.get('/api/listings', (req, res) => {
 });
 
 // PATCH /api/listings/:id/status (Main Admin or Agent updates room status)
-app.patch('/api/listings/:id/status', (req, res) => {
+app.patch('/api/listings/:id/status', requireAuth, (req, res) => {
   try {
     const { id } = req.params;
     const { status } = req.body; // 'available' | 'occupied' | 'reserved'
@@ -588,6 +761,15 @@ app.patch('/api/listings/:id/status', (req, res) => {
 
     if (index === -1) {
       return res.status(404).json({ success: false, message: 'Room listing not found' });
+    }
+
+    // Permission check: Admin can update any listing; Agent can only update their own listings
+    if (req.user.role !== 'admin' && listings[index].agentId !== req.user.id && !isPhoneMatch(listings[index].agentPhone, req.user.phone)) {
+      return res.status(403).json({
+        success: false,
+        code: 'FORBIDDEN',
+        message: 'You can only update status for your own room listings.'
+      });
     }
 
     listings[index].status = status;
@@ -607,6 +789,7 @@ app.patch('/api/listings/:id/status', (req, res) => {
 // POST new listing with video, photo, and Landlord Contact info
 app.post(
   '/api/listings',
+  requireAuth,
   upload.fields([
     { name: 'video', maxCount: 1 },
     { name: 'image', maxCount: 1 }
@@ -690,6 +873,11 @@ app.post(
         else calculatedPriceGroup = 'premium';
       }
 
+      // Enforce verified agent identity from server-side authenticated session
+      const finalAgentId = req.user.role === 'admin' ? (agentId || req.user.id) : req.user.id;
+      const finalAgentName = req.user.role === 'admin' ? (agentName || req.user.name) : req.user.name;
+      const finalAgentPhone = req.user.phone || '';
+
       const newListing = {
         id: `house-${Date.now()}`,
         title: title.trim(),
@@ -710,8 +898,9 @@ app.post(
         videoUrl: finalVideoUrl,
         images: finalImages,
         customCategories: parsedCategories,
-        agentId: agentId || 'user-admin-1',
-        agentName: agentName || 'UniStay Housing Desk',
+        agentId: finalAgentId,
+        agentName: finalAgentName,
+        agentPhone: finalAgentPhone,
         createdAt: new Date().toISOString()
       };
 
@@ -731,8 +920,8 @@ app.post(
   }
 );
 
-// DELETE a listing (Main Admin or Direct Delete)
-app.delete('/api/listings/:id', (req, res) => {
+// DELETE a listing (Main Admin or Listing Owner)
+app.delete('/api/listings/:id', requireAuth, (req, res) => {
   try {
     const { id } = req.params;
     let listings = readJsonFile(listingsFilePath);
@@ -740,6 +929,16 @@ app.delete('/api/listings/:id', (req, res) => {
     if (!existing) {
       return res.status(404).json({ success: false, message: 'Listing not found' });
     }
+
+    // Permission check
+    if (req.user.role !== 'admin' && existing.agentId !== req.user.id && !isPhoneMatch(existing.agentPhone, req.user.phone)) {
+      return res.status(403).json({
+        success: false,
+        code: 'FORBIDDEN',
+        message: 'Only Main Admin or the listing creator can delete this listing.'
+      });
+    }
+
     listings = listings.filter(l => l.id !== id);
     writeJsonFile(listingsFilePath, listings);
 
@@ -768,10 +967,10 @@ app.delete('/api/listings/:id', (req, res) => {
 // ==========================================
 
 // POST /api/listings/:id/delete-request (Agent submits deletion request with reason)
-app.post('/api/listings/:id/delete-request', (req, res) => {
+app.post('/api/listings/:id/delete-request', requireAuth, (req, res) => {
   try {
     const { id } = req.params;
-    const { reason, agentId, agentName, agentPhone } = req.body;
+    const { reason } = req.body;
 
     if (!reason || !reason.trim()) {
       return res.status(400).json({ success: false, message: 'Reason for deletion is required.' });
@@ -799,9 +998,9 @@ app.post('/api/listings/:id/delete-request', (req, res) => {
       listingRent: listing.rentAmount,
       listingAddress: listing.address,
       listingImage: listing.images && listing.images[0] ? listing.images[0] : '',
-      agentId: agentId || listing.agentId || '',
-      agentName: agentName || listing.agentName || 'House Agent',
-      agentPhone: agentPhone || '',
+      agentId: req.user.id,
+      agentName: req.user.name,
+      agentPhone: req.user.phone || '',
       reason: reason.trim(),
       status: 'pending', // 'pending' | 'approved' | 'rejected'
       createdAt: new Date().toISOString()

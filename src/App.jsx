@@ -11,10 +11,10 @@ import BecomeAgentModal from './components/BecomeAgentModal';
 import AdminPanelModal from './components/AdminPanelModal';
 import DeleteRequestModal from './components/DeleteRequestModal';
 import { useAuth } from './context/AuthContext';
-import { Home, AlertCircle, RefreshCw, Sparkles, Filter } from 'lucide-react';
+import { Home, AlertCircle, RefreshCw, Sparkles, Filter, ShieldAlert, MessageCircle } from 'lucide-react';
 
 export default function App() {
-  const { user, isAdmin, isAgent } = useAuth();
+  const { user, isAdmin, isAgent, revocationNotice, clearRevocationNotice } = useAuth();
 
   const [listings, setListings] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -544,6 +544,65 @@ export default function App() {
         room={roomToDeleteRequest}
         onRequestSubmitted={handleDeleteRequestSubmitted}
       />
+
+      {/* Instant Session Revocation & Auto-Logout Modal */}
+      {revocationNotice && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl border border-red-100 text-center space-y-4 animate-in zoom-in-95">
+            <div className="w-14 h-14 rounded-2xl bg-red-50 text-red-600 flex items-center justify-center mx-auto shadow-inner">
+              <ShieldAlert className="w-8 h-8 animate-pulse text-red-600" />
+            </div>
+            
+            <div>
+              <h3 className="text-lg font-black text-slate-900">
+                {revocationNotice.code === 'ACCOUNT_SUSPENDED' 
+                  ? 'Agent Account Suspended' 
+                  : revocationNotice.code === 'ACCOUNT_REMOVED'
+                  ? 'Agent Account Removed'
+                  : 'Session Terminated'}
+              </h3>
+              <p className="text-xs text-slate-600 mt-1.5 leading-relaxed">
+                {revocationNotice.message}
+              </p>
+            </div>
+
+            {revocationNotice.reason && (
+              <div className="p-3.5 bg-red-50/80 rounded-2xl border border-red-200/60 text-left text-xs text-red-900 space-y-1">
+                <span className="font-bold block text-[10px] uppercase tracking-wider text-red-700">Reason for Action:</span>
+                <p className="italic font-medium">"{revocationNotice.reason}"</p>
+              </div>
+            )}
+
+            {revocationNotice.suspendedUntil && (
+              <p className="text-[11px] text-amber-800 font-semibold bg-amber-50 py-2 px-3 rounded-xl border border-amber-200/80">
+                ⏳ Suspended until: <strong className="text-amber-950">{new Date(revocationNotice.suspendedUntil).toLocaleString()}</strong>
+              </p>
+            )}
+
+            <div className="pt-2 flex flex-col gap-2">
+              <a
+                href="https://wa.me/919041543868?text=Hello%20Admin,%20my%20agent%20session%20was%20revoked.%20I%20would%20like%20to%20inquire%20regarding%20my%20account."
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-md shadow-emerald-600/20 transition-all cursor-pointer"
+              >
+                <MessageCircle className="w-4 h-4" />
+                <span>Contact Main Admin (+91 9041543868)</span>
+              </a>
+
+              <button
+                onClick={() => {
+                  clearRevocationNotice();
+                  setIsAuthModalOpen(true);
+                }}
+                className="w-full py-2 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition-all cursor-pointer"
+              >
+                Back to Sign In
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );
