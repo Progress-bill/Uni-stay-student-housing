@@ -14,7 +14,7 @@ import { useAuth } from '../context/AuthContext';
 export default function VideoPlayerModal({ room, onClose }) {
   if (!room || !room.videoUrl) return null;
 
-  const { isAdmin } = useAuth();
+  const { isAdmin, isAgent, user } = useAuth();
   const [isPip, setIsPip] = useState(false);
   const videoRef = useRef(null);
 
@@ -27,10 +27,14 @@ export default function VideoPlayerModal({ room, onClose }) {
   };
 
   const getWhatsAppUrl = () => {
-    const text = encodeURIComponent(
-      `Hello Admin! I just watched the video tour of "${room.title}" (Rent: ${formatPrice(room.rentAmount)}/mo, Electricity: ₹${room.electricityPerUnit}/unit). I want to schedule a visit!`
-    );
-    return `https://wa.me/919041543868?text=${text}`;
+    let msg = '';
+    if (isAgent) {
+      const agentIdentifier = user?.name ? `Agent ${user.name} (${user.phone})` : (user?.phone ? `Agent (${user.phone})` : 'an active House Agent');
+      msg = `Hello Admin! I am ${agentIdentifier}. I just reviewed the video tour for room "${room.title}" (Rent: ${formatPrice(room.rentAmount)}/mo). I have a client who wants this room and I am inquiring about the current room status — is it still vacant and available for my client to book?`;
+    } else {
+      msg = `Hello Admin! I just watched the video tour of "${room.title}" (Rent: ${formatPrice(room.rentAmount)}/mo, Electricity: ₹${room.electricityPerUnit}/unit). I want to schedule a visit!`;
+    }
+    return `https://wa.me/919041543868?text=${encodeURIComponent(msg)}`;
   };
 
   return (
@@ -123,9 +127,10 @@ export default function VideoPlayerModal({ room, onClose }) {
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-lg shadow-emerald-600/30 transition-all cursor-pointer"
+                  title={isAgent ? "Inquire room status with Admin for your client" : "Book Visit on WhatsApp (+91 9041543868)"}
                 >
                   <MessageCircle className="w-4 h-4" />
-                  Book Visit on WhatsApp (+91 9041543868)
+                  {isAgent ? 'Inquire Room Status for Client' : 'Book Visit on WhatsApp (+91 9041543868)'}
                 </a>
               </div>
             </div>

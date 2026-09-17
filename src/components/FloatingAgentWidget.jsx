@@ -12,8 +12,17 @@ export default function FloatingAgentWidget({
   viewMode, 
   setViewMode 
 }) {
-  const { isAdmin, isAgent } = useAuth();
+  const { isAdmin, isAgent, user } = useAuth();
   const canAccessMap = isAdmin || isAgent;
+
+  const getFloatingWhatsAppUrl = () => {
+    if (isAgent) {
+      const agentIdentifier = user?.name ? `Agent ${user.name} (${user.phone})` : (user?.phone ? `Agent (${user.phone})` : 'an active House Agent');
+      const text = `Hello Admin! I am ${agentIdentifier}. I have a client looking for a room and would like to inquire about available room status and vacancies.`;
+      return `https://wa.me/919041543868?text=${encodeURIComponent(text)}`;
+    }
+    return `https://wa.me/919041543868?text=Hello%20Admin!%20I%20am%20a%20student%20looking%20for%20an%20affordable%20PG%20room.`;
+  };
 
   return (
     <>
@@ -64,11 +73,11 @@ export default function FloatingAgentWidget({
       {/* Floating WhatsApp Action Button (Bottom Right) */}
       <div className="fixed bottom-6 right-6 z-40">
         <a
-          href="https://wa.me/919041543868?text=Hello%20Admin!%20I%20am%20a%20student%20looking%20for%20an%20affordable%20PG%20room."
+          href={getFloatingWhatsAppUrl()}
           target="_blank"
           rel="noopener noreferrer"
           className="h-13 w-13 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white shadow-xl shadow-emerald-600/35 flex items-center justify-center transition-all hover:scale-110 active:scale-95 cursor-pointer"
-          title="WhatsApp Admin (+91 9041543868)"
+          title={isAgent ? "Inquire Room Status for Client (+91 9041543868)" : "WhatsApp Admin (+91 9041543868)"}
         >
           <MessageCircle className="w-7 h-7" />
         </a>

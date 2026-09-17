@@ -45,10 +45,14 @@ export default function RoomCard({
 
   // WhatsApp Inquiry URL -> Direct to Main Admin WhatsApp +91 9041543868
   const getWhatsAppUrl = () => {
-    const text = encodeURIComponent(
-      `Hello Admin! I am a student interested in "${room.title}" (${currentStatus.toUpperCase()}) listed for ${formatPrice(room.rentAmount)}/mo (Electricity: ₹${room.electricityPerUnit}/unit). Could you please share visit details?`
-    );
-    return `https://wa.me/919041543868?text=${text}`;
+    let msg = '';
+    if (isAgent) {
+      const agentIdentifier = user?.name ? `Agent ${user.name} (${user.phone})` : (user?.phone ? `Agent (${user.phone})` : 'an active House Agent');
+      msg = `Hello Admin! I am ${agentIdentifier}. I have an inquiry regarding the status of room "${room.title}" (${currentStatus.toUpperCase()}) listed for ${formatPrice(room.rentAmount)}/mo. I have a client who wants this room — could you please confirm if it is currently vacant and available?`;
+    } else {
+      msg = `Hello Admin! I am a student interested in "${room.title}" (${currentStatus.toUpperCase()}) listed for ${formatPrice(room.rentAmount)}/mo (Electricity: ₹${room.electricityPerUnit}/unit). Could you please share visit details?`;
+    }
+    return `https://wa.me/919041543868?text=${encodeURIComponent(msg)}`;
   };
 
   // Direct WhatsApp to Landlord (Admin only)
@@ -360,9 +364,10 @@ export default function RoomCard({
             target="_blank"
             rel="noopener noreferrer"
             className="flex-1 inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-sm shadow-emerald-600/20 transition-all cursor-pointer"
+            title={isAgent ? "Inquire room status with Admin for your client" : "WhatsApp Admin (+91 9041543868)"}
           >
             <MessageCircle className="w-3.5 h-3.5" />
-            <span>WhatsApp Agent</span>
+            <span>{isAgent ? 'Inquire for Client' : 'WhatsApp Agent'}</span>
           </a>
 
           {/* Delete Listing Action */}
