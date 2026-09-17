@@ -19,7 +19,12 @@ import {
   ShieldAlert,
   AlertOctagon,
   Search,
-  CheckCircle2
+  CheckCircle2,
+  Cloud,
+  HardDrive,
+  ExternalLink,
+  BarChart3,
+  Database
 } from 'lucide-react';
 
 export default function AdminPanelModal({ 
@@ -105,11 +110,36 @@ export default function AdminPanelModal({
     }
   };
 
+  // Cloudinary Storage Usage state
+  const [cloudinaryUsage, setCloudinaryUsage] = useState(null);
+  const [loadingUsage, setLoadingUsage] = useState(false);
+  const [usageError, setUsageError] = useState('');
+
+  // Fetch Cloudinary storage usage
+  const fetchCloudinaryUsage = async () => {
+    setLoadingUsage(true);
+    setUsageError('');
+    try {
+      const res = await fetch('/api/admin/cloudinary/usage');
+      const data = await res.json();
+      if (data.success) {
+        setCloudinaryUsage(data.data);
+      } else {
+        setUsageError(data.message || 'Failed to fetch cloud storage metrics');
+      }
+    } catch (err) {
+      setUsageError('Could not connect to Cloudinary monitoring service');
+    } finally {
+      setLoadingUsage(false);
+    }
+  };
+
   useEffect(() => {
     if (isOpen) {
       fetchApplications();
       fetchDeleteRequests();
       fetchAgents();
+      fetchCloudinaryUsage();
     }
   }, [isOpen]);
 
@@ -423,6 +453,27 @@ export default function AdminPanelModal({
             <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600">
               {listings.length}
             </span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('cloudinary')}
+            className={`pb-3 text-xs font-bold uppercase tracking-wider flex items-center gap-2 border-b-2 whitespace-nowrap transition-all cursor-pointer ${
+              activeTab === 'cloudinary'
+                ? 'border-sky-500 text-sky-600'
+                : 'border-transparent text-slate-500 hover:text-slate-800'
+            }`}
+          >
+            <Cloud className="w-4 h-4" />
+            <span>Cloud Storage</span>
+            {cloudinaryUsage ? (
+              <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-sky-100 text-sky-700">
+                {cloudinaryUsage.credits.usage} / {cloudinaryUsage.credits.limit} Credits
+              </span>
+            ) : (
+              <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600">
+                Cloudinary
+              </span>
+            )}
           </button>
         </div>
 
@@ -880,62 +931,58 @@ export default function AdminPanelModal({
             </div>
           )}
 
-          {/* TAB 3: ROOM STATUS & LANDLORD MANAGEMENT */}
+          {/* TAB 4: ROOM STATUS & LANDLORD MANAGEMENT */}
           {activeTab === 'rooms' && (
             <div className="space-y-4">
-              <p className="text-xs text-slate-600 font-medium">
-                Manage all rooms with their exact GPS addresses and <strong>private Landlord phone numbers</strong>. Update booking status with 1 click.
-              </p>
+              <div className="flex items-center justify-between">
+                <p className="text-xs text-slate-600 font-medium">
+                  Direct Landlord contact directory and live room availability management.
+                </p>
+                <span className="text-xs font-bold text-slate-500">
+                  {listings.length} Listed Properties
+                </span>
+              </div>
 
-              <div className="divide-y divide-slate-200 border border-slate-200 rounded-2xl overflow-hidden bg-white shadow-xs">
+              <div className="divide-y divide-slate-100 border border-slate-200/80 rounded-2xl overflow-hidden bg-white shadow-xs">
                 {listings.map((room) => {
                   const currentStatus = room.status || 'available';
                   return (
-                    <div key={room.id} className="p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:bg-slate-50/70 transition-colors">
-                      
-                      {/* Left: Thumbnail & Room Info */}
-                      <div className="flex items-start gap-3 flex-1">
-                        {room.images && room.images[0] && (
-                          <img
-                            src={room.images[0]}
-                            alt={room.title}
-                            className="w-16 h-16 rounded-xl object-cover shrink-0 border border-slate-200"
-                          />
-                        )}
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-2">
-                            <h4 className="text-xs font-bold text-slate-900 line-clamp-1">
-                              {room.title}
-                            </h4>
-                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                              currentStatus === 'available'
-                                ? 'bg-emerald-100 text-emerald-800'
-                                : currentStatus === 'occupied'
-                                ? 'bg-rose-100 text-rose-800'
-                                : 'bg-amber-100 text-amber-800'
-                            }`}>
-                              {currentStatus === 'available' ? 'Available' : currentStatus === 'occupied' ? 'Booked' : 'Reserved'}
-                            </span>
-                          </div>
+                    <div
+                      key={room.id}
+                      className="p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:bg-slate-50/80 transition-colors"
+                    >
+                      {/* Left: Room & Landlord Info */}
+                      <div className="flex items-start gap-3 min-w-0">
+                        <div className="h-12 w-12 rounded-xl bg-slate-100 overflow-hidden shrink-0 border border-slate-200">
+                          {room.images && room.images[0] ? (
+                            <img
+                              src={room.images[0]}
+                              alt={room.title}
+                              className="h-full w-full object-cover"
+                            />
+                          ) : (
+                            <div className="h-full w-full flex items-center justify-center text-slate-400">
+                              <Building2 className="w-5 h-5" />
+                            </div>
+                          )}
+                        </div>
 
-                          <div className="flex flex-wrap items-center gap-2 text-[11px] text-slate-500">
-                            <span className="font-bold text-slate-800">₹{room.rentAmount?.toLocaleString()}/mo</span>
-                            <span>•</span>
-                            <span>⚡ ₹{room.electricityPerUnit}/unit</span>
-                            <span>•</span>
-                            <span className="flex items-center gap-0.5 font-mono text-slate-600">
-                              <MapPin className="w-3 h-3 text-blue-500" /> {room.address}
-                            </span>
-                          </div>
+                        <div className="min-w-0">
+                          <h4 className="text-xs font-bold text-slate-900 truncate">
+                            {room.title}
+                          </h4>
+                          <p className="text-[11px] text-slate-500 font-mono truncate">
+                            {room.address || 'Address Hidden (Admin Only)'}
+                          </p>
 
-                          {/* Private Landlord Contact Strip */}
-                          <div className="pt-1 flex items-center gap-2 text-xs">
-                            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-50 border border-amber-200 text-amber-950 font-medium">
+                          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1 text-[11px] text-slate-600">
+                            <span className="font-extrabold text-blue-700">
+                              ₹{room.rentAmount} <span className="font-normal text-slate-400">/mo</span>
+                            </span>
+                            <span>•</span>
+                            <div className="flex items-center gap-1 font-semibold text-slate-800">
                               <Lock className="w-3 h-3 text-amber-600" />
-                              <span>Landlord: <strong>{room.landlordName || 'Owner'}</strong></span>
-                              <span className="font-mono font-bold text-slate-900 ml-1">
-                                {room.landlordPhone || 'No phone'}
-                              </span>
+                              <span>Landlord: {room.landlordName || 'N/A'} ({room.landlordPhone || 'No Phone'})</span>
                               {room.landlordPhone && (
                                 <a
                                   href={`tel:${room.landlordPhone}`}
@@ -974,6 +1021,192 @@ export default function AdminPanelModal({
                   );
                 })}
               </div>
+            </div>
+          )}
+
+          {/* TAB 5: CLOUDINARY CLOUD STORAGE MONITORING */}
+          {activeTab === 'cloudinary' && (
+            <div className="space-y-6">
+              {/* Header Strip with Refresh & Console Link */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 bg-gradient-to-r from-sky-900 via-blue-900 to-indigo-950 text-white rounded-3xl shadow-md border border-sky-800/40">
+                <div className="flex items-center gap-3">
+                  <div className="h-11 w-11 rounded-2xl bg-sky-500/20 border border-sky-400/30 flex items-center justify-center text-sky-300 shadow-inner">
+                    <Cloud className="w-6 h-6 animate-pulse" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-sm font-extrabold text-white">Cloudinary Media Storage</h3>
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                        Live Connected
+                      </span>
+                    </div>
+                    <p className="text-xs text-sky-200">
+                      Cloud Name: <span className="font-mono font-bold text-white">{cloudinaryUsage?.cloudName || 'v1iyctik'}</span> • Plan: <span className="font-bold text-amber-300">{cloudinaryUsage?.plan || 'Free'} (25 Credits / 25 GB)</span>
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 self-start sm:self-center">
+                  <button
+                    onClick={fetchCloudinaryUsage}
+                    disabled={loadingUsage}
+                    className="px-3.5 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold border border-white/20 flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50"
+                    title="Fetch latest usage metrics from Cloudinary"
+                  >
+                    <RefreshCw className={`w-3.5 h-3.5 ${loadingUsage ? 'animate-spin' : ''}`} />
+                    <span>Refresh</span>
+                  </button>
+
+                  <a
+                    href="https://console.cloudinary.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-3.5 py-1.5 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 text-xs font-black flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
+                  >
+                    <span>Open Cloudinary</span>
+                    <ExternalLink className="w-3.5 h-3.5" />
+                  </a>
+                </div>
+              </div>
+
+              {/* Loading State */}
+              {loadingUsage && !cloudinaryUsage && (
+                <div className="flex flex-col items-center justify-center py-12 text-slate-500 gap-2">
+                  <RefreshCw className="w-7 h-7 animate-spin text-sky-600" />
+                  <p className="text-xs font-semibold">Connecting to Cloudinary API...</p>
+                </div>
+              )}
+
+              {/* Error State */}
+              {usageError && (
+                <div className="p-4 bg-red-50 border border-red-200 rounded-2xl text-xs text-red-700 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <AlertTriangle className="w-4 h-4 text-red-600 shrink-0" />
+                    <span>{usageError}</span>
+                  </div>
+                  <button
+                    onClick={fetchCloudinaryUsage}
+                    className="px-3 py-1 bg-red-600 text-white rounded-lg font-bold text-[11px] hover:bg-red-700 cursor-pointer"
+                  >
+                    Retry
+                  </button>
+                </div>
+              )}
+
+              {/* Metric KPI Cards */}
+              {cloudinaryUsage && (
+                <>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    {/* Card 1: Total Credits / Quota */}
+                    <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200/80 space-y-2">
+                      <div className="flex items-center justify-between text-xs text-slate-500 font-semibold">
+                        <span>Total Monthly Credits</span>
+                        <BarChart3 className="w-4 h-4 text-sky-600" />
+                      </div>
+                      <div className="flex items-baseline gap-1.5">
+                        <span className="text-2xl font-black text-slate-900">
+                          {cloudinaryUsage.credits.usage.toFixed(2)}
+                        </span>
+                        <span className="text-xs font-bold text-slate-400">
+                          / {cloudinaryUsage.credits.limit} Credits
+                        </span>
+                      </div>
+                      {/* Progress bar */}
+                      <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
+                        <div
+                          className={`h-full rounded-full transition-all duration-500 ${
+                            cloudinaryUsage.credits.usedPercent > 80
+                              ? 'bg-red-500'
+                              : cloudinaryUsage.credits.usedPercent > 50
+                              ? 'bg-amber-500'
+                              : 'bg-emerald-500'
+                          }`}
+                          style={{ width: `${Math.min(cloudinaryUsage.credits.usedPercent, 100)}%` }}
+                        />
+                      </div>
+                      <p className="text-[11px] text-slate-500 font-medium flex items-center justify-between">
+                        <span>Used: <strong>{cloudinaryUsage.credits.usedPercent}%</strong></span>
+                        <span className="text-emerald-700 font-bold">{(cloudinaryUsage.credits.limit - cloudinaryUsage.credits.usage).toFixed(2)} Credits free</span>
+                      </p>
+                    </div>
+
+                    {/* Card 2: Cloud Storage Used */}
+                    <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200/80 space-y-2">
+                      <div className="flex items-center justify-between text-xs text-slate-500 font-semibold">
+                        <span>Storage Occupied</span>
+                        <HardDrive className="w-4 h-4 text-blue-600" />
+                      </div>
+                      <div className="flex items-baseline gap-1.5">
+                        <span className="text-2xl font-black text-blue-700">
+                          {(cloudinaryUsage.storage.bytes / (1024 * 1024)).toFixed(1)}
+                        </span>
+                        <span className="text-xs font-bold text-slate-500">MB</span>
+                      </div>
+                      <p className="text-[11px] text-slate-500 leading-tight">
+                        Permanent cloud storage holding room video walkthroughs and cover photos.
+                      </p>
+                    </div>
+
+                    {/* Card 3: Bandwidth Delivered */}
+                    <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200/80 space-y-2">
+                      <div className="flex items-center justify-between text-xs text-slate-500 font-semibold">
+                        <span>Monthly Bandwidth</span>
+                        <Cloud className="w-4 h-4 text-indigo-600" />
+                      </div>
+                      <div className="flex items-baseline gap-1.5">
+                        <span className="text-2xl font-black text-indigo-700">
+                          {(cloudinaryUsage.bandwidth.bytes / (1024 * 1024)).toFixed(1)}
+                        </span>
+                        <span className="text-xs font-bold text-slate-500">MB Streamed</span>
+                      </div>
+                      <p className="text-[11px] text-slate-500 leading-tight">
+                        Data streamed to students watching room video tours this billing cycle.
+                      </p>
+                    </div>
+
+                    {/* Card 4: Total Stored Assets */}
+                    <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200/80 space-y-2">
+                      <div className="flex items-center justify-between text-xs text-slate-500 font-semibold">
+                        <span>Total Media Assets</span>
+                        <Database className="w-4 h-4 text-emerald-600" />
+                      </div>
+                      <div className="flex items-baseline gap-1.5">
+                        <span className="text-2xl font-black text-emerald-700">
+                          {cloudinaryUsage.resources}
+                        </span>
+                        <span className="text-xs font-bold text-slate-500">files</span>
+                      </div>
+                      <p className="text-[11px] text-slate-500 leading-tight">
+                        Total videos and images active in your Cloudinary repository.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Auto-Optimization & Limits Info Box */}
+                  <div className="p-4 bg-emerald-50/80 border border-emerald-200/80 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs text-emerald-900">
+                    <div className="flex items-start gap-3">
+                      <div className="h-8 w-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-sm mt-0.5 sm:mt-0">
+                        <CheckCircle2 className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <h4 className="font-extrabold text-emerald-950">Automatic Cloud Storage Cleanup Active</h4>
+                        <p className="text-[11px] text-emerald-800 leading-relaxed mt-0.5">
+                          When you or an authorized agent deletes a room listing, the backend automatically calls the Cloudinary API to permanently purge the video tour and photos, freeing up your free tier quota immediately.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="shrink-0 text-right sm:text-right pl-11 sm:pl-0">
+                      <span className="font-mono text-[10px] text-emerald-700 block">
+                        API Rate Limit: {cloudinaryUsage.rateLimitRemaining} / {cloudinaryUsage.rateLimitAllowed} calls left
+                      </span>
+                      <span className="text-[10px] text-emerald-600">
+                        Updated: {cloudinaryUsage.lastUpdated || 'Today'}
+                      </span>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           )}
 

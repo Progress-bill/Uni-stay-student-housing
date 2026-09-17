@@ -60,6 +60,53 @@ const uploadFileToCloudinary = async (localFilePath, resourceType = 'auto', fold
   }
 };
 
+// Parse resource type and public ID from Cloudinary URL
+const parseCloudinaryUrl = (url) => {
+  if (!url || typeof url !== 'string' || !url.includes('cloudinary.com')) return null;
+  const match = url.match(/cloudinary\.com\/[^/]+\/([^/]+)\/upload\/(?:v\d+\/)?(.+?)(?:\.[a-zA-Z0-9]+)?$/);
+  if (!match) return null;
+  return {
+    resourceType: match[1], // 'video' or 'image'
+    publicId: match[2]
+  };
+};
+
+// Delete video or photo asset from Cloudinary (and clean local file if local)
+const deleteFromCloudinary = async (url) => {
+  if (!url || typeof url !== 'string') return false;
+
+  // Handle local uploaded files (/uploads/videos/... or /uploads/images/...)
+  if (url.startsWith('/uploads/')) {
+    const localPath = path.join(__dirname, '..', 'public', url);
+    if (fs.existsSync(localPath)) {
+      try {
+        fs.unlinkSync(localPath);
+        console.log(`[Storage] Deleted local media file: ${localPath}`);
+        return true;
+      } catch (err) {
+        console.warn(`[Storage] Error deleting local file ${localPath}:`, err.message);
+      }
+    }
+    return false;
+  }
+
+  if (!isCloudinaryConfigured || !url.includes('cloudinary.com')) return false;
+
+  const parsed = parseCloudinaryUrl(url);
+  if (!parsed) return false;
+
+  try {
+    const res = await cloudinary.uploader.destroy(parsed.publicId, {
+      resource_type: parsed.resourceType
+    });
+    console.log(`[Cloudinary] Deleted asset ${parsed.publicId} (${parsed.resourceType}):`, res);
+    return res.result === 'ok';
+  } catch (err) {
+    console.error(`[Cloudinary] Error deleting asset ${parsed.publicId}:`, err);
+    return false;
+  }
+};
+
 // Ensure directories exist
 const dataDir = path.join(__dirname, 'data');
 const listingsFilePath = path.join(dataDir, 'listings.json');
@@ -921,7 +968,7 @@ app.post(
 );
 
 // DELETE a listing (Main Admin or Listing Owner)
-app.delete('/api/listings/:id', requireAuth, (req, res) => {
+app.delete('/api/listings/:id', requireAuth, async (req, res) => {
   try {
     const { id } = req.params;
     let listings = readJsonFile(listingsFilePath);
@@ -937,6 +984,16 @@ app.delete('/api/listings/:id', requireAuth, (req, res) => {
         code: 'FORBIDDEN',
         message: 'Only Main Admin or the listing creator can delete this listing.'
       });
+    }
+
+    // Automatically delete video and photo assets from Cloudinary / local storage to free space
+    if (existing.videoUrl) {
+      await deleteFromCloudinary(existing.videoUrl);
+    }
+    if (Array.isArray(existing.images)) {
+      for (const imgUrl of existing.images) {
+        await deleteFromCloudinary(imgUrl);
+      }
     }
 
     listings = listings.filter(l => l.id !== id);
@@ -956,7 +1013,7 @@ app.delete('/api/listings/:id', requireAuth, (req, res) => {
       writeJsonFile(deleteRequestsFilePath, deleteRequests);
     }
 
-    res.json({ success: true, message: 'Listing deleted successfully' });
+    res.json({ success: true, message: 'Listing and cloud media deleted successfully' });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Error deleting listing', error: err.message });
   }
@@ -1020,13 +1077,13 @@ app.post('/api/listings/:id/delete-request', requireAuth, (req, res) => {
 });
 
 // GET /api/delete-requests (Main Admin views all deletion requests)
-app.get('/api/delete-requests', (req, res) => {
+app.get('/api/delete-requests', requireAdmin, (req, res) => {
   const deleteRequests = readJsonFile(deleteRequestsFilePath);
   res.json({ success: true, count: deleteRequests.length, data: deleteRequests });
 });
 
 // PATCH /api/delete-requests/:id (Main Admin approves or rejects deletion request)
-app.patch('/api/delete-requests/:id', (req, res) => {
+app.patch('/api/delete-requests/:id', requireAdmin, async (req, res) => {
   try {
     const { id } = req.params;
     const { action } = req.body; // 'approve' | 'reject'
@@ -1048,20 +1105,82 @@ app.patch('/api/delete-requests/:id', (req, res) => {
     deleteRequests[reqIndex] = deleteReq;
     writeJsonFile(deleteRequestsFilePath, deleteRequests);
 
-    // If approved, delete the listing from listings.json
+    // If approved, delete the listing from listings.json and purge cloud assets
     if (action === 'approve') {
       let listings = readJsonFile(listingsFilePath);
+      const listingToDelete = listings.find(l => l.id === deleteReq.listingId);
+      if (listingToDelete) {
+        if (listingToDelete.videoUrl) {
+          await deleteFromCloudinary(listingToDelete.videoUrl);
+        }
+        if (Array.isArray(listingToDelete.images)) {
+          for (const imgUrl of listingToDelete.images) {
+            await deleteFromCloudinary(imgUrl);
+          }
+        }
+      }
       listings = listings.filter(l => l.id !== deleteReq.listingId);
       writeJsonFile(listingsFilePath, listings);
     }
 
     res.json({
       success: true,
-      message: `Listing deletion request ${action === 'approve' ? 'Approved (Listing removed)' : 'Rejected'} successfully.`,
+      message: `Listing deletion request ${action === 'approve' ? 'Approved (Listing & cloud media removed)' : 'Rejected'} successfully.`,
       data: deleteReq
     });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Error processing deletion request', error: err.message });
+  }
+});
+
+// ==========================================
+// 5. CLOUDINARY STORAGE USAGE MONITORING (ADMIN ONLY)
+// ==========================================
+
+// GET /api/admin/cloudinary/usage (Main Admin monitors real-time storage & bandwidth)
+app.get('/api/admin/cloudinary/usage', requireAdmin, async (req, res) => {
+  if (!isCloudinaryConfigured) {
+    return res.status(400).json({
+      success: false,
+      message: 'Cloudinary is not configured on this server.'
+    });
+  }
+
+  try {
+    const usageData = await cloudinary.api.usage();
+    res.json({
+      success: true,
+      data: {
+        cloudName: process.env.CLOUDINARY_CLOUD_NAME,
+        plan: usageData.plan || 'Free',
+        lastUpdated: usageData.last_updated,
+        credits: {
+          usage: usageData.credits?.usage || 0,
+          limit: usageData.credits?.limit || 25,
+          usedPercent: usageData.credits?.used_percent || 0
+        },
+        storage: {
+          bytes: usageData.storage?.usage || 0,
+          creditsUsage: usageData.storage?.credits_usage || 0
+        },
+        bandwidth: {
+          bytes: usageData.bandwidth?.usage || 0,
+          creditsUsage: usageData.bandwidth?.credits_usage || 0
+        },
+        resources: usageData.resources || 0,
+        objects: usageData.objects?.usage || 0,
+        requests: usageData.requests || 0,
+        rateLimitRemaining: usageData.rate_limit_remaining,
+        rateLimitAllowed: usageData.rate_limit_allowed
+      }
+    });
+  } catch (err) {
+    console.error('Error fetching Cloudinary usage:', err);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch Cloudinary storage metrics',
+      error: err.message
+    });
   }
 });
 
