@@ -78,15 +78,48 @@ const optimizeVideoUrl = (url) => {
   return url;
 };
 
-// Parse resource type and public ID from Cloudinary URL
+// Parse resource type and clean public ID from any Cloudinary URL (handling transformations and versions)
 const parseCloudinaryUrl = (url) => {
   if (!url || typeof url !== 'string' || !url.includes('cloudinary.com')) return null;
-  const match = url.match(/cloudinary\.com\/[^/]+\/([^/]+)\/upload\/(?:v\d+\/)?(.+?)(?:\.[a-zA-Z0-9]+)?$/);
-  if (!match) return null;
-  return {
-    resourceType: match[1], // 'video' or 'image'
-    publicId: match[2]
-  };
+  try {
+    const cleanUrl = url.split('?')[0].split('#')[0];
+    const match = cleanUrl.match(/cloudinary\.com\/[^/]+\/(image|video|raw)\/upload\/(.+)$/);
+    if (!match) return null;
+
+    const resourceType = match[1];
+    let pathAfterUpload = match[2];
+
+    // If version exists (v\d+/), everything after v\d+/ is the publicId!
+    const versionMatch = pathAfterUpload.match(/(?:^|\/)v\d+\/(.+)$/);
+    let publicIdWithExt = '';
+    if (versionMatch) {
+      publicIdWithExt = versionMatch[1];
+    } else {
+      // If no version segment, skip transformation segments (segments with commas or standard parameter prefixes)
+      const parts = pathAfterUpload.split('/');
+      const cleanParts = [];
+      let foundContent = false;
+      for (const part of parts) {
+        if (!foundContent && (part.includes(',') || /^[a-z]{1,2}_/.test(part))) {
+          continue;
+        }
+        foundContent = true;
+        cleanParts.push(part);
+      }
+      publicIdWithExt = cleanParts.join('/');
+    }
+
+    // Strip extension (e.g. .mp4, .jpg, .webm, .mov)
+    const publicId = publicIdWithExt.replace(/\.[a-zA-Z0-9]+$/, '');
+
+    return {
+      resourceType,
+      publicId
+    };
+  } catch (err) {
+    console.error('Error parsing Cloudinary URL:', err);
+    return null;
+  }
 };
 
 // Delete video or photo asset from Cloudinary (and clean local file if local)
@@ -111,13 +144,17 @@ const deleteFromCloudinary = async (url) => {
   if (!isCloudinaryConfigured || !url.includes('cloudinary.com')) return false;
 
   const parsed = parseCloudinaryUrl(url);
-  if (!parsed) return false;
+  if (!parsed || !parsed.publicId) {
+    console.warn(`[Cloudinary] Could not parse public ID from URL: ${url}`);
+    return false;
+  }
 
   try {
     const res = await cloudinary.uploader.destroy(parsed.publicId, {
-      resource_type: parsed.resourceType
+      resource_type: parsed.resourceType,
+      invalidate: true // Purge from CDN edge caches immediately
     });
-    console.log(`[Cloudinary] Deleted asset ${parsed.publicId} (${parsed.resourceType}):`, res);
+    console.log(`[Cloudinary] Deleted asset: "${parsed.publicId}" (${parsed.resourceType}) -> result: ${res.result}`);
     return res.result === 'ok';
   } catch (err) {
     console.error(`[Cloudinary] Error deleting asset ${parsed.publicId}:`, err);
