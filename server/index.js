@@ -43,7 +43,7 @@ const uploadFileToCloudinary = async (localFilePath, resourceType = 'auto', fold
     const uploadResult = await cloudinary.uploader.upload(localFilePath, {
       resource_type: resourceType,
       folder: folder,
-      chunk_size: 6000000
+      chunk_size: 10000000
     });
     // Remove local temp file after cloud upload succeeds
     try {
@@ -107,6 +107,24 @@ const deleteFromCloudinary = async (url) => {
   }
 };
 
+// Purge all media belonging to a room listing (videoTree nodes, videoUrl, images)
+const purgeListingMedia = async (listing) => {
+  if (!listing) return;
+  const urlsToDelete = new Set();
+  if (listing.videoUrl) urlsToDelete.add(listing.videoUrl);
+  if (listing.videoTree) {
+    if (listing.videoTree.root?.url) urlsToDelete.add(listing.videoTree.root.url);
+    if (listing.videoTree.left?.url) urlsToDelete.add(listing.videoTree.left.url);
+    if (listing.videoTree.right?.url) urlsToDelete.add(listing.videoTree.right.url);
+  }
+  if (Array.isArray(listing.images)) {
+    listing.images.forEach(img => img && urlsToDelete.add(img));
+  }
+  for (const mediaUrl of urlsToDelete) {
+    await deleteFromCloudinary(mediaUrl);
+  }
+};
+
 // Ensure directories exist
 const dataDir = path.join(__dirname, 'data');
 const listingsFilePath = path.join(dataDir, 'listings.json');
@@ -143,7 +161,7 @@ const storage = multer.diskStorage({
 const upload = multer({
   storage,
   limits: {
-    fileSize: 150 * 1024 * 1024 // 150MB limit for room video tour
+    fileSize: 500 * 1024 * 1024 // 500MB limit for high-res room video tours
   }
 });
 
@@ -838,7 +856,10 @@ app.post(
   '/api/listings',
   requireAuth,
   upload.fields([
-    { name: 'video', maxCount: 1 },
+    { name: 'video_sleeping', maxCount: 1 },
+    { name: 'video_kitchen', maxCount: 1 },
+    { name: 'video_washing', maxCount: 1 },
+    { name: 'video', maxCount: 1 }, // legacy fallback
     { name: 'image', maxCount: 1 }
   ]),
   async (req, res) => {
@@ -860,6 +881,9 @@ app.post(
         longitude,
         address,
         customCategories,
+        videoUrl_sleeping,
+        videoUrl_kitchen,
+        videoUrl_washing,
         videoUrl: fallbackVideoUrl,
         imageUrl: fallbackImageUrl,
         agentId,
@@ -870,20 +894,72 @@ app.post(
         return res.status(400).json({ success: false, message: 'Title and Rent amount are required' });
       }
 
-      let finalVideoUrl = '';
-      if (req.files && req.files['video'] && req.files['video'][0]) {
-        const videoFile = req.files['video'][0];
-        // Stream video directly to Cloudinary for permanent hosting
-        const cloudVideoUrl = await uploadFileToCloudinary(videoFile.path, 'video', 'unistay_rooms/videos');
-        if (cloudVideoUrl) {
-          finalVideoUrl = cloudVideoUrl;
-          console.log(`[Cloudinary] Video tour stored permanently at: ${cloudVideoUrl}`);
-        } else {
-          finalVideoUrl = `/uploads/videos/${videoFile.filename}`;
-        }
-      } else if (fallbackVideoUrl) {
-        finalVideoUrl = fallbackVideoUrl;
+      // Check presence of all 3 mandatory tree sections
+      const sleepingFile = req.files?.['video_sleeping']?.[0] || req.files?.['video']?.[0];
+      const sleepingUrlFallback = videoUrl_sleeping || fallbackVideoUrl;
+      const hasSleeping = Boolean(sleepingFile || (sleepingUrlFallback && sleepingUrlFallback.trim()));
+
+      const kitchenFile = req.files?.['video_kitchen']?.[0];
+      const kitchenUrlFallback = videoUrl_kitchen;
+      const hasKitchen = Boolean(kitchenFile || (kitchenUrlFallback && kitchenUrlFallback.trim()));
+
+      const washingFile = req.files?.['video_washing']?.[0];
+      const washingUrlFallback = videoUrl_washing;
+      const hasWashing = Boolean(washingFile || (washingUrlFallback && washingUrlFallback.trim()));
+
+      if (!hasSleeping || !hasKitchen || !hasWashing) {
+        const missing = [];
+        if (!hasSleeping) missing.push('Sleeping Room (Root Node)');
+        if (!hasKitchen) missing.push('Kitchen (Left Subtree)');
+        if (!hasWashing) missing.push('Washing Room (Right Subtree)');
+
+        return res.status(400).json({
+          success: false,
+          message: `All 3 video tour sections are mandatory: 1) Sleeping Room, 2) Kitchen, and 3) Washing Room. Missing: ${missing.join(', ')}. If you only have one video, please trim/cut it into 3 clips before uploading.`
+        });
       }
+
+      // Upload all 3 video tree nodes to Cloudinary concurrently
+      const uploadVideoSection = async (file, fallbackUrl, label) => {
+        if (file) {
+          const cloudUrl = await uploadFileToCloudinary(file.path, 'video', 'unistay_rooms/videos');
+          if (cloudUrl) {
+            console.log(`[Cloudinary] ${label} video stored at: ${cloudUrl}`);
+            return cloudUrl;
+          }
+          return `/uploads/videos/${file.filename}`;
+        }
+        return (fallbackUrl || '').trim();
+      };
+
+      const [finalSleepingUrl, finalKitchenUrl, finalWashingUrl] = await Promise.all([
+        uploadVideoSection(sleepingFile, sleepingUrlFallback, 'Sleeping Room'),
+        uploadVideoSection(kitchenFile, kitchenUrlFallback, 'Kitchen'),
+        uploadVideoSection(washingFile, washingUrlFallback, 'Washing Room')
+      ]);
+
+      const videoTree = {
+        root: {
+          id: 'sleeping_room',
+          title: 'Sleeping Room',
+          role: 'root',
+          url: finalSleepingUrl
+        },
+        left: {
+          id: 'kitchen',
+          title: 'Kitchen',
+          role: 'left',
+          url: finalKitchenUrl
+        },
+        right: {
+          id: 'washing_room',
+          title: 'Washing Room',
+          role: 'right',
+          url: finalWashingUrl
+        }
+      };
+
+      const finalVideoUrl = finalSleepingUrl || finalKitchenUrl || finalWashingUrl;
 
       let finalImages = [];
       if (req.files && req.files['image'] && req.files['image'][0]) {
@@ -943,6 +1019,7 @@ app.post(
         longitude: parseFloat(longitude) || 77.2090,
         address: (address || 'Near Student University Hub').trim(),
         videoUrl: finalVideoUrl,
+        videoTree: videoTree,
         images: finalImages,
         customCategories: parsedCategories,
         agentId: finalAgentId,
@@ -986,15 +1063,8 @@ app.delete('/api/listings/:id', requireAuth, async (req, res) => {
       });
     }
 
-    // Automatically delete video and photo assets from Cloudinary / local storage to free space
-    if (existing.videoUrl) {
-      await deleteFromCloudinary(existing.videoUrl);
-    }
-    if (Array.isArray(existing.images)) {
-      for (const imgUrl of existing.images) {
-        await deleteFromCloudinary(imgUrl);
-      }
-    }
+    // Automatically delete videoTree, video, and photo assets from Cloudinary / local storage
+    await purgeListingMedia(existing);
 
     listings = listings.filter(l => l.id !== id);
     writeJsonFile(listingsFilePath, listings);
@@ -1110,14 +1180,7 @@ app.patch('/api/delete-requests/:id', requireAdmin, async (req, res) => {
       let listings = readJsonFile(listingsFilePath);
       const listingToDelete = listings.find(l => l.id === deleteReq.listingId);
       if (listingToDelete) {
-        if (listingToDelete.videoUrl) {
-          await deleteFromCloudinary(listingToDelete.videoUrl);
-        }
-        if (Array.isArray(listingToDelete.images)) {
-          for (const imgUrl of listingToDelete.images) {
-            await deleteFromCloudinary(imgUrl);
-          }
-        }
+        await purgeListingMedia(listingToDelete);
       }
       listings = listings.filter(l => l.id !== deleteReq.listingId);
       writeJsonFile(listingsFilePath, listings);

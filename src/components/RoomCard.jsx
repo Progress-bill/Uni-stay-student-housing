@@ -117,7 +117,7 @@ export default function RoomCard({
           {room.videoUrl && (
             <span className="bg-black/60 backdrop-blur-md text-white px-2.5 py-1 rounded-full text-xs font-medium flex items-center gap-1">
               <Video className="w-3.5 h-3.5 text-red-400 animate-pulse" />
-              <span>Video Tour</span>
+              <span>{room.videoTree ? '🌳 3-Part Tour Tree' : 'Video Tour'}</span>
             </span>
           )}
         </div>
@@ -354,7 +354,7 @@ export default function RoomCard({
               className="flex-1 inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-bold transition-all cursor-pointer"
             >
               <Video className="w-3.5 h-3.5" />
-              <span>Tour Video</span>
+              <span>{room.videoTree ? '🌳 3-Part Tour' : 'Tour Video'}</span>
             </button>
           )}
 

@@ -13,7 +13,14 @@ import {
   Check, 
   LocateFixed, 
   AlertCircle,
-  Loader2 
+  Loader2,
+  Bed,
+  UtensilsCrossed,
+  Bath,
+  Scissors,
+  GitFork,
+  CheckCircle2,
+  Trash2
 } from 'lucide-react';
 import MapView from './MapView';
 import { useAuth } from '../context/AuthContext';
@@ -47,10 +54,18 @@ export default function AddRoomModal({ isOpen, onClose, onRoomAdded }) {
   const [tagInput, setTagInput] = useState('');
   const [tags, setTags] = useState(['Single Room', 'Attached Washroom']);
 
-  // Media files
-  const [videoFile, setVideoFile] = useState(null);
+  // Tree-structured Video Media (Root: Sleeping Room, Left: Kitchen, Right: Washing Room)
+  const [videoSleepingFile, setVideoSleepingFile] = useState(null);
+  const [videoSleepingUrl, setVideoSleepingUrl] = useState('');
+
+  const [videoKitchenFile, setVideoKitchenFile] = useState(null);
+  const [videoKitchenUrl, setVideoKitchenUrl] = useState('');
+
+  const [videoWashingFile, setVideoWashingFile] = useState(null);
+  const [videoWashingUrl, setVideoWashingUrl] = useState('');
+
+  // Cover photo
   const [imageFile, setImageFile] = useState(null);
-  const [videoUrlFallback, setVideoUrlFallback] = useState('');
   const [imageUrlFallback, setImageUrlFallback] = useState('');
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -134,6 +149,20 @@ export default function AddRoomModal({ isOpen, onClose, onRoomAdded }) {
       return;
     }
 
+    // Enforce mandatory 3-part video tree validation
+    const hasSleeping = Boolean(videoSleepingFile || (videoSleepingUrl && videoSleepingUrl.trim()));
+    const hasKitchen = Boolean(videoKitchenFile || (videoKitchenUrl && videoKitchenUrl.trim()));
+    const hasWashing = Boolean(videoWashingFile || (videoWashingUrl && videoWashingUrl.trim()));
+
+    if (!hasSleeping || !hasKitchen || !hasWashing) {
+      const missing = [];
+      if (!hasSleeping) missing.push('Sleeping Room (Root Node)');
+      if (!hasKitchen) missing.push('Kitchen (Left Subtree)');
+      if (!hasWashing) missing.push('Washing Room (Right Subtree)');
+      setErrorMsg(`All 3 video tour sections are mandatory. Missing: ${missing.join(', ')}. If you only have one video, please trim it into 3 separate clips.`);
+      return;
+    }
+
     setIsSubmitting(true);
     setErrorMsg('');
 
@@ -158,10 +187,23 @@ export default function AddRoomModal({ isOpen, onClose, onRoomAdded }) {
       formData.append('agentId', user?.id || 'user-admin-1');
       formData.append('agentName', user?.name || 'UniStay Housing Desk');
 
-      if (videoFile) {
-        formData.append('video', videoFile);
-      } else if (videoUrlFallback) {
-        formData.append('videoUrl', videoUrlFallback);
+      // Append 3-part video tree files or URLs
+      if (videoSleepingFile) {
+        formData.append('video_sleeping', videoSleepingFile);
+      } else if (videoSleepingUrl.trim()) {
+        formData.append('videoUrl_sleeping', videoSleepingUrl.trim());
+      }
+
+      if (videoKitchenFile) {
+        formData.append('video_kitchen', videoKitchenFile);
+      } else if (videoKitchenUrl.trim()) {
+        formData.append('videoUrl_kitchen', videoKitchenUrl.trim());
+      }
+
+      if (videoWashingFile) {
+        formData.append('video_washing', videoWashingFile);
+      } else if (videoWashingUrl.trim()) {
+        formData.append('videoUrl_washing', videoWashingUrl.trim());
       }
 
       if (imageFile) {
@@ -477,76 +519,274 @@ export default function AddRoomModal({ isOpen, onClose, onRoomAdded }) {
             </div>
           </div>
 
-          {/* Section 4: Video & Image Upload */}
-          <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200/80 space-y-4">
-            <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
-              <Video className="w-4 h-4 text-blue-600" /> Upload Room Video Tour
-            </h3>
-            
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {/* Video upload input */}
+          {/* Section 4: Tree Structure Video Tour Upload (Max 3, All Mandatory) */}
+          <div className="p-5 bg-slate-50 rounded-3xl border border-slate-200/90 space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 pb-1 border-b border-slate-200/60">
               <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1">
-                  Select Video File (.mp4, .webm, .mov)
-                </label>
-                <input
-                  type="file"
-                  accept="video/*"
-                  onChange={(e) => setVideoFile(e.target.files[0] || null)}
-                  className="block w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-700 file:cursor-pointer"
-                />
-                {videoFile && (
-                  <p className="mt-1 text-[11px] text-emerald-600 font-medium">
-                    ✓ Video selected: {videoFile.name} ({(videoFile.size / (1024 * 1024)).toFixed(1)} MB)
-                  </p>
-                )}
+                <h3 className="text-sm font-extrabold text-slate-900 flex items-center gap-2">
+                  <GitFork className="w-4 h-4 text-blue-600 rotate-180" />
+                  <span>3-Part Room Tour Tree Structure</span>
+                </h3>
+                <p className="text-[11px] text-slate-500">
+                  Binary tree video tour: Sleeping Room (Root), Kitchen (Left), Washing Room (Right).
+                </p>
               </div>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-blue-700 bg-blue-100/80 px-2.5 py-1 rounded-full w-fit">
+                Max 500MB / Video
+              </span>
+            </div>
 
-              {/* Or Video URL */}
-              <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1">
-                  Or Paste Video URL
-                </label>
-                <input
-                  type="url"
-                  placeholder="https://.../room-tour.mp4"
-                  value={videoUrlFallback}
-                  onChange={(e) => setVideoUrlFallback(e.target.value)}
-                  className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-blue-500/20 outline-none"
-                />
+            {/* Single Continuous Video Guidance Banner */}
+            <div className="p-3.5 bg-amber-50/90 border border-amber-200/90 rounded-2xl flex items-start gap-3 text-xs text-amber-950">
+              <div className="p-2 rounded-xl bg-amber-500 text-white shrink-0 mt-0.5 shadow-sm">
+                <Scissors className="w-4 h-4" />
+              </div>
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="font-extrabold text-amber-950">Have only one continuous video?</span>
+                  <span className="text-[10px] bg-amber-200 text-amber-900 px-2 py-0.5 rounded-full font-black uppercase tracking-wider">Tip</span>
+                </div>
+                <p className="text-[11px] text-amber-800 leading-relaxed">
+                  Use your phone's built-in video editor or trimmer to split your single walkthrough into <strong>3 separate clips</strong>:
+                  <strong className="text-amber-950"> 1) Sleeping Room</strong>, 
+                  <strong className="text-amber-950"> 2) Kitchen</strong>, and 
+                  <strong className="text-amber-950"> 3) Washing Room</strong>. 
+                  All three sections are required so students can navigate the room interactively.
+                </p>
               </div>
             </div>
 
-            {/* Image upload */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-slate-200/60">
-              <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1">
-                  Cover Photo File (.jpg, .png)
-                </label>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => setImageFile(e.target.files[0] || null)}
-                  className="block w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-slate-800 file:text-white hover:file:bg-slate-900 file:cursor-pointer"
-                />
-                {imageFile && (
-                  <p className="mt-1 text-[11px] text-emerald-600 font-medium">
-                    ✓ Photo selected: {imageFile.name}
-                  </p>
-                )}
+            {/* Tree Completion Status Tracker */}
+            <div className="p-2.5 bg-white rounded-2xl border border-slate-200 flex items-center justify-between text-xs">
+              <span className="font-bold text-slate-700 flex items-center gap-1.5">
+                <CheckCircle2 className="w-4 h-4 text-blue-600" />
+                Tour Tree Readiness:
+              </span>
+              <div className="flex items-center gap-1.5">
+                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                  (videoSleepingFile || videoSleepingUrl.trim()) ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-400'
+                }`}>
+                  🛏️ Root: {(videoSleepingFile || videoSleepingUrl.trim()) ? 'Ready' : 'Pending'}
+                </span>
+                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                  (videoKitchenFile || videoKitchenUrl.trim()) ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-400'
+                }`}>
+                  🍳 Left: {(videoKitchenFile || videoKitchenUrl.trim()) ? 'Ready' : 'Pending'}
+                </span>
+                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                  (videoWashingFile || videoWashingUrl.trim()) ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-400'
+                }`}>
+                  🚿 Right: {(videoWashingFile || videoWashingUrl.trim()) ? 'Ready' : 'Pending'}
+                </span>
+              </div>
+            </div>
+
+            {/* Visual Binary Tree Container */}
+            <div className="space-y-3">
+              
+              {/* 1. ROOT NODE: Sleeping Room */}
+              <div className="p-4 bg-blue-50/70 rounded-2xl border-2 border-blue-200 space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="p-1.5 rounded-lg bg-blue-600 text-white">
+                      <Bed className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <span className="text-xs font-black text-blue-950 uppercase tracking-wider block">
+                        Root Node: Sleeping Room
+                      </span>
+                      <span className="text-[10px] text-blue-800">
+                        Main bedroom / living area (Required)
+                      </span>
+                    </div>
+                  </div>
+                  <span className="text-[10px] font-extrabold text-red-600 bg-red-100 px-2 py-0.5 rounded-md">
+                    Required
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                  <div>
+                    <input
+                      type="file"
+                      accept="video/*"
+                      onChange={(e) => setVideoSleepingFile(e.target.files[0] || null)}
+                      className="block w-full text-[11px] text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-[11px] file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-700 file:cursor-pointer"
+                    />
+                    {videoSleepingFile && (
+                      <div className="mt-1 flex items-center justify-between text-[11px] text-emerald-700 font-medium">
+                        <span>✓ {videoSleepingFile.name} ({(videoSleepingFile.size / (1024 * 1024)).toFixed(1)} MB)</span>
+                        <button
+                          type="button"
+                          onClick={() => setVideoSleepingFile(null)}
+                          className="text-slate-400 hover:text-red-600 cursor-pointer"
+                          title="Remove file"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    <input
+                      type="url"
+                      placeholder="Or paste sleeping room video URL"
+                      value={videoSleepingUrl}
+                      onChange={(e) => setVideoSleepingUrl(e.target.value)}
+                      className="w-full px-3 py-1.5 bg-white border border-blue-200 rounded-xl text-xs focus:ring-2 focus:ring-blue-500/20 outline-none"
+                    />
+                  </div>
+                </div>
               </div>
 
-              <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1">
-                  Or Cover Photo URL
-                </label>
-                <input
-                  type="url"
-                  placeholder="https://.../room.jpg"
-                  value={imageUrlFallback}
-                  onChange={(e) => setImageUrlFallback(e.target.value)}
-                  className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-blue-500/20 outline-none"
-                />
+              {/* Tree Branch Visual Connector */}
+              <div className="flex flex-col items-center justify-center my-1">
+                <div className="w-0.5 h-4 bg-slate-300" />
+                <div className="w-2/3 h-0.5 bg-slate-300" />
+                <div className="flex justify-between w-2/3">
+                  <div className="w-0.5 h-3 bg-slate-300" />
+                  <div className="w-0.5 h-3 bg-slate-300" />
+                </div>
+              </div>
+
+              {/* Subtree Nodes Grid (Kitchen Left, Washing Room Right) */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                
+                {/* 2. LEFT SUBTREE: Kitchen */}
+                <div className="p-4 bg-amber-50/70 rounded-2xl border-2 border-amber-200 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="p-1.5 rounded-lg bg-amber-600 text-white">
+                        <UtensilsCrossed className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <span className="text-xs font-black text-amber-950 uppercase tracking-wider block">
+                          Left Subtree: Kitchen
+                        </span>
+                        <span className="text-[10px] text-amber-800">
+                          Cooking area / kitchenette (Required)
+                        </span>
+                      </div>
+                    </div>
+                    <span className="text-[10px] font-extrabold text-red-600 bg-red-100 px-2 py-0.5 rounded-md">
+                      Required
+                    </span>
+                  </div>
+
+                  <div className="space-y-2 pt-1">
+                    <input
+                      type="file"
+                      accept="video/*"
+                      onChange={(e) => setVideoKitchenFile(e.target.files[0] || null)}
+                      className="block w-full text-[11px] text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-[11px] file:font-semibold file:bg-amber-600 file:text-white hover:file:bg-amber-700 file:cursor-pointer"
+                    />
+                    {videoKitchenFile && (
+                      <div className="flex items-center justify-between text-[11px] text-emerald-700 font-medium">
+                        <span>✓ {videoKitchenFile.name} ({(videoKitchenFile.size / (1024 * 1024)).toFixed(1)} MB)</span>
+                        <button
+                          type="button"
+                          onClick={() => setVideoKitchenFile(null)}
+                          className="text-slate-400 hover:text-red-600 cursor-pointer"
+                          title="Remove file"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    )}
+                    <input
+                      type="url"
+                      placeholder="Or paste kitchen video URL"
+                      value={videoKitchenUrl}
+                      onChange={(e) => setVideoKitchenUrl(e.target.value)}
+                      className="w-full px-3 py-1.5 bg-white border border-amber-200 rounded-xl text-xs focus:ring-2 focus:ring-amber-500/20 outline-none"
+                    />
+                  </div>
+                </div>
+
+                {/* 3. RIGHT SUBTREE: Washing Room */}
+                <div className="p-4 bg-teal-50/70 rounded-2xl border-2 border-teal-200 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="p-1.5 rounded-lg bg-teal-600 text-white">
+                        <Bath className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <span className="text-xs font-black text-teal-950 uppercase tracking-wider block">
+                          Right Subtree: Washing Room
+                        </span>
+                        <span className="text-[10px] text-teal-800">
+                          Washroom / bathroom (Required)
+                        </span>
+                      </div>
+                    </div>
+                    <span className="text-[10px] font-extrabold text-red-600 bg-red-100 px-2 py-0.5 rounded-md">
+                      Required
+                    </span>
+                  </div>
+
+                  <div className="space-y-2 pt-1">
+                    <input
+                      type="file"
+                      accept="video/*"
+                      onChange={(e) => setVideoWashingFile(e.target.files[0] || null)}
+                      className="block w-full text-[11px] text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-[11px] file:font-semibold file:bg-teal-600 file:text-white hover:file:bg-teal-700 file:cursor-pointer"
+                    />
+                    {videoWashingFile && (
+                      <div className="flex items-center justify-between text-[11px] text-emerald-700 font-medium">
+                        <span>✓ {videoWashingFile.name} ({(videoWashingFile.size / (1024 * 1024)).toFixed(1)} MB)</span>
+                        <button
+                          type="button"
+                          onClick={() => setVideoWashingFile(null)}
+                          className="text-slate-400 hover:text-red-600 cursor-pointer"
+                          title="Remove file"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    )}
+                    <input
+                      type="url"
+                      placeholder="Or paste washing room video URL"
+                      value={videoWashingUrl}
+                      onChange={(e) => setVideoWashingUrl(e.target.value)}
+                      className="w-full px-3 py-1.5 bg-white border border-teal-200 rounded-xl text-xs focus:ring-2 focus:ring-teal-500/20 outline-none"
+                    />
+                  </div>
+                </div>
+
+              </div>
+
+            </div>
+
+            {/* Cover Photo Upload (Card Thumbnail) */}
+            <div className="p-4 bg-white rounded-2xl border border-slate-200 space-y-2 pt-3">
+              <label className="block text-xs font-bold text-slate-800">
+                Cover Photo (Card Thumbnail)
+              </label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => setImageFile(e.target.files[0] || null)}
+                    className="block w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-slate-800 file:text-white hover:file:bg-slate-900 file:cursor-pointer"
+                  />
+                  {imageFile && (
+                    <p className="mt-1 text-[11px] text-emerald-600 font-medium">
+                      ✓ Photo selected: {imageFile.name}
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <input
+                    type="url"
+                    placeholder="Or paste cover photo URL"
+                    value={imageUrlFallback}
+                    onChange={(e) => setImageUrlFallback(e.target.value)}
+                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-blue-500/20 outline-none"
+                  />
+                </div>
               </div>
             </div>
           </div>

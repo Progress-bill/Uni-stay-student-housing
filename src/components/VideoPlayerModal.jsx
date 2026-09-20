@@ -7,16 +7,47 @@ import {
   Zap, 
   MapPin, 
   Building2,
-  Lock 
+  Lock,
+  Bed,
+  UtensilsCrossed,
+  Bath,
+  GitFork,
+  ArrowRight,
+  ArrowLeft
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export default function VideoPlayerModal({ room, onClose }) {
-  if (!room || !room.videoUrl) return null;
+  if (!room || (!room.videoUrl && !room.videoTree)) return null;
 
   const { isAdmin, isAgent, user } = useAuth();
   const [isPip, setIsPip] = useState(false);
   const videoRef = useRef(null);
+
+  // Derive tree structure (with backward compatibility)
+  const videoTree = room.videoTree || {
+    root: room.videoUrl ? { id: 'sleeping_room', title: 'Sleeping Room', role: 'root', url: room.videoUrl } : null,
+    left: null,
+    right: null
+  };
+
+  const [activeNodeKey, setActiveNodeKey] = useState(() => {
+    if (videoTree.root?.url) return 'root';
+    if (videoTree.left?.url) return 'left';
+    if (videoTree.right?.url) return 'right';
+    return 'root';
+  });
+
+  const activeNode = videoTree[activeNodeKey] || videoTree.root || { title: 'Sleeping Room', url: room.videoUrl };
+  const currentVideoUrl = activeNode?.url || room.videoUrl;
+
+  const handleSwitchNode = (nodeKey) => {
+    setActiveNodeKey(nodeKey);
+    if (videoRef.current) {
+      videoRef.current.currentTime = 0;
+      videoRef.current.play().catch(() => {});
+    }
+  };
 
   const formatPrice = (amt) => {
     return new Intl.NumberFormat('en-IN', {
@@ -28,11 +59,12 @@ export default function VideoPlayerModal({ room, onClose }) {
 
   const getWhatsAppUrl = () => {
     let msg = '';
+    const sectionName = activeNode?.title || 'Sleeping Room';
     if (isAgent) {
       const agentIdentifier = user?.name ? `Agent ${user.name} (${user.phone})` : (user?.phone ? `Agent (${user.phone})` : 'an active House Agent');
-      msg = `Hello Admin! I am ${agentIdentifier}. I just reviewed the video tour for room "${room.title}" (Rent: ${formatPrice(room.rentAmount)}/mo). I have a client who wants this room and I am inquiring about the current room status — is it still vacant and available for my client to book?`;
+      msg = `Hello Admin! I am ${agentIdentifier}. I reviewed the 3-part room tour (currently viewing: ${sectionName}) for "${room.title}" (Rent: ${formatPrice(room.rentAmount)}/mo). I have a client who wants this room and I am inquiring about the current room status — is it still vacant and available for my client to book?`;
     } else {
-      msg = `Hello Admin! I just watched the video tour of "${room.title}" (Rent: ${formatPrice(room.rentAmount)}/mo, Electricity: ₹${room.electricityPerUnit}/unit). I want to schedule a visit!`;
+      msg = `Hello Admin! I am watching the ${sectionName} video tour of "${room.title}" (Rent: ${formatPrice(room.rentAmount)}/mo, Electricity: ₹${room.electricityPerUnit}/unit). I want to schedule a visit!`;
     }
     return `https://wa.me/919041543868?text=${encodeURIComponent(msg)}`;
   };
@@ -57,6 +89,10 @@ export default function VideoPlayerModal({ room, onClose }) {
             <span className="text-xs font-bold truncate text-slate-200">
               Video Tour: {room.title}
             </span>
+            <span className="hidden sm:inline-flex items-center gap-1 text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full bg-blue-600/25 text-blue-300 border border-blue-500/30">
+              <GitFork className="w-2.5 h-2.5 rotate-180" />
+              {activeNode?.title || 'Room Tour'}
+            </span>
           </div>
           <div className="flex items-center gap-2">
             <button
@@ -76,11 +112,62 @@ export default function VideoPlayerModal({ room, onClose }) {
           </div>
         </div>
 
+        {/* Tree Navigation Selector Bar */}
+        <div className="bg-slate-950/90 border-b border-slate-800/80 px-3 py-2 flex items-center justify-between gap-2 overflow-x-auto">
+          <div className="flex items-center gap-1.5 w-full justify-center">
+            {/* Left Child: Kitchen */}
+            <button
+              type="button"
+              onClick={() => videoTree.left?.url && handleSwitchNode('left')}
+              disabled={!videoTree.left?.url}
+              className={`flex-1 max-w-[200px] flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${
+                activeNodeKey === 'left'
+                  ? 'bg-amber-600 text-white shadow-md shadow-amber-600/30 ring-1 ring-amber-400'
+                  : 'bg-slate-900 text-slate-300 hover:bg-slate-800 hover:text-white border border-slate-800'
+              }`}
+            >
+              <UtensilsCrossed className="w-3.5 h-3.5 text-amber-400" />
+              <span className="truncate">Kitchen (Left)</span>
+            </button>
+
+            {/* Root Node: Sleeping Room */}
+            <button
+              type="button"
+              onClick={() => videoTree.root?.url && handleSwitchNode('root')}
+              disabled={!videoTree.root?.url}
+              className={`flex-1 max-w-[240px] flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${
+                activeNodeKey === 'root'
+                  ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30 ring-1 ring-blue-400'
+                  : 'bg-slate-900 text-slate-300 hover:bg-slate-800 hover:text-white border border-slate-800'
+              }`}
+            >
+              <Bed className="w-3.5 h-3.5 text-blue-400" />
+              <span className="truncate">Sleeping Room (Root)</span>
+            </button>
+
+            {/* Right Child: Washing Room */}
+            <button
+              type="button"
+              onClick={() => videoTree.right?.url && handleSwitchNode('right')}
+              disabled={!videoTree.right?.url}
+              className={`flex-1 max-w-[200px] flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${
+                activeNodeKey === 'right'
+                  ? 'bg-teal-600 text-white shadow-md shadow-teal-600/30 ring-1 ring-teal-400'
+                  : 'bg-slate-900 text-slate-300 hover:bg-slate-800 hover:text-white border border-slate-800'
+              }`}
+            >
+              <Bath className="w-3.5 h-3.5 text-teal-400" />
+              <span className="truncate">Washing Room (Right)</span>
+            </button>
+          </div>
+        </div>
+
         {/* Video Player */}
         <div className="relative aspect-video bg-black flex items-center justify-center">
           <video
             ref={videoRef}
-            src={room.videoUrl}
+            key={currentVideoUrl}
+            src={currentVideoUrl}
             controls
             autoPlay
             playsInline
@@ -88,6 +175,48 @@ export default function VideoPlayerModal({ room, onClose }) {
           >
             Your browser does not support the video tag.
           </video>
+
+          {/* In-Video Tree Quick Branch Navigators (Floating overlay buttons) */}
+          <div className="absolute bottom-14 left-4 right-4 flex items-center justify-between pointer-events-none z-20">
+            {activeNodeKey === 'root' ? (
+              <>
+                {videoTree.left?.url ? (
+                  <button
+                    type="button"
+                    onClick={() => handleSwitchNode('left')}
+                    className="pointer-events-auto flex items-center gap-1.5 bg-black/75 hover:bg-amber-600 text-white text-xs font-bold py-1.5 px-3 rounded-full backdrop-blur-md border border-white/20 transition-all shadow-lg cursor-pointer"
+                  >
+                    <ArrowLeft className="w-3 h-3" />
+                    <span>View Kitchen (Left)</span>
+                  </button>
+                ) : <span />}
+
+                {videoTree.right?.url && (
+                  <button
+                    type="button"
+                    onClick={() => handleSwitchNode('right')}
+                    className="pointer-events-auto flex items-center gap-1.5 bg-black/75 hover:bg-teal-600 text-white text-xs font-bold py-1.5 px-3 rounded-full backdrop-blur-md border border-white/20 transition-all shadow-lg cursor-pointer"
+                  >
+                    <span>View Washing Room (Right)</span>
+                    <ArrowRight className="w-3 h-3" />
+                  </button>
+                )}
+              </>
+            ) : (
+              <div className="w-full flex justify-center pointer-events-auto">
+                {videoTree.root?.url && (
+                  <button
+                    type="button"
+                    onClick={() => handleSwitchNode('root')}
+                    className="flex items-center gap-1.5 bg-black/75 hover:bg-blue-600 text-white text-xs font-bold py-1.5 px-3.5 rounded-full backdrop-blur-md border border-white/20 transition-all shadow-lg cursor-pointer"
+                  >
+                    <Bed className="w-3 h-3 text-blue-400" />
+                    <span>Return to Sleeping Room (Root)</span>
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Video Details Bar */}
