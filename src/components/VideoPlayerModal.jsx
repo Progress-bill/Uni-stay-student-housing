@@ -13,7 +13,8 @@ import {
   Bath,
   GitFork,
   ArrowRight,
-  ArrowLeft
+  ArrowLeft,
+  VolumeX
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
@@ -170,11 +171,21 @@ export default function VideoPlayerModal({ room, onClose }) {
             src={currentVideoUrl}
             controls
             autoPlay
+            muted
+            defaultMuted
             playsInline
             className="w-full h-full object-contain"
           >
             Your browser does not support the video tag.
           </video>
+
+          {/* Muted Tour Badge Indicator */}
+          <div className="absolute top-3 left-3 z-20 pointer-events-none">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-black/60 backdrop-blur-md text-slate-200 border border-white/10 shadow-sm">
+              <VolumeX className="w-3.5 h-3.5 text-amber-400" />
+              <span>Muted Walkthrough</span>
+            </span>
+          </div>
 
           {/* In-Video Tree Quick Branch Navigators (Floating overlay buttons) */}
           <div className="absolute bottom-14 left-4 right-4 flex items-center justify-between pointer-events-none z-20">

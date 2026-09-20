@@ -40,11 +40,20 @@ const uploadFileToCloudinary = async (localFilePath, resourceType = 'auto', fold
     return null;
   }
   try {
-    const uploadResult = await cloudinary.uploader.upload(localFilePath, {
+    const uploadOptions = {
       resource_type: resourceType,
       folder: folder,
       chunk_size: 10000000
-    });
+    };
+
+    // For video tour walkthroughs: strip audio to reduce file size, save storage & bandwidth, and mute by default
+    if (resourceType === 'video') {
+      uploadOptions.audio_codec = 'none'; // Strips audio stream completely from the stored video
+      uploadOptions.quality = 'auto:good'; // Automatic visual compression
+      uploadOptions.fetch_format = 'auto'; // Optimize format for web streaming
+    }
+
+    const uploadResult = await cloudinary.uploader.upload(localFilePath, uploadOptions);
     // Remove local temp file after cloud upload succeeds
     try {
       if (fs.existsSync(localFilePath)) {
@@ -58,6 +67,15 @@ const uploadFileToCloudinary = async (localFilePath, resourceType = 'auto', fold
     console.error(`[Cloudinary] Upload failed for ${localFilePath}:`, err);
     return null;
   }
+};
+
+// Automatically ensure Cloudinary video URLs deliver without audio (ac_none) and optimized (q_auto)
+const optimizeVideoUrl = (url) => {
+  if (!url || typeof url !== 'string') return url;
+  if (url.includes('cloudinary.com') && url.includes('/video/upload/') && !url.includes('/ac_none')) {
+    return url.replace('/video/upload/', '/video/upload/ac_none,q_auto/');
+  }
+  return url;
 };
 
 // Parse resource type and public ID from Cloudinary URL
@@ -943,23 +961,23 @@ app.post(
           id: 'sleeping_room',
           title: 'Sleeping Room',
           role: 'root',
-          url: finalSleepingUrl
+          url: optimizeVideoUrl(finalSleepingUrl)
         },
         left: {
           id: 'kitchen',
           title: 'Kitchen',
           role: 'left',
-          url: finalKitchenUrl
+          url: optimizeVideoUrl(finalKitchenUrl)
         },
         right: {
           id: 'washing_room',
           title: 'Washing Room',
           role: 'right',
-          url: finalWashingUrl
+          url: optimizeVideoUrl(finalWashingUrl)
         }
       };
 
-      const finalVideoUrl = finalSleepingUrl || finalKitchenUrl || finalWashingUrl;
+      const finalVideoUrl = videoTree.root.url || videoTree.left.url || videoTree.right.url;
 
       let finalImages = [];
       if (req.files && req.files['image'] && req.files['image'][0]) {

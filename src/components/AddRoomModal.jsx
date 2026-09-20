@@ -551,7 +551,7 @@ export default function AddRoomModal({ isOpen, onClose, onRoomAdded }) {
                   <strong className="text-amber-950"> 1) Sleeping Room</strong>, 
                   <strong className="text-amber-950"> 2) Kitchen</strong>, and 
                   <strong className="text-amber-950"> 3) Washing Room</strong>. 
-                  All three sections are required so students can navigate the room interactively.
+                  Audio tracks are automatically removed upon upload to reduce file sizes and stream on mute for a silent walkthrough experience.
                 </p>
               </div>
             </div>
