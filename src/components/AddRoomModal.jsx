@@ -49,6 +49,7 @@ export default function AddRoomModal({ isOpen, onClose, onRoomAdded }) {
   const [latitude, setLatitude] = useState(28.5355);
   const [longitude, setLongitude] = useState(77.2090);
   const [fetchingAddress, setFetchingAddress] = useState(false);
+  const [searchingAddress, setSearchingAddress] = useState(false);
 
   // Custom tags
   const [tagInput, setTagInput] = useState('');
@@ -71,24 +72,31 @@ export default function AddRoomModal({ isOpen, onClose, onRoomAdded }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
-  // Reverse geocoding helper via OpenStreetMap Nominatim
+  // Reverse geocoding helper (Fast cached backend proxy with client fallback)
   const fetchAddressForCoords = async (lat, lng) => {
     setFetchingAddress(true);
     try {
-      const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`, {
-        headers: {
-          'Accept-Language': 'en'
+      // 1. Try cached backend endpoint first
+      const apiRes = await fetch(`/api/geocode/reverse?lat=${lat}&lng=${lng}`);
+      if (apiRes.ok) {
+        const json = await apiRes.json();
+        if (json.success && json.data?.formattedAddress) {
+          setAddress(json.data.formattedAddress);
+          return;
         }
+      }
+
+      // 2. Client fallback
+      const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`, {
+        headers: { 'Accept-Language': 'en' }
       });
       if (res.ok) {
         const data = await res.json();
         if (data && data.display_name) {
-          // Format a clean, human-readable address
           const road = data.address?.road || data.address?.pedestrian || data.address?.footway || data.address?.neighbourhood || '';
           const suburb = data.address?.suburb || data.address?.city_district || data.address?.residential || '';
           const city = data.address?.city || data.address?.town || data.address?.county || '';
           const cleanAddr = [road, suburb, city].filter(Boolean).join(', ');
-
           setAddress(cleanAddr || data.display_name);
         }
       }
@@ -111,7 +119,7 @@ export default function AddRoomModal({ isOpen, onClose, onRoomAdded }) {
     setTags(tags.filter(t => t !== tagToRemove));
   };
 
-  // Geolocation
+  // Geolocation with high accuracy
   const handleGetCurrentLocation = () => {
     if ('geolocation' in navigator) {
       setFetchingAddress(true);
@@ -126,19 +134,66 @@ export default function AddRoomModal({ isOpen, onClose, onRoomAdded }) {
         (err) => {
           console.warn('Geolocation error:', err);
           setFetchingAddress(false);
-          alert('Could not access current location. Please click on the map to place the GPS pin.');
-        }
+          alert('Could not access current location. Please check browser GPS permissions or click directly on the map.');
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
       );
+    } else {
+      alert('Geolocation is not supported by your browser.');
     }
   };
 
-  // Handle map click in modal
-  const handleLocationSelect = (lat, lng) => {
+  // Handle map click in modal (avoids duplicate reverse-geocode requests if addr was already resolved by MapView)
+  const handleLocationSelect = (lat, lng, addr) => {
     const rLat = parseFloat(lat.toFixed(5));
     const rLng = parseFloat(lng.toFixed(5));
     setLatitude(rLat);
     setLongitude(rLng);
-    fetchAddressForCoords(rLat, rLng);
+    if (addr && typeof addr === 'string') {
+      setAddress(addr);
+    } else {
+      fetchAddressForCoords(rLat, rLng);
+    }
+  };
+
+  // Geocode typed address and pin on map
+  const handleLocateTypedAddress = async () => {
+    const query = address.trim();
+    if (!query) return;
+    setSearchingAddress(true);
+    try {
+      // 1. Try cached backend endpoint
+      const apiRes = await fetch(`/api/geocode/search?q=${encodeURIComponent(query)}`);
+      if (apiRes.ok) {
+        const json = await apiRes.json();
+        if (json.success && Array.isArray(json.data) && json.data.length > 0) {
+          const item = json.data[0];
+          setLatitude(item.lat);
+          setLongitude(item.lng);
+          if (item.formattedAddress) {
+            setAddress(item.formattedAddress);
+          }
+          return;
+        }
+      }
+
+      // 2. Client fallback
+      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`, {
+        headers: { 'Accept-Language': 'en' }
+      });
+      const data = await res.json();
+      if (data && data.length > 0) {
+        const item = data[0];
+        setLatitude(parseFloat(parseFloat(item.lat).toFixed(5)));
+        setLongitude(parseFloat(parseFloat(item.lon).toFixed(5)));
+      } else {
+        alert('Could not locate address on map. Please check spelling or click directly on the map.');
+      }
+    } catch (err) {
+      console.warn('Geocoding error:', err);
+    } finally {
+      setSearchingAddress(false);
+    }
   };
 
   // Submit listing
@@ -251,7 +306,15 @@ export default function AddRoomModal({ isOpen, onClose, onRoomAdded }) {
         </div>
 
         {/* Modal Body / Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-6 max-h-[80vh] overflow-y-auto">
+        <form 
+          onSubmit={handleSubmit} 
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && e.target.tagName === 'INPUT') {
+              e.preventDefault();
+            }
+          }}
+          className="p-6 space-y-6 max-h-[80vh] overflow-y-auto"
+        >
           
           {errorMsg && (
             <div className="p-3.5 bg-red-50 border border-red-200 rounded-xl flex items-center gap-2 text-xs font-semibold text-red-700">
@@ -815,23 +878,53 @@ export default function AddRoomModal({ isOpen, onClose, onRoomAdded }) {
                 <label className="block text-xs font-semibold text-slate-600">
                   House Address / Landmark
                 </label>
-                {fetchingAddress && (
-                  <span className="flex items-center gap-1 text-[10px] text-blue-600 font-medium animate-pulse">
-                    <Loader2 className="w-3 h-3 animate-spin" /> Fetching street name...
-                  </span>
-                )}
+                <div className="flex items-center gap-2">
+                  {fetchingAddress && (
+                    <span className="flex items-center gap-1 text-[10px] text-blue-600 font-medium animate-pulse">
+                      <Loader2 className="w-3 h-3 animate-spin" /> Fetching street name...
+                    </span>
+                  )}
+                  {searchingAddress && (
+                    <span className="flex items-center gap-1 text-[10px] text-blue-600 font-medium animate-pulse">
+                      <Loader2 className="w-3 h-3 animate-spin" /> Locating on map...
+                    </span>
+                  )}
+                </div>
               </div>
-              <input
-                type="text"
-                placeholder="e.g. House #14, Lane 2, Near Engineering Campus Gate"
-                value={address}
-                onChange={(e) => setAddress(e.target.value)}
-                className="w-full px-3.5 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-blue-500/20 outline-none"
-              />
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="e.g. House #14, Lane 2, Near Engineering Campus Gate"
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleLocateTypedAddress();
+                    }
+                  }}
+                  className="flex-1 px-3.5 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-blue-500/20 outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={handleLocateTypedAddress}
+                  disabled={searchingAddress || !address.trim()}
+                  className="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-40 text-white text-xs font-bold transition-all cursor-pointer flex items-center gap-1 shrink-0"
+                  title="Locate this address on the map below"
+                >
+                  {searchingAddress ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <MapPin className="w-3.5 h-3.5" />
+                  )}
+                  <span>Locate on Map</span>
+                </button>
+              </div>
             </div>
 
             {/* Interactive Pin Picker Map */}
-            <div className="h-56 w-full rounded-xl overflow-hidden border border-slate-200">
+            <div className="h-72 w-full rounded-2xl overflow-hidden border border-slate-200 shadow-inner">
               <MapView
                 pickerMode={true}
                 pickerLocation={{ lat: latitude, lng: longitude }}

@@ -846,6 +846,127 @@ app.delete('/api/admin/agents/:id', (req, res) => {
 });
 
 // ==========================================
+// 2B. GEOCODING & GPS SEARCH PROXY WITH IN-MEMORY CACHE
+// ==========================================
+const geocodeCache = new Map();
+const GEOCODE_CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours
+
+const cleanAddressObj = (raw) => {
+  if (!raw) return '';
+  const addr = raw.address || {};
+  const road = addr.road || addr.pedestrian || addr.footway || addr.street || addr.neighbourhood || '';
+  const suburb = addr.suburb || addr.residential || addr.city_district || '';
+  const city = addr.city || addr.town || addr.village || addr.county || '';
+  const cleanParts = [road, suburb, city].filter(Boolean);
+  if (cleanParts.length > 0) {
+    return cleanParts.join(', ');
+  }
+  return raw.display_name ? raw.display_name.split(',').slice(0, 3).join(', ') : '';
+};
+
+// GET /api/geocode/search?q=...
+app.get('/api/geocode/search', async (req, res) => {
+  try {
+    const q = (req.query.q || '').trim();
+    if (!q) {
+      return res.status(400).json({ success: false, message: 'Query parameter "q" is required' });
+    }
+
+    const cacheKey = `search:${q.toLowerCase()}`;
+    const cached = geocodeCache.get(cacheKey);
+    if (cached && (Date.now() - cached.timestamp < GEOCODE_CACHE_TTL)) {
+      return res.json({ success: true, source: 'cache', data: cached.data });
+    }
+
+    const nominatimUrl = `https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&limit=5&q=${encodeURIComponent(q)}`;
+    const response = await fetch(nominatimUrl, {
+      headers: {
+        'User-Agent': 'UniStay-Student-Housing/1.0 (contact@unistay.internal)',
+        'Accept-Language': 'en'
+      }
+    });
+
+    if (!response.ok) {
+      return res.status(response.status).json({ success: false, message: 'Upstream geocoding service error' });
+    }
+
+    const rawResults = await response.json();
+    const formatted = (Array.isArray(rawResults) ? rawResults : []).map(item => ({
+      lat: parseFloat(parseFloat(item.lat).toFixed(5)),
+      lng: parseFloat(parseFloat(item.lon).toFixed(5)),
+      displayName: item.display_name,
+      formattedAddress: cleanAddressObj(item),
+      type: item.type,
+      importance: item.importance
+    }));
+
+    if (geocodeCache.size > 500) {
+      const firstKey = geocodeCache.keys().next().value;
+      geocodeCache.delete(firstKey);
+    }
+    geocodeCache.set(cacheKey, { data: formatted, timestamp: Date.now() });
+
+    res.json({ success: true, source: 'live', data: formatted });
+  } catch (err) {
+    console.error('Geocode search error:', err);
+    res.status(500).json({ success: false, message: 'Geocoding search failed', error: err.message });
+  }
+});
+
+// GET /api/geocode/reverse?lat=...&lng=...
+app.get('/api/geocode/reverse', async (req, res) => {
+  try {
+    const lat = parseFloat(req.query.lat);
+    const lng = parseFloat(req.query.lng);
+    if (isNaN(lat) || isNaN(lng)) {
+      return res.status(400).json({ success: false, message: 'Valid lat and lng query parameters are required' });
+    }
+
+    const rLat = parseFloat(lat.toFixed(4));
+    const rLng = parseFloat(lng.toFixed(4));
+    const cacheKey = `rev:${rLat},${rLng}`;
+
+    const cached = geocodeCache.get(cacheKey);
+    if (cached && (Date.now() - cached.timestamp < GEOCODE_CACHE_TTL)) {
+      return res.json({ success: true, source: 'cache', data: cached.data });
+    }
+
+    const nominatimUrl = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&addressdetails=1&lat=${rLat}&lon=${rLng}`;
+    const response = await fetch(nominatimUrl, {
+      headers: {
+        'User-Agent': 'UniStay-Student-Housing/1.0 (contact@unistay.internal)',
+        'Accept-Language': 'en'
+      }
+    });
+
+    if (!response.ok) {
+      return res.status(response.status).json({ success: false, message: 'Upstream reverse geocoding error' });
+    }
+
+    const raw = await response.json();
+    const cleanAddr = cleanAddressObj(raw) || raw.display_name || `${rLat}, ${rLng}`;
+    const resultData = {
+      lat: rLat,
+      lng: rLng,
+      formattedAddress: cleanAddr,
+      displayName: raw.display_name || cleanAddr,
+      addressDetails: raw.address || {}
+    };
+
+    if (geocodeCache.size > 500) {
+      const firstKey = geocodeCache.keys().next().value;
+      geocodeCache.delete(firstKey);
+    }
+    geocodeCache.set(cacheKey, { data: resultData, timestamp: Date.now() });
+
+    res.json({ success: true, source: 'live', data: resultData });
+  } catch (err) {
+    console.error('Reverse geocode error:', err);
+    res.status(500).json({ success: false, message: 'Reverse geocoding failed', error: err.message });
+  }
+});
+
+// ==========================================
 // 3. ROOM LISTINGS & STATUS MANAGEMENT
 // ==========================================
 

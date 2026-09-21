@@ -148,6 +148,8 @@ export default function MapView({
   // Search Address / Landmark state
   const [searchQuery, setSearchQuery] = useState('');
   const [searchingPlace, setSearchingPlace] = useState(false);
+  const [searchResults, setSearchResults] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
 
   // Navigation Route state (OSRM API)
   const [activeRoute, setActiveRoute] = useState(null);
@@ -211,10 +213,25 @@ export default function MapView({
     );
   };
 
-  // Reverse Geocode a pinned location
+  // Reverse Geocode a pinned location (Fast cached backend proxy with client fallback)
   const reverseGeocode = async (lat, lng) => {
     setFetchingAddress(true);
     try {
+      // 1. Try fast cached backend endpoint first
+      const apiRes = await fetch(`/api/geocode/reverse?lat=${lat}&lng=${lng}`);
+      if (apiRes.ok) {
+        const json = await apiRes.json();
+        if (json.success && json.data?.formattedAddress) {
+          const addr = json.data.formattedAddress;
+          setPinAddress(addr);
+          if (onLocationSelect) {
+            onLocationSelect(lat, lng, addr);
+          }
+          return;
+        }
+      }
+
+      // 2. Fallback to direct Nominatim
       const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`, {
         headers: { 'Accept-Language': 'en' }
       });
@@ -245,29 +262,68 @@ export default function MapView({
     reverseGeocode(newCoords.lat, newCoords.lng);
   };
 
-  // Search Address / Place API (Nominatim)
+  // Select place from search suggestions
+  const handleSelectSearchResult = (item) => {
+    const coords = { lat: item.lat, lng: item.lng };
+    setMapCenter([item.lat, item.lng]);
+    setDroppedPin(coords);
+    const cleanAddr = item.formattedAddress || item.displayName.split(',').slice(0, 3).join(', ');
+    setPinAddress(cleanAddr);
+    setSearchQuery(cleanAddr);
+    setShowSuggestions(false);
+    if (onLocationSelect) {
+      onLocationSelect(item.lat, item.lng, cleanAddr);
+    }
+  };
+
+  // Search Address / Place API (Fast Backend Proxy with Cache & Nominatim Fallback)
   const handleSearchPlace = async (e) => {
-    e.preventDefault();
-    if (!searchQuery.trim()) return;
+    if (e) {
+      e.preventDefault?.();
+      e.stopPropagation?.();
+    }
+    const query = searchQuery.trim();
+    if (!query) return;
 
     setSearchingPlace(true);
     try {
-      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery.trim())}&limit=1`, {
+      // 1. Try fast cached backend endpoint first
+      const apiRes = await fetch(`/api/geocode/search?q=${encodeURIComponent(query)}`);
+      if (apiRes.ok) {
+        const json = await apiRes.json();
+        if (json.success && Array.isArray(json.data) && json.data.length > 0) {
+          setSearchResults(json.data);
+          handleSelectSearchResult(json.data[0]);
+          if (json.data.length > 1) {
+            setShowSuggestions(true);
+          }
+          return;
+        }
+      }
+
+      // 2. Client fallback to Nominatim
+      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5`, {
         headers: { 'Accept-Language': 'en' }
       });
       const data = await res.json();
       if (data && data.length > 0) {
-        const item = data[0];
-        const lat = parseFloat(parseFloat(item.lat).toFixed(5));
-        const lng = parseFloat(parseFloat(item.lon).toFixed(5));
-        setMapCenter([lat, lng]);
-        handleMapPin(lat, lng);
+        const formatted = data.map(item => ({
+          lat: parseFloat(parseFloat(item.lat).toFixed(5)),
+          lng: parseFloat(parseFloat(item.lon).toFixed(5)),
+          displayName: item.display_name,
+          formattedAddress: item.display_name.split(',').slice(0, 3).join(', ')
+        }));
+        setSearchResults(formatted);
+        handleSelectSearchResult(formatted[0]);
+        if (formatted.length > 1) {
+          setShowSuggestions(true);
+        }
       } else {
-        alert('No location found matching your search.');
+        alert('No location found matching your search. Try another landmark or street name.');
       }
     } catch (err) {
       console.error('Search error:', err);
-      alert('Error connecting to map search API.');
+      alert('Error connecting to map search service.');
     } finally {
       setSearchingPlace(false);
     }
@@ -369,36 +425,82 @@ export default function MapView({
       {/* Top Map Action Bar (Search, GPS Connect, Pin Mode) */}
       <div className="absolute top-3 left-3 right-3 z-[1000] flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 pointer-events-none">
         
-        {/* Left: Place Search Bar */}
-        <form 
-          onSubmit={handleSearchPlace}
-          className="pointer-events-auto flex items-center bg-white/95 backdrop-blur-md rounded-2xl shadow-md border border-slate-200/90 px-3 py-1.5 w-full sm:max-w-xs"
+        {/* Left: Place Search Bar (Non-form container to prevent form submit bubbling) */}
+        <div 
+          role="search"
+          className="pointer-events-auto relative flex flex-col w-full sm:max-w-xs"
         >
-          <Search className="w-3.5 h-3.5 text-slate-400 shrink-0 mr-2" />
-          <input
-            type="text"
-            placeholder="Search place, college or area..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full text-xs bg-transparent outline-none text-slate-800 placeholder:text-slate-400 font-medium"
-          />
-          {searchQuery && (
+          <div className="flex items-center bg-white/95 backdrop-blur-md rounded-2xl shadow-md border border-slate-200/90 px-3 py-1.5 w-full">
+            <Search className="w-3.5 h-3.5 text-slate-400 shrink-0 mr-2" />
+            <input
+              type="text"
+              placeholder="Search place, college or area..."
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                if (!e.target.value.trim()) {
+                  setSearchResults([]);
+                  setShowSuggestions(false);
+                }
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleSearchPlace(e);
+                }
+              }}
+              className="w-full text-xs bg-transparent outline-none text-slate-800 placeholder:text-slate-400 font-medium"
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchQuery('');
+                  setSearchResults([]);
+                  setShowSuggestions(false);
+                }}
+                className="text-slate-400 hover:text-slate-600 text-xs mr-1 cursor-pointer"
+              >
+                ×
+              </button>
+            )}
             <button
               type="button"
-              onClick={() => setSearchQuery('')}
-              className="text-slate-400 hover:text-slate-600 text-xs mr-1 cursor-pointer"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleSearchPlace(e);
+              }}
+              disabled={searchingPlace}
+              className="p-1 px-2.5 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 text-xs font-bold transition-all cursor-pointer disabled:opacity-50 shrink-0 flex items-center gap-1"
+              title="Search place on map"
             >
-              ×
+              {searchingPlace ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Find'}
             </button>
+          </div>
+
+          {/* Search Suggestions Dropdown */}
+          {showSuggestions && searchResults.length > 0 && (
+            <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden z-[1100] max-h-48 overflow-y-auto divide-y divide-slate-100">
+              {searchResults.map((item, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => handleSelectSearchResult(item)}
+                  className="w-full text-left px-3 py-2 text-xs hover:bg-blue-50 flex flex-col gap-0.5 transition-colors cursor-pointer"
+                >
+                  <span className="font-bold text-slate-900 truncate">
+                    {item.formattedAddress || item.displayName.split(',')[0]}
+                  </span>
+                  <span className="text-[10px] text-slate-500 truncate">
+                    {item.displayName}
+                  </span>
+                </button>
+              ))}
+            </div>
           )}
-          <button
-            type="submit"
-            disabled={searchingPlace}
-            className="p-1 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 text-xs font-bold transition-all cursor-pointer disabled:opacity-50"
-          >
-            {searchingPlace ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Find'}
-          </button>
-        </form>
+        </div>
 
         {/* Right: GPS Controls */}
         <div className="pointer-events-auto flex items-center gap-1.5 self-end sm:self-auto">
