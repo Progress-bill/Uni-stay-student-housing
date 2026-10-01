@@ -25,7 +25,10 @@ import {
   ExternalLink,
   BarChart3,
   Database,
-  Edit3
+  Edit3,
+  Download,
+  Upload,
+  GitBranch
 } from 'lucide-react';
 import EditRoomModal from './EditRoomModal';
 
@@ -63,6 +66,92 @@ export default function AdminPanelModal({
   const [deleteConfirmAgent, setDeleteConfirmAgent] = useState(null);
   const [reconnectingCloud, setReconnectingCloud] = useState(false);
   const [reconnectResult, setReconnectResult] = useState(null);
+
+  // GitHub & Database Backup states
+  const [syncingGithub, setSyncingGithub] = useState(false);
+  const [backupStatusMessage, setBackupStatusMessage] = useState('');
+  const [restoringBackup, setRestoringBackup] = useState(false);
+
+  // Download backup JSON file
+  const handleDownloadBackup = async () => {
+    try {
+      const token = localStorage.getItem('unistay_token');
+      const res = await fetch(`/api/admin/backup-download${token ? `?token=${encodeURIComponent(token)}` : ''}`, {
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+      });
+      if (!res.ok) throw new Error('Download failed from server');
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `unistay_listings_backup_${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (e) {
+      alert('Could not download backup file: ' + e.message);
+    }
+  };
+
+  // Sync to GitHub repository
+  const handleSyncGithub = async () => {
+    setSyncingGithub(true);
+    setBackupStatusMessage('');
+    try {
+      const token = localStorage.getItem('unistay_token');
+      const res = await fetch('/api/admin/sync-github', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        }
+      });
+      const data = await res.json();
+      if (data.success) {
+        setBackupStatusMessage(`✅ ${data.message} (${data.totalListings} listings saved in GitHub backup file).`);
+      } else {
+        setBackupStatusMessage(`⚠️ ${data.message || 'GitHub sync initiated'}`);
+      }
+    } catch (e) {
+      setBackupStatusMessage('Sync error: ' + e.message);
+    } finally {
+      setSyncingGithub(false);
+    }
+  };
+
+  // Restore database from uploaded JSON file
+  const handleRestoreBackupFile = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setRestoringBackup(true);
+    setBackupStatusMessage('');
+    try {
+      const text = await file.text();
+      const json = JSON.parse(text);
+      const token = localStorage.getItem('unistay_token');
+      const res = await fetch('/api/admin/backup-restore', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify({ listings: Array.isArray(json) ? json : json.listings })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setBackupStatusMessage(`✅ Restored ${data.totalRestored} listings to database and synchronized!`);
+        if (onRefreshListings) onRefreshListings();
+      } else {
+        alert(data.message || 'Restoration failed');
+      }
+    } catch (err) {
+      alert('Invalid JSON backup file: ' + err.message);
+    } finally {
+      setRestoringBackup(false);
+      e.target.value = '';
+    }
+  };
 
   // Fetch applications
   const fetchApplications = async () => {
@@ -1322,6 +1411,91 @@ export default function AdminPanelModal({
                       <span className="text-[10px] text-emerald-600">
                         Updated: {cloudinaryUsage.lastUpdated || 'Today'}
                       </span>
+                    </div>
+                  </div>
+
+                  {/* GitHub & Cloud Database Backup Center */}
+                  <div className="p-5 bg-gradient-to-br from-slate-900 to-indigo-950 text-white rounded-3xl border border-slate-700/60 shadow-lg space-y-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 rounded-2xl bg-indigo-500/20 border border-indigo-400/30 flex items-center justify-center text-indigo-300">
+                          <GitBranch className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <h4 className="text-sm font-bold text-white">GitHub Repository & Cloud Database Backup</h4>
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                              Active Backup
+                            </span>
+                          </div>
+                          <p className="text-xs text-slate-300">
+                            Persistent backup file: <span className="font-mono text-amber-300">server/data/listings_backup.json</span> ({listings.length} listings)
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Action Buttons */}
+                      <div className="flex flex-wrap items-center gap-2">
+                        {/* Download JSON Backup */}
+                        <button
+                          type="button"
+                          onClick={handleDownloadBackup}
+                          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold transition-all border border-slate-600 shadow-xs cursor-pointer"
+                          title="Download latest database JSON backup to your computer"
+                        >
+                          <Download className="w-3.5 h-3.5 text-sky-400" />
+                          <span>Download JSON</span>
+                        </button>
+
+                        {/* Push to GitHub */}
+                        <button
+                          type="button"
+                          onClick={handleSyncGithub}
+                          disabled={syncingGithub}
+                          className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-xs font-bold transition-all shadow-md shadow-indigo-600/30 cursor-pointer"
+                          title="Commit & push latest listings_backup.json to GitHub repository"
+                        >
+                          <GitBranch className={`w-3.5 h-3.5 ${syncingGithub ? 'animate-spin' : ''}`} />
+                          <span>{syncingGithub ? 'Syncing GitHub...' : 'Sync to GitHub'}</span>
+                        </button>
+
+                        {/* Upload & Restore Backup */}
+                        <label className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold transition-all border border-slate-600 shadow-xs cursor-pointer">
+                          <Upload className="w-3.5 h-3.5 text-amber-400" />
+                          <span>{restoringBackup ? 'Restoring...' : 'Restore JSON'}</span>
+                          <input
+                            type="file"
+                            accept=".json"
+                            className="hidden"
+                            onChange={handleRestoreBackupFile}
+                            disabled={restoringBackup}
+                          />
+                        </label>
+                      </div>
+                    </div>
+
+                    {backupStatusMessage && (
+                      <div className="p-3 bg-indigo-900/60 border border-indigo-500/40 rounded-xl text-xs text-indigo-100 flex items-center justify-between">
+                        <span>{backupStatusMessage}</span>
+                        <button
+                          type="button"
+                          onClick={() => setBackupStatusMessage('')}
+                          className="text-slate-400 hover:text-white font-bold ml-2 cursor-pointer"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    )}
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-slate-800/80 text-[11px] text-slate-300">
+                      <div className="flex items-center gap-2">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                        <span>Every edit automatically mirrors to <strong>listings_backup.json</strong></span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                        <span>Cloudinary persistent cloud snapshot: <strong>unistay_database/listings.json</strong></span>
+                      </div>
                     </div>
                   </div>
                 </>

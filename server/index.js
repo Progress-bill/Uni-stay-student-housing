@@ -4,6 +4,7 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
+import { exec } from 'child_process';
 import dotenv from 'dotenv';
 import { v2 as cloudinary } from 'cloudinary';
 
@@ -183,6 +184,7 @@ const purgeListingMedia = async (listing) => {
 // Ensure directories exist
 const dataDir = path.join(__dirname, 'data');
 const listingsFilePath = path.join(dataDir, 'listings.json');
+const listingsBackupFilePath = path.join(dataDir, 'listings_backup.json');
 const usersFilePath = path.join(dataDir, 'users.json');
 const applicationsFilePath = path.join(dataDir, 'agent_applications.json');
 const deleteRequestsFilePath = path.join(dataDir, 'delete_requests.json');
@@ -262,9 +264,110 @@ const syncDatabaseToCloudinary = async (filePath) => {
   }
 };
 
+let gitSyncTimeout = null;
+
+// Synchronize backup file to GitHub (using GitHub API if GITHUB_TOKEN is available, or git CLI)
+const syncToGitHubBackup = async (reason = 'auto-sync') => {
+  try {
+    if (!fs.existsSync(listingsBackupFilePath)) return { success: false, message: 'Backup file missing' };
+    const backupContent = fs.readFileSync(listingsBackupFilePath, 'utf8');
+    const parsed = JSON.parse(backupContent);
+    console.log(`[GitHub Backup] Initiating backup sync (${parsed.length} listings, reason: ${reason})...`);
+
+    // Method 1: If GITHUB_TOKEN is provided (works on Render, Docker, Cloud containers without local git auth)
+    const githubToken = process.env.GITHUB_TOKEN || process.env.GH_TOKEN;
+    const repoOwner = 'Progress-bill';
+    const repoName = 'Uni-stay-student-housing';
+    const filePathInRepo = 'server/data/listings_backup.json';
+
+    if (githubToken) {
+      try {
+        const getUrl = `https://api.github.com/repos/${repoOwner}/${repoName}/contents/${filePathInRepo}`;
+        const getRes = await fetch(getUrl, {
+          headers: {
+            'Authorization': `Bearer ${githubToken}`,
+            'Accept': 'application/vnd.github.v3+json',
+            'User-Agent': 'UniStay-Backend-Sync'
+          }
+        });
+        let currentSha = null;
+        if (getRes.ok) {
+          const fileInfo = await getRes.json();
+          currentSha = fileInfo.sha;
+        }
+
+        const putRes = await fetch(getUrl, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${githubToken}`,
+            'Accept': 'application/vnd.github.v3+json',
+            'User-Agent': 'UniStay-Backend-Sync',
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            message: `chore: update listings backup in GitHub (${parsed.length} listings) [skip ci]`,
+            content: Buffer.from(backupContent).toString('base64'),
+            sha: currentSha || undefined,
+            branch: 'main'
+          })
+        });
+
+        if (putRes.ok) {
+          console.log('[GitHub Backup] Successfully pushed listings_backup.json to GitHub repository via API!');
+          return { success: true, method: 'github_api', message: 'Backup successfully pushed to GitHub repository' };
+        } else {
+          const errData = await putRes.json().catch(() => ({}));
+          console.warn('[GitHub Backup] GitHub API update note:', errData.message);
+        }
+      } catch (apiErr) {
+        console.warn('[GitHub Backup] GitHub API error:', apiErr.message);
+      }
+    }
+
+    // Method 2: Git CLI (works on local development machine or environments with git push access)
+    return new Promise((resolve) => {
+      exec(
+        'git add server/data/listings_backup.json server/data/listings.json && git commit -m "chore: auto-backup listings to GitHub [skip ci]" && git push origin main',
+        { cwd: path.join(__dirname, '..') },
+        (error, stdout, stderr) => {
+          if (error) {
+            console.log('[GitHub Backup] Local git CLI note:', stderr?.trim() || error.message);
+            resolve({ success: false, method: 'git_cli', note: stderr?.trim() || error.message });
+          } else {
+            console.log('[GitHub Backup] Git CLI push succeeded to GitHub origin main!');
+            resolve({ success: true, method: 'git_cli', message: 'Successfully committed and pushed to GitHub' });
+          }
+        }
+      );
+    });
+  } catch (err) {
+    console.error('[GitHub Backup] Failed to synchronize to GitHub:', err);
+    return { success: false, error: err.message };
+  }
+};
+
+// Debounced trigger so editing multiple fields doesn't trigger 10 commits in 5 seconds
+const triggerDebouncedGitHubSync = () => {
+  if (gitSyncTimeout) clearTimeout(gitSyncTimeout);
+  gitSyncTimeout = setTimeout(() => {
+    syncToGitHubBackup('debounced-update');
+  }, 25000); // 25 seconds after last modification
+};
+
 const writeJsonFile = (filePath, data) => {
   try {
     fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf8');
+
+    // If listings are updated, mirror to listings_backup.json and trigger GitHub sync
+    if (filePath === listingsFilePath) {
+      try {
+        fs.writeFileSync(listingsBackupFilePath, JSON.stringify(data, null, 2), 'utf8');
+      } catch (bErr) {
+        console.warn('Could not mirror listings_backup.json:', bErr.message);
+      }
+      triggerDebouncedGitHubSync();
+    }
+
     // Asynchronously synchronize persistent database backup to Cloudinary
     syncDatabaseToCloudinary(filePath);
     return true;
@@ -274,10 +377,20 @@ const writeJsonFile = (filePath, data) => {
   }
 };
 
-// Restore persistent database from Cloudinary storage on boot
+// Restore persistent database from Cloudinary storage and GitHub backup on boot
 const initDatabaseFromCloud = async () => {
-  if (!isCloudinaryConfigured) return;
   try {
+    // Step 1: Immediate fallback from repository backup if local listings are empty or <= 3
+    const currentListings = readJsonFile(listingsFilePath, []);
+    const backupListings = readJsonFile(listingsBackupFilePath, []);
+    if (Array.isArray(backupListings) && backupListings.length > currentListings.length) {
+      fs.writeFileSync(listingsFilePath, JSON.stringify(backupListings, null, 2), 'utf8');
+      console.log(`[GitHub Backup] Loaded ${backupListings.length} listings from repository listings_backup.json`);
+    }
+
+    if (!isCloudinaryConfigured) return;
+
+    // Step 2: Check Cloudinary persistent raw database backups
     console.log('[Cloudinary Database] Checking persistent cloud database backups...');
     const filesToSync = [
       { name: 'listings.json', path: listingsFilePath },
@@ -298,6 +411,9 @@ const initDatabaseFromCloud = async () => {
             if (!Array.isArray(localData) || cloudData.length >= localData.length) {
               fs.writeFileSync(item.path, JSON.stringify(cloudData, null, 2), 'utf8');
               console.log(`[Cloudinary Database] Restored ${item.name} from Cloudinary (${cloudData.length} records)`);
+              if (item.name === 'listings.json') {
+                fs.writeFileSync(listingsBackupFilePath, JSON.stringify(cloudData, null, 2), 'utf8');
+              }
             }
           }
         }
@@ -309,7 +425,7 @@ const initDatabaseFromCloud = async () => {
       }
     }
   } catch (err) {
-    console.warn('[Cloudinary Database] Error syncing database from cloud on startup:', err.message);
+    console.warn('[Database Init] Error syncing database on startup:', err.message);
   }
 };
 
@@ -1178,17 +1294,27 @@ app.get('/api/geocode/reverse', async (req, res) => {
 // GET all listings
 app.get('/api/listings', async (req, res) => {
   let listings = readJsonFile(listingsFilePath);
-  // Auto-recovery fallback: If listings are empty or sample only (due to ephemeral disk restart), fetch from Cloudinary
-  if (listings.length <= 3 && isCloudinaryConfigured) {
-    try {
-      await initDatabaseFromCloud();
-      listings = readJsonFile(listingsFilePath);
-      if (listings.length <= 3) {
-        await reconcileCloudinaryMedia();
+  // Auto-recovery fallback: If listings are empty or sample only (due to ephemeral disk restart)
+  if (listings.length <= 3) {
+    // 1. Immediate fallback from repository backup file in GitHub
+    const backupListings = readJsonFile(listingsBackupFilePath, []);
+    if (Array.isArray(backupListings) && backupListings.length > listings.length) {
+      listings = backupListings;
+      fs.writeFileSync(listingsFilePath, JSON.stringify(listings, null, 2), 'utf8');
+      console.log(`[GitHub Backup] Fallback loaded ${listings.length} listings from listings_backup.json`);
+    }
+
+    if (listings.length <= 3 && isCloudinaryConfigured) {
+      try {
+        await initDatabaseFromCloud();
         listings = readJsonFile(listingsFilePath);
+        if (listings.length <= 3) {
+          await reconcileCloudinaryMedia();
+          listings = readJsonFile(listingsFilePath);
+        }
+      } catch (err) {
+        console.warn('Auto-sync in GET /api/listings failed:', err.message);
       }
-    } catch (err) {
-      console.warn('Auto-sync in GET /api/listings failed:', err.message);
     }
   }
 
@@ -1742,6 +1868,63 @@ app.post('/api/admin/reconnect-cloudinary', requireAdmin, async (req, res) => {
     res.json(result);
   } catch (err) {
     res.status(500).json({ success: false, message: 'Reconciliation failed', error: err.message });
+  }
+});
+
+// GET /api/admin/backup-download (Download raw listings_backup.json from server)
+app.get('/api/admin/backup-download', requireAdmin, (req, res) => {
+  try {
+    if (!fs.existsSync(listingsBackupFilePath)) {
+      if (fs.existsSync(listingsFilePath)) {
+        fs.copyFileSync(listingsFilePath, listingsBackupFilePath);
+      } else {
+        return res.status(404).json({ success: false, message: 'Backup file not found' });
+      }
+    }
+    const today = new Date().toISOString().split('T')[0];
+    res.download(listingsBackupFilePath, `unistay_listings_backup_${today}.json`);
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Error downloading backup', error: err.message });
+  }
+});
+
+// POST /api/admin/sync-github (Trigger manual GitHub backup commit & push)
+app.post('/api/admin/sync-github', requireAdmin, async (req, res) => {
+  try {
+    const result = await syncToGitHubBackup('admin-requested');
+    const backupListings = readJsonFile(listingsBackupFilePath, []);
+    res.json({
+      success: true,
+      result,
+      backupFile: 'server/data/listings_backup.json',
+      totalListings: backupListings.length,
+      message: result.message || 'GitHub backup synchronization completed'
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'GitHub backup sync failed', error: err.message });
+  }
+});
+
+// POST /api/admin/backup-restore (Restore listings from an uploaded backup JSON array)
+app.post('/api/admin/backup-restore', requireAdmin, async (req, res) => {
+  try {
+    const importedListings = Array.isArray(req.body.listings) ? req.body.listings : (Array.isArray(req.body) ? req.body : null);
+    if (!importedListings || !importedListings.length) {
+      return res.status(400).json({ success: false, message: 'Invalid listings backup data format' });
+    }
+
+    // Write to both listings.json and listings_backup.json and sync to Cloudinary
+    writeJsonFile(listingsFilePath, importedListings);
+    fs.writeFileSync(listingsBackupFilePath, JSON.stringify(importedListings, null, 2), 'utf8');
+    syncToGitHubBackup('admin-restored');
+
+    res.json({
+      success: true,
+      totalRestored: importedListings.length,
+      message: `Successfully restored ${importedListings.length} listings to database and synchronized to Cloudinary and GitHub.`
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Backup restoration failed', error: err.message });
   }
 });
 

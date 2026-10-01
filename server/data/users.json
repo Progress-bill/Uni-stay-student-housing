@@ -6,9 +6,9 @@
     "password": "admin123",
     "role": "admin",
     "createdAt": "2026-09-01T00:00:00.000Z",
-    "tokenVersion": 3,
-    "sessionToken": "agt_sess_user-admin-1_v3_1790843810448_6orev0uhm1vj3h6x1imn",
-    "lastLoginAt": "2026-10-01T08:36:50.449Z"
+    "tokenVersion": 5,
+    "sessionToken": "agt_sess_user-admin-1_v5_1790845059486_w3iw1otuchdpzl2m1uxs",
+    "lastLoginAt": "2026-10-01T08:57:39.486Z"
   },
   {
     "id": "user-agent-1789392143703",
@@ -18,7 +18,8 @@
     "role": "agent",
     "area": "lawgate",
     "createdAt": "2026-09-14T13:22:23.703Z",
-    "status": "active",
-    "tokenVersion": 4
+    "status": "removed",
+    "tokenVersion": 5,
+    "removedAt": "2026-10-01T08:53:35.598Z"
   }
 ]
