@@ -58,6 +58,8 @@ export default function AdminPanelModal({
   const [suspendReason, setSuspendReason] = useState('');
   const [agentActionLoading, setAgentActionLoading] = useState(null);
   const [deleteConfirmAgent, setDeleteConfirmAgent] = useState(null);
+  const [reconnectingCloud, setReconnectingCloud] = useState(false);
+  const [reconnectResult, setReconnectResult] = useState(null);
 
   // Fetch applications
   const fetchApplications = async () => {
@@ -194,6 +196,32 @@ export default function AdminPanelModal({
       alert('Error updating deletion request');
     } finally {
       setDelReqActionInProgress(null);
+    }
+  };
+
+  // Handle Reconnect and Synchronize Cloudinary Database
+  const handleReconnectCloudinary = async () => {
+    setReconnectingCloud(true);
+    setReconnectResult(null);
+    try {
+      const res = await fetch('/api/admin/reconnect-cloudinary', {
+        method: 'POST'
+      });
+      const data = await res.json();
+      if (data.success) {
+        setReconnectResult(data);
+        if (onRefreshListings) {
+          onRefreshListings();
+        }
+        fetchCloudinaryUsage();
+      } else {
+        alert(data.message || 'Failed to reconnect Cloudinary database.');
+      }
+    } catch (err) {
+      console.error('Reconnect error:', err);
+      alert('Error reconnecting Cloudinary database.');
+    } finally {
+      setReconnectingCloud(false);
     }
   };
 
@@ -934,14 +962,43 @@ export default function AdminPanelModal({
           {/* TAB 4: ROOM STATUS & LANDLORD MANAGEMENT */}
           {activeTab === 'rooms' && (
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <p className="text-xs text-slate-600 font-medium">
-                  Direct Landlord contact directory and live room availability management.
-                </p>
-                <span className="text-xs font-bold text-slate-500">
-                  {listings.length} Listed Properties
-                </span>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50 p-3.5 rounded-2xl border border-slate-200">
+                <div>
+                  <p className="text-xs text-slate-800 font-bold flex items-center gap-1.5">
+                    <Database className="w-4 h-4 text-blue-600" />
+                    <span>Live Properties Database ({listings.length} Active Rooms)</span>
+                  </p>
+                  <p className="text-[11px] text-slate-500 mt-0.5">
+                    Direct Landlord contact directory and live room availability management.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleReconnectCloudinary}
+                  disabled={reconnectingCloud}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-xs font-bold transition-all cursor-pointer shadow-xs shrink-0"
+                  title="Scan Cloudinary and sync all uploaded video tours into database"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${reconnectingCloud ? 'animate-spin' : ''}`} />
+                  <span>{reconnectingCloud ? 'Syncing...' : 'Sync Cloudinary Videos'}</span>
+                </button>
               </div>
+
+              {reconnectResult && (
+                <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center justify-between text-xs text-emerald-800 font-medium">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                    <span>{reconnectResult.message} (Total {reconnectResult.totalListings} rooms active)</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setReconnectResult(null)}
+                    className="text-emerald-600 hover:text-emerald-800 text-xs font-bold cursor-pointer"
+                  >
+                    ×
+                  </button>
+                </div>
+              )}
 
               <div className="divide-y divide-slate-100 border border-slate-200/80 rounded-2xl overflow-hidden bg-white shadow-xs">
                 {listings.map((room) => {
@@ -1057,6 +1114,17 @@ export default function AdminPanelModal({
                     <span>Refresh</span>
                   </button>
 
+                  <button
+                    type="button"
+                    onClick={handleReconnectCloudinary}
+                    disabled={reconnectingCloud}
+                    className="px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
+                    title="Scan Cloudinary and sync all uploaded video tours into database"
+                  >
+                    <Database className="w-3.5 h-3.5" />
+                    <span>{reconnectingCloud ? 'Syncing...' : 'Sync Database'}</span>
+                  </button>
+
                   <a
                     href="https://console.cloudinary.com"
                     target="_blank"
@@ -1067,6 +1135,42 @@ export default function AdminPanelModal({
                     <ExternalLink className="w-3.5 h-3.5" />
                   </a>
                 </div>
+              </div>
+
+              {/* Cloudinary Database Sync Banner */}
+              <div className="p-4 bg-gradient-to-r from-slate-900 via-blue-950 to-indigo-950 text-white rounded-2xl border border-blue-600/40 shadow-md flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div className="flex items-start gap-3">
+                  <div className="h-10 w-10 rounded-xl bg-blue-600/40 border border-blue-400/40 text-blue-300 flex items-center justify-center shrink-0 shadow-sm mt-0.5 sm:mt-0">
+                    <Database className="w-5 h-5 text-blue-400 animate-pulse" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h4 className="font-extrabold text-sm text-white">Cloud Database & Media Synchronizer</h4>
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                        Auto-Persistent
+                      </span>
+                    </div>
+                    <p className="text-xs text-blue-200/90 leading-relaxed mt-1">
+                      All video walkthroughs and photo assets are securely stored in your Cloudinary cloud (<strong className="text-white">v1iyctik</strong>). The database is automatically backed up and synced with Cloudinary so your rooms never get lost on server restarts.
+                    </p>
+                    {reconnectResult && (
+                      <p className="mt-2 text-xs font-bold text-emerald-300 flex items-center gap-1.5 bg-emerald-500/10 py-1 px-2.5 rounded-lg border border-emerald-500/20 w-fit">
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                        {reconnectResult.message} ({reconnectResult.totalListings} total rooms active)
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleReconnectCloudinary}
+                  disabled={reconnectingCloud}
+                  className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 active:scale-95 disabled:opacity-50 text-white font-extrabold text-xs shadow-lg shadow-blue-600/30 transition-all cursor-pointer flex items-center gap-2 shrink-0 self-stretch sm:self-auto justify-center"
+                >
+                  <RefreshCw className={`w-4 h-4 ${reconnectingCloud ? 'animate-spin' : ''}`} />
+                  <span>{reconnectingCloud ? 'Scanning & Reconnecting...' : 'Sync & Reconnect All Videos'}</span>
+                </button>
               </div>
 
               {/* Loading State */}

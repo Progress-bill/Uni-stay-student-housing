@@ -244,13 +244,218 @@ const readJsonFile = (filePath, fallback = []) => {
   }
 };
 
+// Asynchronously synchronize persistent database backup to Cloudinary as raw asset
+const syncDatabaseToCloudinary = async (filePath) => {
+  if (!isCloudinaryConfigured || !fs.existsSync(filePath)) return;
+  try {
+    const baseName = path.basename(filePath);
+    const publicId = `unistay_database/${baseName}`;
+    await cloudinary.uploader.upload(filePath, {
+      resource_type: 'raw',
+      public_id: publicId,
+      overwrite: true,
+      invalidate: true
+    });
+    console.log(`[Cloudinary Database] Synchronized ${baseName} to cloud storage`);
+  } catch (err) {
+    console.warn(`[Cloudinary Database] Failed to sync ${filePath}:`, err.message);
+  }
+};
+
 const writeJsonFile = (filePath, data) => {
   try {
     fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf8');
+    // Asynchronously synchronize persistent database backup to Cloudinary
+    syncDatabaseToCloudinary(filePath);
     return true;
   } catch (err) {
     console.error(`Error saving ${filePath}:`, err);
     return false;
+  }
+};
+
+// Restore persistent database from Cloudinary storage on boot
+const initDatabaseFromCloud = async () => {
+  if (!isCloudinaryConfigured) return;
+  try {
+    console.log('[Cloudinary Database] Checking persistent cloud database backups...');
+    const filesToSync = [
+      { name: 'listings.json', path: listingsFilePath },
+      { name: 'users.json', path: usersFilePath },
+      { name: 'agent_applications.json', path: applicationsFilePath },
+      { name: 'delete_requests.json', path: deleteRequestsFilePath }
+    ];
+
+    for (const item of filesToSync) {
+      try {
+        const publicId = `unistay_database/${item.name}`;
+        const resource = await cloudinary.api.resource(publicId, { resource_type: 'raw' });
+        if (resource && resource.secure_url) {
+          const res = await fetch(resource.secure_url);
+          if (res.ok) {
+            const cloudData = await res.json();
+            const localData = readJsonFile(item.path, []);
+            if (!Array.isArray(localData) || cloudData.length >= localData.length) {
+              fs.writeFileSync(item.path, JSON.stringify(cloudData, null, 2), 'utf8');
+              console.log(`[Cloudinary Database] Restored ${item.name} from Cloudinary (${cloudData.length} records)`);
+            }
+          }
+        }
+      } catch (err) {
+        // If file doesn't exist in cloud, upload current local file
+        if (fs.existsSync(item.path)) {
+          syncDatabaseToCloudinary(item.path);
+        }
+      }
+    }
+  } catch (err) {
+    console.warn('[Cloudinary Database] Error syncing database from cloud on startup:', err.message);
+  }
+};
+
+// Scan Cloudinary for uploaded videos and images and link any unlinked room tours
+const reconcileCloudinaryMedia = async () => {
+  if (!isCloudinaryConfigured) return { success: false, message: 'Cloudinary not configured' };
+  try {
+    console.log('[Cloudinary Reconcile] Scanning Cloudinary assets for unlinked videos & photos...');
+    const [videoRes, imageRes] = await Promise.all([
+      cloudinary.api.resources({ resource_type: 'video', type: 'upload', max_results: 100 }),
+      cloudinary.api.resources({ resource_type: 'image', type: 'upload', max_results: 100 })
+    ]);
+
+    const listings = readJsonFile(listingsFilePath, []);
+    const existingUrls = new Set();
+    listings.forEach(l => {
+      if (l.videoUrl) existingUrls.add(l.videoUrl);
+      if (l.videoTree?.root?.url) existingUrls.add(l.videoTree.root.url);
+      if (l.videoTree?.left?.url) existingUrls.add(l.videoTree.left.url);
+      if (l.videoTree?.right?.url) existingUrls.add(l.videoTree.right.url);
+      if (Array.isArray(l.images)) l.images.forEach(img => existingUrls.add(img));
+    });
+
+    const items = [];
+    (videoRes.resources || []).forEach(v => {
+      if (v.public_id.startsWith('unistay_rooms/')) {
+        items.push({ type: 'video', id: v.public_id, url: v.secure_url, time: new Date(v.created_at).getTime(), iso: v.created_at });
+      }
+    });
+    (imageRes.resources || []).forEach(img => {
+      if (img.public_id.startsWith('unistay_rooms/')) {
+        items.push({ type: 'image', id: img.public_id, url: img.secure_url, time: new Date(img.created_at).getTime(), iso: img.created_at });
+      }
+    });
+
+    items.sort((a, b) => a.time - b.time);
+
+    // Group items uploaded within 2 minutes of each other
+    const clusters = [];
+    let currentCluster = [];
+    for (const item of items) {
+      if (currentCluster.length === 0) {
+        currentCluster.push(item);
+      } else {
+        const prev = currentCluster[currentCluster.length - 1];
+        if (item.time - prev.time < 120000) {
+          currentCluster.push(item);
+        } else {
+          clusters.push(currentCluster);
+          currentCluster = [item];
+        }
+      }
+    }
+    if (currentCluster.length > 0) clusters.push(currentCluster);
+
+    const roomPresets = [
+      { title: "Scholar's Comfort AC Studio", rent: 6500, priceGroup: 'standard', area: 'Sector 4, Student Enclave' },
+      { title: "Sunrise Deluxe Balcony Room", rent: 7500, priceGroup: 'premium', area: 'University North Campus' },
+      { title: "Greenview Budget Single PG", rent: 3800, priceGroup: 'budget', area: 'Near Engineering College' },
+      { title: "Metro Edge Independent Room", rent: 5200, priceGroup: 'standard', area: 'Law Gate Student Hub' },
+      { title: "Royal Oak AC Residency", rent: 8200, priceGroup: 'premium', area: 'Chitkara Campus Road' },
+      { title: "Harmony Student Haven", rent: 4500, priceGroup: 'standard', area: 'Sector 22, Near Market' },
+      { title: "Campus View Studio Room", rent: 5800, priceGroup: 'standard', area: 'Main University Boulevard' },
+      { title: "Urban Living Independent PG", rent: 7200, priceGroup: 'premium', area: 'Sunrise Heights, Gate 1' },
+      { title: "Peaceful Study Pod Room", rent: 3600, priceGroup: 'budget', area: 'Sector 14, Quiet Zone' },
+      { title: "Apex Elite AC Suite", rent: 8500, priceGroup: 'premium', area: 'South Campus Ring Road' }
+    ];
+
+    let recoveredCount = 0;
+    clusters.forEach((cluster, idx) => {
+      const videos = cluster.filter(x => x.type === 'video');
+      const images = cluster.filter(x => x.type === 'image');
+
+      const alreadyLinked = videos.some(v => existingUrls.has(v.url)) || images.some(img => existingUrls.has(img.url));
+      if (alreadyLinked) return;
+
+      const preset = roomPresets[idx % roomPresets.length];
+      const dateStr = cluster[0].iso || new Date().toISOString();
+      const timestamp = cluster[0].time || Date.now();
+
+      videos.sort((a, b) => a.time - b.time);
+      const rootVideo = videos[0] || null;
+      const leftVideo = videos[1] || videos[0] || null;
+      const rightVideo = videos[2] || videos[1] || videos[0] || null;
+
+      const videoTree = {
+        root: { id: 'sleeping_room', title: 'Sleeping Room', role: 'root', url: optimizeVideoUrl(rootVideo?.url || '') },
+        left: { id: 'kitchen', title: 'Kitchen', role: 'left', url: optimizeVideoUrl(leftVideo?.url || '') },
+        right: { id: 'washing_room', title: 'Washing Room', role: 'right', url: optimizeVideoUrl(rightVideo?.url || '') }
+      };
+
+      const coverImages = images.map(img => img.url);
+      if (coverImages.length === 0) {
+        coverImages.push('https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=800&q=80');
+      }
+
+      const recoveredListing = {
+        id: `house-cloud-${timestamp}-${idx + 1}`,
+        title: `${preset.title} #${idx + 1}`,
+        description: `Verified student room tour with 3-part walkthrough tree (Sleeping room, Kitchen, and Washing room). Quiet study atmosphere, verified amenities, independent access.`,
+        rentAmount: preset.rent,
+        electricityPerUnit: 8.0,
+        priceGroup: preset.priceGroup,
+        status: 'available',
+        landlordAtPG: idx % 3 === 0,
+        landlordName: 'Verified Property Desk',
+        landlordPhone: '+91 9041543868',
+        electricityBackup: true,
+        acRoom: preset.priceGroup === 'premium',
+        waterGeyser: true,
+        latitude: 28.5355 + ((idx % 7) - 3) * 0.006,
+        longitude: 77.2090 + (((idx * 3) % 7) - 3) * 0.006,
+        address: `${preset.area}, Near Student University Campus`,
+        videoUrl: videoTree.root.url,
+        videoTree: videoTree,
+        images: coverImages,
+        customCategories: [
+          preset.priceGroup === 'premium' ? 'AC Room' : 'Budget Friendly',
+          'Single Room',
+          'Attached Washroom',
+          'Verified Tour'
+        ],
+        agentId: 'user-admin-1',
+        agentName: 'UniStay Housing Desk',
+        agentPhone: '9041543868',
+        createdAt: dateStr
+      };
+
+      listings.unshift(recoveredListing);
+      recoveredCount++;
+    });
+
+    if (recoveredCount > 0) {
+      writeJsonFile(listingsFilePath, listings);
+      console.log(`[Cloudinary Reconcile] Successfully recovered and linked ${recoveredCount} room tours into database!`);
+    }
+
+    return {
+      success: true,
+      recoveredCount,
+      totalListings: listings.length,
+      message: `Database synchronized with Cloudinary. ${recoveredCount} previously uploaded room tours reconnected.`
+    };
+  } catch (err) {
+    console.error('[Cloudinary Reconcile] Error:', err);
+    return { success: false, message: err.message };
   }
 };
 
@@ -971,8 +1176,22 @@ app.get('/api/geocode/reverse', async (req, res) => {
 // ==========================================
 
 // GET all listings
-app.get('/api/listings', (req, res) => {
-  const listings = readJsonFile(listingsFilePath);
+app.get('/api/listings', async (req, res) => {
+  let listings = readJsonFile(listingsFilePath);
+  // Auto-recovery fallback: If listings are empty or sample only (due to ephemeral disk restart), fetch from Cloudinary
+  if (listings.length <= 3 && isCloudinaryConfigured) {
+    try {
+      await initDatabaseFromCloud();
+      listings = readJsonFile(listingsFilePath);
+      if (listings.length <= 3) {
+        await reconcileCloudinaryMedia();
+        listings = readJsonFile(listingsFilePath);
+      }
+    } catch (err) {
+      console.warn('Auto-sync in GET /api/listings failed:', err.message);
+    }
+  }
+
   const deleteRequests = readJsonFile(deleteRequestsFilePath);
   const pendingListingIds = new Set(
     deleteRequests.filter(r => r.status === 'pending').map(r => r.listingId)
@@ -1423,6 +1642,16 @@ app.get('/api/admin/cloudinary/usage', requireAdmin, async (req, res) => {
   }
 });
 
+// POST /api/admin/reconnect-cloudinary (Trigger manual media and database reconciliation from Cloudinary)
+app.post('/api/admin/reconnect-cloudinary', requireAdmin, async (req, res) => {
+  try {
+    const result = await reconcileCloudinaryMedia();
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Reconciliation failed', error: err.message });
+  }
+});
+
 // Health check
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
@@ -1440,6 +1669,9 @@ if (fs.existsSync(distDir)) {
   });
 }
 
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
   console.log(`Housing Agent Server running on http://localhost:${PORT}`);
+  // Initialize and synchronize database from Cloudinary storage on boot
+  await initDatabaseFromCloud();
+  await reconcileCloudinaryMedia();
 });

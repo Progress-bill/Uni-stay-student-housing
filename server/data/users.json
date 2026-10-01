@@ -5,7 +5,10 @@
     "phone": "9041543868",
     "password": "admin123",
     "role": "admin",
-    "createdAt": "2026-09-01T00:00:00.000Z"
+    "createdAt": "2026-09-01T00:00:00.000Z",
+    "tokenVersion": 1,
+    "sessionToken": "agt_sess_user-admin-1_v1_1790838321902_u350e8dxsumtlobujuph",
+    "lastLoginAt": "2026-10-01T07:05:21.902Z"
   },
   {
     "id": "user-agent-1789392143703",
