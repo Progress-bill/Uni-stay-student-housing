@@ -1,0 +1,1451 @@
+[
+  {
+    "id": "house-cloud-1790007525000-1",
+    "title": "Law Gate Executive AC Studio #1",
+    "description": "Verified student room tour with 3-part walkthrough tree (Sleeping room, Kitchen, and Washing room). Quiet study atmosphere, verified amenities, independent access.",
+    "rentAmount": 6500,
+    "electricityPerUnit": 8,
+    "priceGroup": "standard",
+    "status": "available",
+    "landlordAtPG": true,
+    "landlordName": "Verified Property Desk",
+    "landlordPhone": "+91 9041543868",
+    "electricityBackup": true,
+    "acRoom": false,
+    "waterGeyser": true,
+    "latitude": 28.5175,
+    "longitude": 77.191,
+    "address": "Law Gate, Near LPU Campus Gate 1, Phagwara, Punjab",
+    "videoUrl": "https://res.cloudinary.com/v1iyctik/video/upload/ac_none,q_auto/v1790007525/unistay_rooms/videos/vmaxvqkkhyitd0yosg5j.mp4",
+    "videoTree": {
+      "root": {
+        "id": "sleeping_room",
+        "title": "Sleeping Room",
+        "role": "root",
+        "url": "https://res.cloudinary.com/v1iyctik/video/upload/ac_none,q_auto/v1790007525/unistay_rooms/videos/vmaxvqkkhyitd0yosg5j.mp4"
+      },
+      "left": {
+        "id": "kitchen",
+        "title": "Kitchen",
+        "role": "left",
+        "url": "https://res.cloudinary.com/v1iyctik/video/upload/ac_none,q_auto/v1790007525/unistay_rooms/videos/hzeqq88dy9z0ctx5zbdr.mp4"
+      },
+      "right": {
+        "id": "washing_room",
+        "title": "Washing Room",
+        "role": "right",
+        "url": "https://res.cloudinary.com/v1iyctik/video/upload/ac_none,q_auto/v1790007526/unistay_rooms/videos/ozut3brc6oj9x87z6zlx.mp4"
+      }
+    },
+    "images": [
+      "https://res.cloudinary.com/v1iyctik/image/upload/v1790007532/unistay_rooms/images/hwdvdvdsjrs92oawznpu.jpg"
+    ],
+    "customCategories": [
+      "Budget Friendly",
+      "Single Room",
+      "Attached Washroom",
+      "Verified Tour"
+    ],
+    "agentId": "user-admin-1",
+    "agentName": "UniStay Housing Desk",
+    "agentPhone": "9041543868",
+    "createdAt": "2026-09-21T16:18:45Z",
+    "updatedAt": "2026-10-01T08:36:50.545Z"
+  },
+  {
+    "id": "house-cloud-1790014696000-2",
+    "title": "Sunrise Deluxe Balcony Room #2",
+    "description": "Verified student room tour with 3-part walkthrough tree (Sleeping room, Kitchen, and Washing room). Quiet study atmosphere, verified amenities, independent access.",
+    "rentAmount": 7500,
+    "electricityPerUnit": 8,
+    "priceGroup": "premium",
+    "status": "available",
+    "landlordAtPG": false,
+    "landlordName": "Verified Property Desk",
+    "landlordPhone": "+91 9041543868",
+    "electricityBackup": true,
+    "acRoom": true,
+    "waterGeyser": true,
+    "latitude": 28.5235,
+    "longitude": 77.209,
+    "address": "University North Campus, Near Student University Campus",
+    "videoUrl": "https://res.cloudinary.com/v1iyctik/video/upload/ac_none,q_auto/v1790014696/unistay_rooms/videos/v8vgmjtw47czk4mrnzse.mp4",
+    "videoTree": {
+      "root": {
+        "id": "sleeping_room",
+        "title": "Sleeping Room",
+        "role": "root",
+        "url": "https://res.cloudinary.com/v1iyctik/video/upload/ac_none,q_auto/v1790014696/unistay_rooms/videos/v8vgmjtw47czk4mrnzse.mp4"
+      },
+      "left": {
+        "id": "kitchen",
+        "title": "Kitchen",
+        "role": "left",
+        "url": "https://res.cloudinary.com/v1iyctik/video/upload/ac_none,q_auto/v1790014696/unistay_rooms/videos/udqkz20tliwdrqckwc6p.mp4"
+      },
+      "right": {
+        "id": "washing_room",
+        "title": "Washing Room",
+        "role": "right",
+        "url": "https://res.cloudinary.com/v1iyctik/video/upload/ac_none,q_auto/v1790014696/unistay_rooms/videos/udqkz20tliwdrqckwc6p.mp4"
+      }
+    },
+    "images": [
+      "https://res.cloudinary.com/v1iyctik/image/upload/v1790014719/unistay_rooms/images/li8lbz5swub0s3vr11vg.jpg"
+    ],
+    "customCategories": [
+      "AC Room",
+      "Single Room",
+      "Attached Washroom",
+      "Verified Tour"
+    ],
+    "agentId": "user-admin-1",
+    "agentName": "UniStay Housing Desk",
+    "agentPhone": "9041543868",
+    "createdAt": "2026-09-21T18:18:16Z"
+  },
+  {
+    "id": "house-cloud-1790016397000-3",
+    "title": "Greenview Budget Single PG #3",
+    "description": "Verified student room tour with 3-part walkthrough tree (Sleeping room, Kitchen, and Washing room). Quiet study atmosphere, verified amenities, independent access.",
+    "rentAmount": 3800,
+    "electricityPerUnit": 8,
+    "priceGroup": "budget",
+    "status": "available",
+    "landlordAtPG": false,
+    "landlordName": "Verified Property Desk",
+    "landlordPhone": "+91 9041543868",
+    "electricityBackup": true,
+    "acRoom": false,
+    "waterGeyser": true,
+    "latitude": 28.5295,
+    "longitude": 77.227,
+    "address": "Near Engineering College, Near Student University Campus",
+    "videoUrl": "https://res.cloudinary.com/v1iyctik/video/upload/ac_none,q_auto/v1790016397/unistay_rooms/videos/qvklacwymkimzxks77c2.mp4",
+    "videoTree": {
+      "root": {
+        "id": "sleeping_room",
+        "title": "Sleeping Room",
+        "role": "root",
+        "url": "https://res.cloudinary.com/v1iyctik/video/upload/ac_none,q_auto/v1790016397/unistay_rooms/videos/qvklacwymkimzxks77c2.mp4"
+      },
+      "left": {
+        "id": "kitchen",
+        "title": "Kitchen",
+        "role": "left",
+        "url": "https://res.cloudinary.com/v1iyctik/video/upload/ac_none,q_auto/v1790016397/unistay_rooms/videos/qvklacwymkimzxks77c2.mp4"
+      },
+      "right": {
+        "id": "washing_room",
+        "title": "Washing Room",
+        "role": "right",
+        "url": "https://res.cloudinary.com/v1iyctik/video/upload/ac_none,q_auto/v1790016397/unistay_rooms/videos/qvklacwymkimzxks77c2.mp4"
+      }
+    },
+    "images": [
+      "https://res.cloudinary.com/v1iyctik/image/upload/v1790016413/unistay_rooms/images/x0zj3g1ootjy0emxgm4h.jpg"
+    ],
+    "customCategories": [
+      "Budget Friendly",
+      "Single Room",
+      "Attached Washroom",
+      "Verified Tour"
+    ],
+    "agentId": "user-admin-1",
+    "agentName": "UniStay Housing Desk",
+    "agentPhone": "9041543868",
+    "createdAt": "2026-09-21T18:46:37Z"
+  },
+  {
+    "id": "house-cloud-1790247793000-4",
+    "title": "Metro Edge Independent Room #4",
+    "description": "Verified student room tour with 3-part walkthrough tree (Sleeping room, Kitchen, and Washing room). Quiet study atmosphere, verified amenities, independent access.",
+    "rentAmount": 5200,
+    "electricityPerUnit": 8,
+    "priceGroup": "standard",
+    "status": "available",
+    "landlordAtPG": true,
+    "landlordName": "Verified Property Desk",
+    "landlordPhone": "+91 9041543868",
+    "electricityBackup": true,
+    "acRoom": false,
+    "waterGeyser": true,
+    "latitude": 28.5355,
+    "longitude": 77.203,
+    "address": "Law Gate Student Hub, Near Student University Campus",
+    "videoUrl": "https://res.cloudinary.com/v1iyctik/video/upload/ac_none,q_auto/v1790247793/unistay_rooms/videos/esm7wnz29yl3riwe3vpi.mp4",
+    "videoTree": {
+      "root": {
+        "id": "sleeping_room",
+        "title": "Sleeping Room",
+        "role": "root",
+        "url": "https://res.cloudinary.com/v1iyctik/video/upload/ac_none,q_auto/v1790247793/unistay_rooms/videos/esm7wnz29yl3riwe3vpi.mp4"
+      },
+      "left": {
+        "id": "kitchen",
+        "title": "Kitchen",
+        "role": "left",
+        "url": "https://res.cloudinary.com/v1iyctik/video/upload/ac_none,q_auto/v1790247793/unistay_rooms/videos/qhwxubehpeiuvfillpsc.mp4"
+      },
+      "right": {
+        "id": "washing_room",
+        "title": "Washing Room",
+        "role": "right",
+        "url": "https://res.cloudinary.com/v1iyctik/video/upload/ac_none,q_auto/v1790247794/unistay_rooms/videos/ecdfvp2zcywcze0cpljt.mp4"
+      }
+    },
+    "images": [
+      "https://res.cloudinary.com/v1iyctik/image/upload/v1790247812/unistay_rooms/images/avxvfwgwlg0qwpysvdmg.jpg"
+    ],
+    "customCategories": [
+      "Budget Friendly",
+      "Single Room",
+      "Attached Washroom",
+      "Verified Tour"
+    ],
+    "agentId": "user-admin-1",
+    "agentName": "UniStay Housing Desk",
+    "agentPhone": "9041543868",
+    "createdAt": "2026-09-24T11:03:13Z"
+  },
+  {
+    "id": "house-cloud-1790248424000-5",
+    "title": "Royal Oak AC Residency #5",
+    "description": "Verified student room tour with 3-part walkthrough tree (Sleeping room, Kitchen, and Washing room). Quiet study atmosphere, verified amenities, independent access.",
+    "rentAmount": 8200,
+    "electricityPerUnit": 8,
+    "priceGroup": "premium",
+    "status": "available",
+    "landlordAtPG": false,
+    "landlordName": "Verified Property Desk",
+    "landlordPhone": "+91 9041543868",
+    "electricityBackup": true,
+    "acRoom": true,
+    "waterGeyser": true,
+    "latitude": 28.5415,
+    "longitude": 77.221,
+    "address": "Chitkara Campus Road, Near Student University Campus",
+    "videoUrl": "https://res.cloudinary.com/v1iyctik/video/upload/ac_none,q_auto/v1790248424/unistay_rooms/videos/jjsh6r8jifv8x4kq7b7n.mp4",
+    "videoTree": {
+      "root": {
+        "id": "sleeping_room",
+        "title": "Sleeping Room",
+        "role": "root",
+        "url": "https://res.cloudinary.com/v1iyctik/video/upload/ac_none,q_auto/v1790248424/unistay_rooms/videos/jjsh6r8jifv8x4kq7b7n.mp4"
+      },
+      "left": {
+        "id": "kitchen",
+        "title": "Kitchen",
+        "role": "left",
+        "url": "https://res.cloudinary.com/v1iyctik/video/upload/ac_none,q_auto/v1790248424/unistay_rooms/videos/wscwky7mktlyyzkw99jc.mp4"
+      },
+      "right": {
+        "id": "washing_room",
+        "title": "Washing Room",
+        "role": "right",
+        "url": "https://res.cloudinary.com/v1iyctik/video/upload/ac_none,q_auto/v1790248424/unistay_rooms/videos/epi6agxc9qyfio15tjkg.mp4"
+      }
+    },
+    "images": [
+      "https://res.cloudinary.com/v1iyctik/image/upload/v1790248429/unistay_rooms/images/bziook7kh8puh3fisnbv.jpg"
+    ],
+    "customCategories": [
+      "AC Room",
+      "Single Room",
+      "Attached Washroom",
+      "Verified Tour"
+    ],
+    "agentId": "user-admin-1",
+    "agentName": "UniStay Housing Desk",
+    "agentPhone": "9041543868",
+    "createdAt": "2026-09-24T11:13:44Z"
+  },
+  {
+    "id": "house-cloud-1790248842000-6",
+    "title": "Harmony Student Haven #6",
+    "description": "Verified student room tour with 3-part walkthrough tree (Sleeping room, Kitchen, and Washing room). Quiet study atmosphere, verified amenities, independent access.",
+    "rentAmount": 4500,
+    "electricityPerUnit": 8,
+    "priceGroup": "standard",
+    "status": "available",
+    "landlordAtPG": false,
+    "landlordName": "Verified Property Desk",
+    "landlordPhone": "+91 9041543868",
+    "electricityBackup": true,
+    "acRoom": false,
+    "waterGeyser": true,
+    "latitude": 28.5475,
+    "longitude": 77.197,
+    "address": "Sector 22, Near Market, Near Student University Campus",
+    "videoUrl": "https://res.cloudinary.com/v1iyctik/video/upload/ac_none,q_auto/v1790248842/unistay_rooms/videos/roicnirfsm0mhwwzubqs.mp4",
+    "videoTree": {
+      "root": {
+        "id": "sleeping_room",
+        "title": "Sleeping Room",
+        "role": "root",
+        "url": "https://res.cloudinary.com/v1iyctik/video/upload/ac_none,q_auto/v1790248842/unistay_rooms/videos/roicnirfsm0mhwwzubqs.mp4"
+      },
+      "left": {
+        "id": "kitchen",
+        "title": "Kitchen",
+        "role": "left",
+        "url": "https://res.cloudinary.com/v1iyctik/video/upload/ac_none,q_auto/v1790248842/unistay_rooms/videos/coj60qpkrt5vrazm7igz.mp4"
+      },
+      "right": {
+        "id": "washing_room",
+        "title": "Washing Room",
+        "role": "right",
+        "url": "https://res.cloudinary.com/v1iyctik/video/upload/ac_none,q_auto/v1790248842/unistay_rooms/videos/ndtskxtomwfmersaocux.mp4"
+      }
+    },
+    "images": [
+      "https://res.cloudinary.com/v1iyctik/image/upload/v1790248858/unistay_rooms/images/ejxf3arm7ox76fcqt7m9.jpg"
+    ],
+    "customCategories": [
+      "Budget Friendly",
+      "Single Room",
+      "Attached Washroom",
+      "Verified Tour"
+    ],
+    "agentId": "user-admin-1",
+    "agentName": "UniStay Housing Desk",
+    "agentPhone": "9041543868",
+    "createdAt": "2026-09-24T11:20:42Z"
+  },
+  {
+    "id": "house-cloud-1790264964000-7",
+    "title": "Campus View Studio Room #7",
+    "description": "Verified student room tour with 3-part walkthrough tree (Sleeping room, Kitchen, and Washing room). Quiet study atmosphere, verified amenities, independent access.",
+    "rentAmount": 5800,
+    "electricityPerUnit": 8,
+    "priceGroup": "standard",
+    "status": "available",
+    "landlordAtPG": true,
+    "landlordName": "Verified Property Desk",
+    "landlordPhone": "+91 9041543868",
+    "electricityBackup": true,
+    "acRoom": false,
+    "waterGeyser": true,
+    "latitude": 28.5535,
+    "longitude": 77.215,
+    "address": "Main University Boulevard, Near Student University Campus",
+    "videoUrl": "https://res.cloudinary.com/v1iyctik/video/upload/ac_none,q_auto/v1790264964/unistay_rooms/videos/ivvie2uqugew5pgezwez.mp4",
+    "videoTree": {
+      "root": {
+        "id": "sleeping_room",
+        "title": "Sleeping Room",
+        "role": "root",
+        "url": "https://res.cloudinary.com/v1iyctik/video/upload/ac_none,q_auto/v1790264964/unistay_rooms/videos/ivvie2uqugew5pgezwez.mp4"
+      },
+      "left": {
+        "id": "kitchen",
+        "title": "Kitchen",
+        "role": "left",
+        "url": "https://res.cloudinary.com/v1iyctik/video/upload/ac_none,q_auto/v1790264965/unistay_rooms/videos/owsidr61bwkywhkfpz2r.mp4"
+      },
+      "right": {
+        "id": "washing_room",
+        "title": "Washing Room",
+        "role": "right",
+        "url": "https://res.cloudinary.com/v1iyctik/video/upload/ac_none,q_auto/v1790264965/unistay_rooms/videos/fnaz1fm8wpxlfkww4abt.mp4"
+      }
+    },
+    "images": [
+      "https://res.cloudinary.com/v1iyctik/image/upload/v1790264978/unistay_rooms/images/ynsbc6i7tknqcpxztyly.jpg"
+    ],
+    "customCategories": [
+      "Budget Friendly",
+      "Single Room",
+      "Attached Washroom",
+      "Verified Tour"
+    ],
+    "agentId": "user-admin-1",
+    "agentName": "UniStay Housing Desk",
+    "agentPhone": "9041543868",
+    "createdAt": "2026-09-24T15:49:24Z"
+  },
+  {
+    "id": "house-cloud-1790266769000-8",
+    "title": "Urban Living Independent PG #8",
+    "description": "Verified student room tour with 3-part walkthrough tree (Sleeping room, Kitchen, and Washing room). Quiet study atmosphere, verified amenities, independent access.",
+    "rentAmount": 7200,
+    "electricityPerUnit": 8,
+    "priceGroup": "premium",
+    "status": "available",
+    "landlordAtPG": false,
+    "landlordName": "Verified Property Desk",
+    "landlordPhone": "+91 9041543868",
+    "electricityBackup": true,
+    "acRoom": true,
+    "waterGeyser": true,
+    "latitude": 28.5175,
+    "longitude": 77.191,
+    "address": "Sunrise Heights, Gate 1, Near Student University Campus",
+    "videoUrl": "https://res.cloudinary.com/v1iyctik/video/upload/ac_none,q_auto/v1790266769/unistay_rooms/videos/dfmjnqskdexvln8ld2w3.mp4",
+    "videoTree": {
+      "root": {
+        "id": "sleeping_room",
+        "title": "Sleeping Room",
+        "role": "root",
+        "url": "https://res.cloudinary.com/v1iyctik/video/upload/ac_none,q_auto/v1790266769/unistay_rooms/videos/dfmjnqskdexvln8ld2w3.mp4"
+      },
+      "left": {
+        "id": "kitchen",
+        "title": "Kitchen",
+        "role": "left",
+        "url": "https://res.cloudinary.com/v1iyctik/video/upload/ac_none,q_auto/v1790266769/unistay_rooms/videos/wvoxsg3ijoepulxfaygq.mp4"
+      },
+      "right": {
+        "id": "washing_room",
+        "title": "Washing Room",
+        "role": "right",
+        "url": "https://res.cloudinary.com/v1iyctik/video/upload/ac_none,q_auto/v1790266769/unistay_rooms/videos/iql5vyzbclp21tslewwz.mp4"
+      }
+    },
+    "images": [
+      "https://res.cloudinary.com/v1iyctik/image/upload/v1790266774/unistay_rooms/images/gwtg1bfpd4vtd8kbgnik.jpg"
+    ],
+    "customCategories": [
+      "AC Room",
+      "Single Room",
+      "Attached Washroom",
+      "Verified Tour"
+    ],
+    "agentId": "user-admin-1",
+    "agentName": "UniStay Housing Desk",
+    "agentPhone": "9041543868",
+    "createdAt": "2026-09-24T16:19:29Z"
+  },
+  {
+    "id": "house-cloud-1790267559000-9",
+    "title": "Peaceful Study Pod Room #9",
+    "description": "Verified student room tour with 3-part walkthrough tree (Sleeping room, Kitchen, and Washing room). Quiet study atmosphere, verified amenities, independent access.",
+    "rentAmount": 3600,
+    "electricityPerUnit": 8,
+    "priceGroup": "budget",
+    "status": "available",
+    "landlordAtPG": false,
+    "landlordName": "Verified Property Desk",
+    "landlordPhone": "+91 9041543868",
+    "electricityBackup": true,
+    "acRoom": false,
+    "waterGeyser": true,
+    "latitude": 28.5235,
+    "longitude": 77.209,
+    "address": "Sector 14, Quiet Zone, Near Student University Campus",
+    "videoUrl": "https://res.cloudinary.com/v1iyctik/video/upload/ac_none,q_auto/v1790267559/unistay_rooms/videos/qutkevwsg9vqb3bxjxbu.mp4",
+    "videoTree": {
+      "root": {
+        "id": "sleeping_room",
+        "title": "Sleeping Room",
+        "role": "root",
+        "url": "https://res.cloudinary.com/v1iyctik/video/upload/ac_none,q_auto/v1790267559/unistay_rooms/videos/qutkevwsg9vqb3bxjxbu.mp4"
+      },
+      "left": {
+        "id": "kitchen",
+        "title": "Kitchen",
+        "role": "left",
+        "url": "https://res.cloudinary.com/v1iyctik/video/upload/ac_none,q_auto/v1790267559/unistay_rooms/videos/ty2geabhtv4dv2n1qdu1.mp4"
+      },
+      "right": {
+        "id": "washing_room",
+        "title": "Washing Room",
+        "role": "right",
+        "url": "https://res.cloudinary.com/v1iyctik/video/upload/ac_none,q_auto/v1790267559/unistay_rooms/videos/ty2geabhtv4dv2n1qdu1.mp4"
+      }
+    },
+    "images": [
+      "https://res.cloudinary.com/v1iyctik/image/upload/v1790267578/unistay_rooms/images/mp1qcly2p0wv7axpslqt.jpg"
+    ],
+    "customCategories": [
+      "Budget Friendly",
+      "Single Room",
+      "Attached Washroom",
+      "Verified Tour"
+    ],
+    "agentId": "user-admin-1",
+    "agentName": "UniStay Housing Desk",
+    "agentPhone": "9041543868",
+    "createdAt": "2026-09-24T16:32:39Z"
+  },
+  {
+    "id": "house-cloud-1790268453000-10",
+    "title": "Apex Elite AC Suite #10",
+    "description": "Verified student room tour with 3-part walkthrough tree (Sleeping room, Kitchen, and Washing room). Quiet study atmosphere, verified amenities, independent access.",
+    "rentAmount": 8500,
+    "electricityPerUnit": 8,
+    "priceGroup": "premium",
+    "status": "available",
+    "landlordAtPG": true,
+    "landlordName": "Verified Property Desk",
+    "landlordPhone": "+91 9041543868",
+    "electricityBackup": true,
+    "acRoom": true,
+    "waterGeyser": true,
+    "latitude": 28.5295,
+    "longitude": 77.227,
+    "address": "South Campus Ring Road, Near Student University Campus",
+    "videoUrl": "https://res.cloudinary.com/v1iyctik/video/upload/ac_none,q_auto/v1790268453/unistay_rooms/videos/b6moygdtagpxe22y2dmv.mp4",
+    "videoTree": {
+      "root": {
+        "id": "sleeping_room",
+        "title": "Sleeping Room",
+        "role": "root",
+        "url": "https://res.cloudinary.com/v1iyctik/video/upload/ac_none,q_auto/v1790268453/unistay_rooms/videos/b6moygdtagpxe22y2dmv.mp4"
+      },
+      "left": {
+        "id": "kitchen",
+        "title": "Kitchen",
+        "role": "left",
+        "url": "https://res.cloudinary.com/v1iyctik/video/upload/ac_none,q_auto/v1790268453/unistay_rooms/videos/oilkhg1nzpfynomuk5vp.mp4"
+      },
+      "right": {
+        "id": "washing_room",
+        "title": "Washing Room",
+        "role": "right",
+        "url": "https://res.cloudinary.com/v1iyctik/video/upload/ac_none,q_auto/v1790268454/unistay_rooms/videos/g8kd7qbcf8v4p9h3aqkv.mp4"
+      }
+    },
+    "images": [
+      "https://res.cloudinary.com/v1iyctik/image/upload/v1790268473/unistay_rooms/images/y1jtomjvp14ycx51thc2.jpg"
+    ],
+    "customCategories": [
+      "AC Room",
+      "Single Room",
+      "Attached Washroom",
+      "Verified Tour"
+    ],
+    "agentId": "user-admin-1",
+    "agentName": "UniStay Housing Desk",
+    "agentPhone": "9041543868",
+    "createdAt": "2026-09-24T16:47:33Z"
+  },
+  {
+    "id": "house-cloud-1790269446000-11",
+    "title": "Scholar's Comfort AC Studio #11",
+    "description": "Verified student room tour with 3-part walkthrough tree (Sleeping room, Kitchen, and Washing room). Quiet study atmosphere, verified amenities, independent access.",
+    "rentAmount": 6500,
+    "electricityPerUnit": 8,
+    "priceGroup": "standard",
+    "status": "available",
+    "landlordAtPG": false,
+    "landlordName": "Verified Property Desk",
+    "landlordPhone": "+91 9041543868",
+    "electricityBackup": true,
+    "acRoom": false,
+    "waterGeyser": true,
+    "latitude": 28.5355,
+    "longitude": 77.203,
+    "address": "Sector 4, Student Enclave, Near Student University Campus",
+    "videoUrl": "https://res.cloudinary.com/v1iyctik/video/upload/ac_none,q_auto/v1790269446/unistay_rooms/videos/h4dlwpjvvb3dggmukgjw.mp4",
+    "videoTree": {
+      "root": {
+        "id": "sleeping_room",
+        "title": "Sleeping Room",
+        "role": "root",
+        "url": "https://res.cloudinary.com/v1iyctik/video/upload/ac_none,q_auto/v1790269446/unistay_rooms/videos/h4dlwpjvvb3dggmukgjw.mp4"
+      },
+      "left": {
+        "id": "kitchen",
+        "title": "Kitchen",
+        "role": "left",
+        "url": "https://res.cloudinary.com/v1iyctik/video/upload/ac_none,q_auto/v1790269446/unistay_rooms/videos/qrgi61fl8ye0ocznxurr.mp4"
+      },
+      "right": {
+        "id": "washing_room",
+        "title": "Washing Room",
+        "role": "right",
+        "url": "https://res.cloudinary.com/v1iyctik/video/upload/ac_none,q_auto/v1790269446/unistay_rooms/videos/mwegmyclqt5v3wyvj8yx.mp4"
+      }
+    },
+    "images": [
+      "https://res.cloudinary.com/v1iyctik/image/upload/v1790269478/unistay_rooms/images/wqcqg15np5ywk09ue5ac.jpg"
+    ],
+    "customCategories": [
+      "Budget Friendly",
+      "Single Room",
+      "Attached Washroom",
+      "Verified Tour"
+    ],
+    "agentId": "user-admin-1",
+    "agentName": "UniStay Housing Desk",
+    "agentPhone": "9041543868",
+    "createdAt": "2026-09-24T17:04:06Z"
+  },
+  {
+    "id": "house-cloud-1790269852000-12",
+    "title": "Sunrise Deluxe Balcony Room #12",
+    "description": "Verified student room tour with 3-part walkthrough tree (Sleeping room, Kitchen, and Washing room). Quiet study atmosphere, verified amenities, independent access.",
+    "rentAmount": 7500,
+    "electricityPerUnit": 8,
+    "priceGroup": "premium",
+    "status": "available",
+    "landlordAtPG": false,
+    "landlordName": "Verified Property Desk",
+    "landlordPhone": "+91 9041543868",
+    "electricityBackup": true,
+    "acRoom": true,
+    "waterGeyser": true,
+    "latitude": 28.5415,
+    "longitude": 77.221,
+    "address": "University North Campus, Near Student University Campus",
+    "videoUrl": "https://res.cloudinary.com/v1iyctik/video/upload/ac_none,q_auto/v1790269852/unistay_rooms/videos/svdeanjwjeccfvnwfrtz.mp4",
+    "videoTree": {
+      "root": {
+        "id": "sleeping_room",
+        "title": "Sleeping Room",
+        "role": "root",
+        "url": "https://res.cloudinary.com/v1iyctik/video/upload/ac_none,q_auto/v1790269852/unistay_rooms/videos/svdeanjwjeccfvnwfrtz.mp4"
+      },
+      "left": {
+        "id": "kitchen",
+        "title": "Kitchen",
+        "role": "left",
+        "url": "https://res.cloudinary.com/v1iyctik/video/upload/ac_none,q_auto/v1790269853/unistay_rooms/videos/azqbxns6ro367tbi7oek.mp4"
+      },
+      "right": {
+        "id": "washing_room",
+        "title": "Washing Room",
+        "role": "right",
+        "url": "https://res.cloudinary.com/v1iyctik/video/upload/ac_none,q_auto/v1790269853/unistay_rooms/videos/qhjymsbotni6a356d6zl.mp4"
+      }
+    },
+    "images": [
+      "https://res.cloudinary.com/v1iyctik/image/upload/v1790269874/unistay_rooms/images/bavmp2xcg6tsblg50wzk.jpg"
+    ],
+    "customCategories": [
+      "AC Room",
+      "Single Room",
+      "Attached Washroom",
+      "Verified Tour"
+    ],
+    "agentId": "user-admin-1",
+    "agentName": "UniStay Housing Desk",
+    "agentPhone": "9041543868",
+    "createdAt": "2026-09-24T17:10:52Z"
+  },
+  {
+    "id": "house-cloud-1790407455000-13",
+    "title": "Greenview Budget Single PG #13",
+    "description": "Verified student room tour with 3-part walkthrough tree (Sleeping room, Kitchen, and Washing room). Quiet study atmosphere, verified amenities, independent access.",
+    "rentAmount": 3800,
+    "electricityPerUnit": 8,
+    "priceGroup": "budget",
+    "status": "available",
+    "landlordAtPG": true,
+    "landlordName": "Verified Property Desk",
+    "landlordPhone": "+91 9041543868",
+    "electricityBackup": true,
+    "acRoom": false,
+    "waterGeyser": true,
+    "latitude": 28.5475,
+    "longitude": 77.197,
+    "address": "Near Engineering College, Near Student University Campus",
+    "videoUrl": "https://res.cloudinary.com/v1iyctik/video/upload/ac_none,q_auto/v1790407455/unistay_rooms/videos/iohehvuxqsb5bpwae4ob.mp4",
+    "videoTree": {
+      "root": {
+        "id": "sleeping_room",
+        "title": "Sleeping Room",
+        "role": "root",
+        "url": "https://res.cloudinary.com/v1iyctik/video/upload/ac_none,q_auto/v1790407455/unistay_rooms/videos/iohehvuxqsb5bpwae4ob.mp4"
+      },
+      "left": {
+        "id": "kitchen",
+        "title": "Kitchen",
+        "role": "left",
+        "url": "https://res.cloudinary.com/v1iyctik/video/upload/ac_none,q_auto/v1790407457/unistay_rooms/videos/y2nduo934ffgycvx0ues.mp4"
+      },
+      "right": {
+        "id": "washing_room",
+        "title": "Washing Room",
+        "role": "right",
+        "url": "https://res.cloudinary.com/v1iyctik/video/upload/ac_none,q_auto/v1790407457/unistay_rooms/videos/wxblu0nmg8aux03mfo1k.mp4"
+      }
+    },
+    "images": [
+      "https://res.cloudinary.com/v1iyctik/image/upload/v1790407468/unistay_rooms/images/hdvqkj7qvgfpxnegbuwl.jpg"
+    ],
+    "customCategories": [
+      "Budget Friendly",
+      "Single Room",
+      "Attached Washroom",
+      "Verified Tour"
+    ],
+    "agentId": "user-admin-1",
+    "agentName": "UniStay Housing Desk",
+    "agentPhone": "9041543868",
+    "createdAt": "2026-09-26T07:24:15Z"
+  },
+  {
+    "id": "house-cloud-1790421169000-14",
+    "title": "Metro Edge Independent Room #14",
+    "description": "Verified student room tour with 3-part walkthrough tree (Sleeping room, Kitchen, and Washing room). Quiet study atmosphere, verified amenities, independent access.",
+    "rentAmount": 5200,
+    "electricityPerUnit": 8,
+    "priceGroup": "standard",
+    "status": "available",
+    "landlordAtPG": false,
+    "landlordName": "Verified Property Desk",
+    "landlordPhone": "+91 9041543868",
+    "electricityBackup": true,
+    "acRoom": false,
+    "waterGeyser": true,
+    "latitude": 28.5535,
+    "longitude": 77.215,
+    "address": "Law Gate Student Hub, Near Student University Campus",
+    "videoUrl": "https://res.cloudinary.com/v1iyctik/video/upload/ac_none,q_auto/v1790421169/unistay_rooms/videos/pjp4fhp5xclotqsupnnw.mp4",
+    "videoTree": {
+      "root": {
+        "id": "sleeping_room",
+        "title": "Sleeping Room",
+        "role": "root",
+        "url": "https://res.cloudinary.com/v1iyctik/video/upload/ac_none,q_auto/v1790421169/unistay_rooms/videos/pjp4fhp5xclotqsupnnw.mp4"
+      },
+      "left": {
+        "id": "kitchen",
+        "title": "Kitchen",
+        "role": "left",
+        "url": "https://res.cloudinary.com/v1iyctik/video/upload/ac_none,q_auto/v1790421169/unistay_rooms/videos/wjeej3kkupuoqzajvg0m.mp4"
+      },
+      "right": {
+        "id": "washing_room",
+        "title": "Washing Room",
+        "role": "right",
+        "url": "https://res.cloudinary.com/v1iyctik/video/upload/ac_none,q_auto/v1790421169/unistay_rooms/videos/kaafyyi0a8faes0btlwv.mp4"
+      }
+    },
+    "images": [
+      "https://res.cloudinary.com/v1iyctik/image/upload/v1790421178/unistay_rooms/images/jsdo1fbco0l2zzrpopot.jpg"
+    ],
+    "customCategories": [
+      "Budget Friendly",
+      "Single Room",
+      "Attached Washroom",
+      "Verified Tour"
+    ],
+    "agentId": "user-admin-1",
+    "agentName": "UniStay Housing Desk",
+    "agentPhone": "9041543868",
+    "createdAt": "2026-09-26T11:12:49Z"
+  },
+  {
+    "id": "house-cloud-1790575136000-15",
+    "title": "Royal Oak AC Residency #15",
+    "description": "Verified student room tour with 3-part walkthrough tree (Sleeping room, Kitchen, and Washing room). Quiet study atmosphere, verified amenities, independent access.",
+    "rentAmount": 8200,
+    "electricityPerUnit": 8,
+    "priceGroup": "premium",
+    "status": "available",
+    "landlordAtPG": false,
+    "landlordName": "Verified Property Desk",
+    "landlordPhone": "+91 9041543868",
+    "electricityBackup": true,
+    "acRoom": true,
+    "waterGeyser": true,
+    "latitude": 28.5175,
+    "longitude": 77.191,
+    "address": "Chitkara Campus Road, Near Student University Campus",
+    "videoUrl": "https://res.cloudinary.com/v1iyctik/video/upload/ac_none,q_auto/v1790575136/unistay_rooms/videos/v3iup1eibly9fmsrzbpx.mp4",
+    "videoTree": {
+      "root": {
+        "id": "sleeping_room",
+        "title": "Sleeping Room",
+        "role": "root",
+        "url": "https://res.cloudinary.com/v1iyctik/video/upload/ac_none,q_auto/v1790575136/unistay_rooms/videos/v3iup1eibly9fmsrzbpx.mp4"
+      },
+      "left": {
+        "id": "kitchen",
+        "title": "Kitchen",
+        "role": "left",
+        "url": "https://res.cloudinary.com/v1iyctik/video/upload/ac_none,q_auto/v1790575136/unistay_rooms/videos/qx7hpqbylx0sfxlsxrof.mp4"
+      },
+      "right": {
+        "id": "washing_room",
+        "title": "Washing Room",
+        "role": "right",
+        "url": "https://res.cloudinary.com/v1iyctik/video/upload/ac_none,q_auto/v1790575136/unistay_rooms/videos/vbgzlvx6d9sg9ixm589b.mp4"
+      }
+    },
+    "images": [
+      "https://res.cloudinary.com/v1iyctik/image/upload/v1790575150/unistay_rooms/images/lwnkd0his4qxuxgahkwb.jpg"
+    ],
+    "customCategories": [
+      "AC Room",
+      "Single Room",
+      "Attached Washroom",
+      "Verified Tour"
+    ],
+    "agentId": "user-admin-1",
+    "agentName": "UniStay Housing Desk",
+    "agentPhone": "9041543868",
+    "createdAt": "2026-09-28T05:58:56Z"
+  },
+  {
+    "id": "house-cloud-1790575768000-16",
+    "title": "Harmony Student Haven #16",
+    "description": "Verified student room tour with 3-part walkthrough tree (Sleeping room, Kitchen, and Washing room). Quiet study atmosphere, verified amenities, independent access.",
+    "rentAmount": 4500,
+    "electricityPerUnit": 8,
+    "priceGroup": "standard",
+    "status": "available",
+    "landlordAtPG": true,
+    "landlordName": "Verified Property Desk",
+    "landlordPhone": "+91 9041543868",
+    "electricityBackup": true,
+    "acRoom": false,
+    "waterGeyser": true,
+    "latitude": 28.5235,
+    "longitude": 77.209,
+    "address": "Sector 22, Near Market, Near Student University Campus",
+    "videoUrl": "https://res.cloudinary.com/v1iyctik/video/upload/ac_none,q_auto/v1790575768/unistay_rooms/videos/qsj7cehilp1ldthvpqit.mp4",
+    "videoTree": {
+      "root": {
+        "id": "sleeping_room",
+        "title": "Sleeping Room",
+        "role": "root",
+        "url": "https://res.cloudinary.com/v1iyctik/video/upload/ac_none,q_auto/v1790575768/unistay_rooms/videos/qsj7cehilp1ldthvpqit.mp4"
+      },
+      "left": {
+        "id": "kitchen",
+        "title": "Kitchen",
+        "role": "left",
+        "url": "https://res.cloudinary.com/v1iyctik/video/upload/ac_none,q_auto/v1790575768/unistay_rooms/videos/kvgl8cr2wxda3moyf1k0.mp4"
+      },
+      "right": {
+        "id": "washing_room",
+        "title": "Washing Room",
+        "role": "right",
+        "url": "https://res.cloudinary.com/v1iyctik/video/upload/ac_none,q_auto/v1790575768/unistay_rooms/videos/rvqlzfmtbop0d9srysma.mp4"
+      }
+    },
+    "images": [
+      "https://res.cloudinary.com/v1iyctik/image/upload/v1790575781/unistay_rooms/images/c4fagjqplexfgohh71af.jpg"
+    ],
+    "customCategories": [
+      "Budget Friendly",
+      "Single Room",
+      "Attached Washroom",
+      "Verified Tour"
+    ],
+    "agentId": "user-admin-1",
+    "agentName": "UniStay Housing Desk",
+    "agentPhone": "9041543868",
+    "createdAt": "2026-09-28T06:09:28Z"
+  },
+  {
+    "id": "house-cloud-1790576198000-17",
+    "title": "Campus View Studio Room #17",
+    "description": "Verified student room tour with 3-part walkthrough tree (Sleeping room, Kitchen, and Washing room). Quiet study atmosphere, verified amenities, independent access.",
+    "rentAmount": 5800,
+    "electricityPerUnit": 8,
+    "priceGroup": "standard",
+    "status": "available",
+    "landlordAtPG": false,
+    "landlordName": "Verified Property Desk",
+    "landlordPhone": "+91 9041543868",
+    "electricityBackup": true,
+    "acRoom": false,
+    "waterGeyser": true,
+    "latitude": 28.5295,
+    "longitude": 77.227,
+    "address": "Main University Boulevard, Near Student University Campus",
+    "videoUrl": "https://res.cloudinary.com/v1iyctik/video/upload/ac_none,q_auto/v1790576198/unistay_rooms/videos/xu1ruhwqm26qjbr3da0x.mp4",
+    "videoTree": {
+      "root": {
+        "id": "sleeping_room",
+        "title": "Sleeping Room",
+        "role": "root",
+        "url": "https://res.cloudinary.com/v1iyctik/video/upload/ac_none,q_auto/v1790576198/unistay_rooms/videos/xu1ruhwqm26qjbr3da0x.mp4"
+      },
+      "left": {
+        "id": "kitchen",
+        "title": "Kitchen",
+        "role": "left",
+        "url": "https://res.cloudinary.com/v1iyctik/video/upload/ac_none,q_auto/v1790576199/unistay_rooms/videos/guycjmolhw20snokowol.mp4"
+      },
+      "right": {
+        "id": "washing_room",
+        "title": "Washing Room",
+        "role": "right",
+        "url": "https://res.cloudinary.com/v1iyctik/video/upload/ac_none,q_auto/v1790576199/unistay_rooms/videos/udund558mor2xcqbyozo.mp4"
+      }
+    },
+    "images": [
+      "https://res.cloudinary.com/v1iyctik/image/upload/v1790576208/unistay_rooms/images/nzun5ndubkujfavlk6w7.jpg"
+    ],
+    "customCategories": [
+      "Budget Friendly",
+      "Single Room",
+      "Attached Washroom",
+      "Verified Tour"
+    ],
+    "agentId": "user-admin-1",
+    "agentName": "UniStay Housing Desk",
+    "agentPhone": "9041543868",
+    "createdAt": "2026-09-28T06:16:38Z"
+  },
+  {
+    "id": "house-cloud-1790576517000-18",
+    "title": "Urban Living Independent PG #18",
+    "description": "Verified student room tour with 3-part walkthrough tree (Sleeping room, Kitchen, and Washing room). Quiet study atmosphere, verified amenities, independent access.",
+    "rentAmount": 7200,
+    "electricityPerUnit": 8,
+    "priceGroup": "premium",
+    "status": "available",
+    "landlordAtPG": false,
+    "landlordName": "Verified Property Desk",
+    "landlordPhone": "+91 9041543868",
+    "electricityBackup": true,
+    "acRoom": true,
+    "waterGeyser": true,
+    "latitude": 28.5355,
+    "longitude": 77.203,
+    "address": "Sunrise Heights, Gate 1, Near Student University Campus",
+    "videoUrl": "https://res.cloudinary.com/v1iyctik/video/upload/ac_none,q_auto/v1790576517/unistay_rooms/videos/osihp9yspgzzoyijyulc.mp4",
+    "videoTree": {
+      "root": {
+        "id": "sleeping_room",
+        "title": "Sleeping Room",
+        "role": "root",
+        "url": "https://res.cloudinary.com/v1iyctik/video/upload/ac_none,q_auto/v1790576517/unistay_rooms/videos/osihp9yspgzzoyijyulc.mp4"
+      },
+      "left": {
+        "id": "kitchen",
+        "title": "Kitchen",
+        "role": "left",
+        "url": "https://res.cloudinary.com/v1iyctik/video/upload/ac_none,q_auto/v1790576517/unistay_rooms/videos/dbu3fg4fuh9yxagpwk9d.mp4"
+      },
+      "right": {
+        "id": "washing_room",
+        "title": "Washing Room",
+        "role": "right",
+        "url": "https://res.cloudinary.com/v1iyctik/video/upload/ac_none,q_auto/v1790576517/unistay_rooms/videos/fwvbvjasqonvjwov6ixh.mp4"
+      }
+    },
+    "images": [
+      "https://res.cloudinary.com/v1iyctik/image/upload/v1790576526/unistay_rooms/images/wxchholybfnbbrlwxebg.jpg"
+    ],
+    "customCategories": [
+      "AC Room",
+      "Single Room",
+      "Attached Washroom",
+      "Verified Tour"
+    ],
+    "agentId": "user-admin-1",
+    "agentName": "UniStay Housing Desk",
+    "agentPhone": "9041543868",
+    "createdAt": "2026-09-28T06:21:57Z"
+  },
+  {
+    "id": "house-cloud-1790578189000-19",
+    "title": "Peaceful Study Pod Room #19",
+    "description": "Verified student room tour with 3-part walkthrough tree (Sleeping room, Kitchen, and Washing room). Quiet study atmosphere, verified amenities, independent access.",
+    "rentAmount": 3600,
+    "electricityPerUnit": 8,
+    "priceGroup": "budget",
+    "status": "available",
+    "landlordAtPG": true,
+    "landlordName": "Verified Property Desk",
+    "landlordPhone": "+91 9041543868",
+    "electricityBackup": true,
+    "acRoom": false,
+    "waterGeyser": true,
+    "latitude": 28.5415,
+    "longitude": 77.221,
+    "address": "Sector 14, Quiet Zone, Near Student University Campus",
+    "videoUrl": "https://res.cloudinary.com/v1iyctik/video/upload/ac_none,q_auto/v1790578189/unistay_rooms/videos/ntthmkqnddqpjmo5vrmo.mp4",
+    "videoTree": {
+      "root": {
+        "id": "sleeping_room",
+        "title": "Sleeping Room",
+        "role": "root",
+        "url": "https://res.cloudinary.com/v1iyctik/video/upload/ac_none,q_auto/v1790578189/unistay_rooms/videos/ntthmkqnddqpjmo5vrmo.mp4"
+      },
+      "left": {
+        "id": "kitchen",
+        "title": "Kitchen",
+        "role": "left",
+        "url": "https://res.cloudinary.com/v1iyctik/video/upload/ac_none,q_auto/v1790578190/unistay_rooms/videos/ksweg6zzdcrn7ispjxso.mp4"
+      },
+      "right": {
+        "id": "washing_room",
+        "title": "Washing Room",
+        "role": "right",
+        "url": "https://res.cloudinary.com/v1iyctik/video/upload/ac_none,q_auto/v1790578191/unistay_rooms/videos/q4ktciiwryt3nmga95et.mp4"
+      }
+    },
+    "images": [
+      "https://res.cloudinary.com/v1iyctik/image/upload/v1790578219/unistay_rooms/images/gpzsjmyxftr9etisxrji.jpg"
+    ],
+    "customCategories": [
+      "Budget Friendly",
+      "Single Room",
+      "Attached Washroom",
+      "Verified Tour"
+    ],
+    "agentId": "user-admin-1",
+    "agentName": "UniStay Housing Desk",
+    "agentPhone": "9041543868",
+    "createdAt": "2026-09-28T06:49:49Z"
+  },
+  {
+    "id": "house-cloud-1790578799000-20",
+    "title": "Apex Elite AC Suite #20",
+    "description": "Verified student room tour with 3-part walkthrough tree (Sleeping room, Kitchen, and Washing room). Quiet study atmosphere, verified amenities, independent access.",
+    "rentAmount": 8500,
+    "electricityPerUnit": 8,
+    "priceGroup": "premium",
+    "status": "available",
+    "landlordAtPG": false,
+    "landlordName": "Verified Property Desk",
+    "landlordPhone": "+91 9041543868",
+    "electricityBackup": true,
+    "acRoom": true,
+    "waterGeyser": true,
+    "latitude": 28.5475,
+    "longitude": 77.197,
+    "address": "South Campus Ring Road, Near Student University Campus",
+    "videoUrl": "https://res.cloudinary.com/v1iyctik/video/upload/ac_none,q_auto/v1790578799/unistay_rooms/videos/lnlrczfdnk94h6k4tx0h.mp4",
+    "videoTree": {
+      "root": {
+        "id": "sleeping_room",
+        "title": "Sleeping Room",
+        "role": "root",
+        "url": "https://res.cloudinary.com/v1iyctik/video/upload/ac_none,q_auto/v1790578799/unistay_rooms/videos/lnlrczfdnk94h6k4tx0h.mp4"
+      },
+      "left": {
+        "id": "kitchen",
+        "title": "Kitchen",
+        "role": "left",
+        "url": "https://res.cloudinary.com/v1iyctik/video/upload/ac_none,q_auto/v1790578800/unistay_rooms/videos/knqadp19hsz6gjb2wzy2.mp4"
+      },
+      "right": {
+        "id": "washing_room",
+        "title": "Washing Room",
+        "role": "right",
+        "url": "https://res.cloudinary.com/v1iyctik/video/upload/ac_none,q_auto/v1790578801/unistay_rooms/videos/jimmva8uf1n6qixsbxna.mp4"
+      }
+    },
+    "images": [
+      "https://res.cloudinary.com/v1iyctik/image/upload/v1790578834/unistay_rooms/images/qrokkdreytehvza5oj0l.jpg"
+    ],
+    "customCategories": [
+      "AC Room",
+      "Single Room",
+      "Attached Washroom",
+      "Verified Tour"
+    ],
+    "agentId": "user-admin-1",
+    "agentName": "UniStay Housing Desk",
+    "agentPhone": "9041543868",
+    "createdAt": "2026-09-28T06:59:59Z"
+  },
+  {
+    "id": "house-cloud-1790579828000-21",
+    "title": "Scholar's Comfort AC Studio #21",
+    "description": "Verified student room tour with 3-part walkthrough tree (Sleeping room, Kitchen, and Washing room). Quiet study atmosphere, verified amenities, independent access.",
+    "rentAmount": 6500,
+    "electricityPerUnit": 8,
+    "priceGroup": "standard",
+    "status": "available",
+    "landlordAtPG": false,
+    "landlordName": "Verified Property Desk",
+    "landlordPhone": "+91 9041543868",
+    "electricityBackup": true,
+    "acRoom": false,
+    "waterGeyser": true,
+    "latitude": 28.5535,
+    "longitude": 77.215,
+    "address": "Sector 4, Student Enclave, Near Student University Campus",
+    "videoUrl": "https://res.cloudinary.com/v1iyctik/video/upload/ac_none,q_auto/v1790579828/unistay_rooms/videos/lv0hlmw0vmklocrtpj8z.mp4",
+    "videoTree": {
+      "root": {
+        "id": "sleeping_room",
+        "title": "Sleeping Room",
+        "role": "root",
+        "url": "https://res.cloudinary.com/v1iyctik/video/upload/ac_none,q_auto/v1790579828/unistay_rooms/videos/lv0hlmw0vmklocrtpj8z.mp4"
+      },
+      "left": {
+        "id": "kitchen",
+        "title": "Kitchen",
+        "role": "left",
+        "url": "https://res.cloudinary.com/v1iyctik/video/upload/ac_none,q_auto/v1790579828/unistay_rooms/videos/d2nypnqhptmx2guziing.mp4"
+      },
+      "right": {
+        "id": "washing_room",
+        "title": "Washing Room",
+        "role": "right",
+        "url": "https://res.cloudinary.com/v1iyctik/video/upload/ac_none,q_auto/v1790579829/unistay_rooms/videos/n3macckxvb3qlapznr8u.mp4"
+      }
+    },
+    "images": [
+      "https://res.cloudinary.com/v1iyctik/image/upload/v1790579856/unistay_rooms/images/lzslwyplphooz9wsqxya.jpg"
+    ],
+    "customCategories": [
+      "Budget Friendly",
+      "Single Room",
+      "Attached Washroom",
+      "Verified Tour"
+    ],
+    "agentId": "user-admin-1",
+    "agentName": "UniStay Housing Desk",
+    "agentPhone": "9041543868",
+    "createdAt": "2026-09-28T07:17:08Z"
+  },
+  {
+    "id": "house-cloud-1790674556000-22",
+    "title": "Sunrise Deluxe Balcony Room #22",
+    "description": "Verified student room tour with 3-part walkthrough tree (Sleeping room, Kitchen, and Washing room). Quiet study atmosphere, verified amenities, independent access.",
+    "rentAmount": 7500,
+    "electricityPerUnit": 8,
+    "priceGroup": "premium",
+    "status": "available",
+    "landlordAtPG": true,
+    "landlordName": "Verified Property Desk",
+    "landlordPhone": "+91 9041543868",
+    "electricityBackup": true,
+    "acRoom": true,
+    "waterGeyser": true,
+    "latitude": 28.5175,
+    "longitude": 77.191,
+    "address": "University North Campus, Near Student University Campus",
+    "videoUrl": "https://res.cloudinary.com/v1iyctik/video/upload/ac_none,q_auto/v1790674556/unistay_rooms/videos/nht78uia3ih3obrq04co.mp4",
+    "videoTree": {
+      "root": {
+        "id": "sleeping_room",
+        "title": "Sleeping Room",
+        "role": "root",
+        "url": "https://res.cloudinary.com/v1iyctik/video/upload/ac_none,q_auto/v1790674556/unistay_rooms/videos/nht78uia3ih3obrq04co.mp4"
+      },
+      "left": {
+        "id": "kitchen",
+        "title": "Kitchen",
+        "role": "left",
+        "url": "https://res.cloudinary.com/v1iyctik/video/upload/ac_none,q_auto/v1790674556/unistay_rooms/videos/yl6gkgdxulfpmvqvp2ib.mp4"
+      },
+      "right": {
+        "id": "washing_room",
+        "title": "Washing Room",
+        "role": "right",
+        "url": "https://res.cloudinary.com/v1iyctik/video/upload/ac_none,q_auto/v1790674556/unistay_rooms/videos/n0yo8g9wumuzaevzsw59.mp4"
+      }
+    },
+    "images": [
+      "https://res.cloudinary.com/v1iyctik/image/upload/v1790674562/unistay_rooms/images/tcoqcvzhqqnxhwbuslgt.jpg"
+    ],
+    "customCategories": [
+      "AC Room",
+      "Single Room",
+      "Attached Washroom",
+      "Verified Tour"
+    ],
+    "agentId": "user-admin-1",
+    "agentName": "UniStay Housing Desk",
+    "agentPhone": "9041543868",
+    "createdAt": "2026-09-29T09:35:56Z"
+  },
+  {
+    "id": "house-cloud-1790675031000-23",
+    "title": "Greenview Budget Single PG #23",
+    "description": "Verified student room tour with 3-part walkthrough tree (Sleeping room, Kitchen, and Washing room). Quiet study atmosphere, verified amenities, independent access.",
+    "rentAmount": 3800,
+    "electricityPerUnit": 8,
+    "priceGroup": "budget",
+    "status": "available",
+    "landlordAtPG": false,
+    "landlordName": "Verified Property Desk",
+    "landlordPhone": "+91 9041543868",
+    "electricityBackup": true,
+    "acRoom": false,
+    "waterGeyser": true,
+    "latitude": 28.5235,
+    "longitude": 77.209,
+    "address": "Near Engineering College, Near Student University Campus",
+    "videoUrl": "https://res.cloudinary.com/v1iyctik/video/upload/ac_none,q_auto/v1790675031/unistay_rooms/videos/i5harzf3yqcazaut2cjr.mp4",
+    "videoTree": {
+      "root": {
+        "id": "sleeping_room",
+        "title": "Sleeping Room",
+        "role": "root",
+        "url": "https://res.cloudinary.com/v1iyctik/video/upload/ac_none,q_auto/v1790675031/unistay_rooms/videos/i5harzf3yqcazaut2cjr.mp4"
+      },
+      "left": {
+        "id": "kitchen",
+        "title": "Kitchen",
+        "role": "left",
+        "url": "https://res.cloudinary.com/v1iyctik/video/upload/ac_none,q_auto/v1790675031/unistay_rooms/videos/j27rn8slthb0s2hliws7.mp4"
+      },
+      "right": {
+        "id": "washing_room",
+        "title": "Washing Room",
+        "role": "right",
+        "url": "https://res.cloudinary.com/v1iyctik/video/upload/ac_none,q_auto/v1790675031/unistay_rooms/videos/uxbqszwlhol5w7jehm0h.mp4"
+      }
+    },
+    "images": [
+      "https://res.cloudinary.com/v1iyctik/image/upload/v1790675036/unistay_rooms/images/njvskbfh6ioljl5tjpk2.jpg"
+    ],
+    "customCategories": [
+      "Budget Friendly",
+      "Single Room",
+      "Attached Washroom",
+      "Verified Tour"
+    ],
+    "agentId": "user-admin-1",
+    "agentName": "UniStay Housing Desk",
+    "agentPhone": "9041543868",
+    "createdAt": "2026-09-29T09:43:51Z"
+  },
+  {
+    "id": "house-cloud-1790675203000-24",
+    "title": "Metro Edge Independent Room #24",
+    "description": "Verified student room tour with 3-part walkthrough tree (Sleeping room, Kitchen, and Washing room). Quiet study atmosphere, verified amenities, independent access.",
+    "rentAmount": 5200,
+    "electricityPerUnit": 8,
+    "priceGroup": "standard",
+    "status": "available",
+    "landlordAtPG": false,
+    "landlordName": "Verified Property Desk",
+    "landlordPhone": "+91 9041543868",
+    "electricityBackup": true,
+    "acRoom": false,
+    "waterGeyser": true,
+    "latitude": 28.5295,
+    "longitude": 77.227,
+    "address": "Law Gate Student Hub, Near Student University Campus",
+    "videoUrl": "https://res.cloudinary.com/v1iyctik/video/upload/ac_none,q_auto/v1790675203/unistay_rooms/videos/zhthc2spfpv69ohm45xz.mp4",
+    "videoTree": {
+      "root": {
+        "id": "sleeping_room",
+        "title": "Sleeping Room",
+        "role": "root",
+        "url": "https://res.cloudinary.com/v1iyctik/video/upload/ac_none,q_auto/v1790675203/unistay_rooms/videos/zhthc2spfpv69ohm45xz.mp4"
+      },
+      "left": {
+        "id": "kitchen",
+        "title": "Kitchen",
+        "role": "left",
+        "url": "https://res.cloudinary.com/v1iyctik/video/upload/ac_none,q_auto/v1790675203/unistay_rooms/videos/zsinvrimac8o1o36ibti.mp4"
+      },
+      "right": {
+        "id": "washing_room",
+        "title": "Washing Room",
+        "role": "right",
+        "url": "https://res.cloudinary.com/v1iyctik/video/upload/ac_none,q_auto/v1790675203/unistay_rooms/videos/qapsus7gclfdnrvl913q.mp4"
+      }
+    },
+    "images": [
+      "https://res.cloudinary.com/v1iyctik/image/upload/v1790675209/unistay_rooms/images/c3emqia8wqp4bq2xerbf.jpg"
+    ],
+    "customCategories": [
+      "Budget Friendly",
+      "Single Room",
+      "Attached Washroom",
+      "Verified Tour"
+    ],
+    "agentId": "user-admin-1",
+    "agentName": "UniStay Housing Desk",
+    "agentPhone": "9041543868",
+    "createdAt": "2026-09-29T09:46:43Z"
+  },
+  {
+    "id": "house-cloud-1790675532000-25",
+    "title": "Royal Oak AC Residency #25",
+    "description": "Verified student room tour with 3-part walkthrough tree (Sleeping room, Kitchen, and Washing room). Quiet study atmosphere, verified amenities, independent access.",
+    "rentAmount": 8200,
+    "electricityPerUnit": 8,
+    "priceGroup": "premium",
+    "status": "available",
+    "landlordAtPG": true,
+    "landlordName": "Verified Property Desk",
+    "landlordPhone": "+91 9041543868",
+    "electricityBackup": true,
+    "acRoom": true,
+    "waterGeyser": true,
+    "latitude": 28.5355,
+    "longitude": 77.203,
+    "address": "Chitkara Campus Road, Near Student University Campus",
+    "videoUrl": "https://res.cloudinary.com/v1iyctik/video/upload/ac_none,q_auto/v1790675532/unistay_rooms/videos/hrpgj8tsjavvttlsnon9.mp4",
+    "videoTree": {
+      "root": {
+        "id": "sleeping_room",
+        "title": "Sleeping Room",
+        "role": "root",
+        "url": "https://res.cloudinary.com/v1iyctik/video/upload/ac_none,q_auto/v1790675532/unistay_rooms/videos/hrpgj8tsjavvttlsnon9.mp4"
+      },
+      "left": {
+        "id": "kitchen",
+        "title": "Kitchen",
+        "role": "left",
+        "url": "https://res.cloudinary.com/v1iyctik/video/upload/ac_none,q_auto/v1790675532/unistay_rooms/videos/x2ulz3cvroeckqpwkzvi.mp4"
+      },
+      "right": {
+        "id": "washing_room",
+        "title": "Washing Room",
+        "role": "right",
+        "url": "https://res.cloudinary.com/v1iyctik/video/upload/ac_none,q_auto/v1790675532/unistay_rooms/videos/cgsitttygqmpxey2at5t.mp4"
+      }
+    },
+    "images": [
+      "https://res.cloudinary.com/v1iyctik/image/upload/v1790675537/unistay_rooms/images/glq3b2fmuhsaodexnopi.jpg"
+    ],
+    "customCategories": [
+      "AC Room",
+      "Single Room",
+      "Attached Washroom",
+      "Verified Tour"
+    ],
+    "agentId": "user-admin-1",
+    "agentName": "UniStay Housing Desk",
+    "agentPhone": "9041543868",
+    "createdAt": "2026-09-29T09:52:12Z"
+  },
+  {
+    "id": "house-cloud-1790689408000-26",
+    "title": "Harmony Student Haven #26",
+    "description": "Verified student room tour with 3-part walkthrough tree (Sleeping room, Kitchen, and Washing room). Quiet study atmosphere, verified amenities, independent access.",
+    "rentAmount": 4500,
+    "electricityPerUnit": 8,
+    "priceGroup": "standard",
+    "status": "available",
+    "landlordAtPG": false,
+    "landlordName": "Verified Property Desk",
+    "landlordPhone": "+91 9041543868",
+    "electricityBackup": true,
+    "acRoom": false,
+    "waterGeyser": true,
+    "latitude": 28.5415,
+    "longitude": 77.221,
+    "address": "Sector 22, Near Market, Near Student University Campus",
+    "videoUrl": "https://res.cloudinary.com/v1iyctik/video/upload/ac_none,q_auto/v1790689408/unistay_rooms/videos/sw8vuz1phrcfyudfpwhm.mp4",
+    "videoTree": {
+      "root": {
+        "id": "sleeping_room",
+        "title": "Sleeping Room",
+        "role": "root",
+        "url": "https://res.cloudinary.com/v1iyctik/video/upload/ac_none,q_auto/v1790689408/unistay_rooms/videos/sw8vuz1phrcfyudfpwhm.mp4"
+      },
+      "left": {
+        "id": "kitchen",
+        "title": "Kitchen",
+        "role": "left",
+        "url": "https://res.cloudinary.com/v1iyctik/video/upload/ac_none,q_auto/v1790689408/unistay_rooms/videos/nnffkycyxlq77tgdclwm.mp4"
+      },
+      "right": {
+        "id": "washing_room",
+        "title": "Washing Room",
+        "role": "right",
+        "url": "https://res.cloudinary.com/v1iyctik/video/upload/ac_none,q_auto/v1790689408/unistay_rooms/videos/pviisrplxmqbchmgahfu.mp4"
+      }
+    },
+    "images": [
+      "https://res.cloudinary.com/v1iyctik/image/upload/v1790689417/unistay_rooms/images/e3jcrwvpv127dhvrfqxy.jpg"
+    ],
+    "customCategories": [
+      "Budget Friendly",
+      "Single Room",
+      "Attached Washroom",
+      "Verified Tour"
+    ],
+    "agentId": "user-admin-1",
+    "agentName": "UniStay Housing Desk",
+    "agentPhone": "9041543868",
+    "createdAt": "2026-09-29T13:43:28Z"
+  },
+  {
+    "id": "house-1",
+    "title": "Scholar Haven Budget PG",
+    "description": "Affordable student room with peaceful study vibe, study desk, 24/7 high-speed WiFi and friendly atmosphere. Close to colleges and local library.",
+    "rentAmount": 3200,
+    "electricityPerUnit": 7.5,
+    "priceGroup": "budget",
+    "status": "available",
+    "landlordAtPG": false,
+    "landlordName": "Ramesh Gupta",
+    "landlordPhone": "+91 98101 23456",
+    "electricityBackup": true,
+    "acRoom": false,
+    "waterGeyser": true,
+    "customCategories": [
+      "Single Room",
+      "Boys Only",
+      "Near Library",
+      "Walking to Metro"
+    ],
+    "latitude": 28.5355,
+    "longitude": 77.209,
+    "address": "Sector 4, Student Enclave, Near Metro Gate 2",
+    "videoUrl": "https://assets.mixkit.co/videos/preview/mixkit-living-room-in-a-modern-apartment-43391-large.mp4",
+    "images": [
+      "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1598928506311-c55ded91a20c?auto=format&fit=crop&w=800&q=80"
+    ],
+    "agentId": "user-agent-1",
+    "agentName": "Alex - Campus Agent",
+    "createdAt": "2026-09-01T10:00:00.000Z",
+    "statusUpdatedAt": "2026-09-09T12:23:47.619Z"
+  },
+  {
+    "id": "house-2",
+    "title": "Elite Comfort AC Studio PG",
+    "description": "Fully furnished studio room with cooling inverter AC, personal geyser, premium wooden wardrobe, and power backup. Ideal for students wanting complete privacy.",
+    "rentAmount": 7800,
+    "electricityPerUnit": 9,
+    "priceGroup": "premium",
+    "status": "occupied",
+    "landlordAtPG": true,
+    "landlordName": "Sunita Batra",
+    "landlordPhone": "+91 98202 34567",
+    "electricityBackup": true,
+    "acRoom": true,
+    "waterGeyser": true,
+    "customCategories": [
+      "AC Room",
+      "Private Studio",
+      "Girls PG",
+      "Balcony View"
+    ],
+    "latitude": 28.5492,
+    "longitude": 77.2155,
+    "address": "Pocket B, Sunrise Heights, University North Campus",
+    "videoUrl": "https://assets.mixkit.co/videos/preview/mixkit-modern-apartment-with-living-room-and-kitchen-43392-large.mp4",
+    "images": [
+      "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=800&q=80"
+    ],
+    "agentId": "user-agent-1",
+    "agentName": "Alex - Campus Agent",
+    "createdAt": "2026-09-02T12:30:00.000Z"
+  },
+  {
+    "id": "house-4",
+    "title": "Greenview Standard AC Residency",
+    "description": "Spacious and ventilated room with energy-saving Split AC, modern geyser bathroom, and no landlord interference. Great rooftop access for evening breaks.",
+    "rentAmount": 6200,
+    "electricityPerUnit": 8.5,
+    "priceGroup": "standard",
+    "status": "reserved",
+    "landlordAtPG": false,
+    "landlordName": "Harpreet Singh",
+    "landlordPhone": "+91 98404 56789",
+    "electricityBackup": true,
+    "acRoom": true,
+    "waterGeyser": true,
+    "customCategories": [
+      "AC Room",
+      "Single Room",
+      "Rooftop Access",
+      "Boys PG"
+    ],
+    "latitude": 28.528,
+    "longitude": 77.2045,
+    "address": "42-B, Green Avenue, 5 mins from Engineering College",
+    "videoUrl": "https://assets.mixkit.co/videos/preview/mixkit-bright-kitchen-in-an-apartment-43394-large.mp4",
+    "images": [
+      "https://images.unsplash.com/photo-1512918728675-ed5a9ecdebfd?auto=format&fit=crop&w=800&q=80"
+    ],
+    "agentId": "user-agent-1",
+    "agentName": "Alex - Campus Agent",
+    "createdAt": "2026-09-04T09:40:00.000Z"
+  }
+]
