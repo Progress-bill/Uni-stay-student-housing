@@ -1246,6 +1246,99 @@ app.patch('/api/listings/:id/status', requireAuth, (req, res) => {
   }
 });
 
+// PUT /api/listings/:id (Update room details: title, description, rent, location, amenities, landlord info)
+app.put('/api/listings/:id', requireAuth, (req, res) => {
+  try {
+    const { id } = req.params;
+    const listings = readJsonFile(listingsFilePath);
+    const index = listings.findIndex(l => l.id === id);
+
+    if (index === -1) {
+      return res.status(404).json({ success: false, message: 'Room listing not found' });
+    }
+
+    // Permission check: Admin can update any listing; Agent can only update their own listings
+    if (req.user.role !== 'admin' && listings[index].agentId !== req.user.id && !isPhoneMatch(listings[index].agentPhone, req.user.phone)) {
+      return res.status(403).json({
+        success: false,
+        code: 'FORBIDDEN',
+        message: 'You can only edit details for your own room listings.'
+      });
+    }
+
+    const current = listings[index];
+    const {
+      title,
+      description,
+      rentAmount,
+      electricityPerUnit,
+      priceGroup,
+      status,
+      landlordAtPG,
+      landlordName,
+      landlordPhone,
+      electricityBackup,
+      acRoom,
+      waterGeyser,
+      latitude,
+      longitude,
+      address,
+      customCategories
+    } = req.body;
+
+    if (title !== undefined) current.title = String(title).trim() || current.title;
+    if (description !== undefined) current.description = String(description).trim();
+    if (rentAmount !== undefined) {
+      const parsedRent = Number(rentAmount);
+      if (!isNaN(parsedRent) && parsedRent > 0) {
+        current.rentAmount = parsedRent;
+        // Auto-compute priceGroup if not provided explicitly
+        if (!priceGroup) {
+          if (parsedRent <= 4000) current.priceGroup = 'budget';
+          else if (parsedRent <= 7000) current.priceGroup = 'standard';
+          else current.priceGroup = 'premium';
+        }
+      }
+    }
+    if (priceGroup && ['budget', 'standard', 'premium'].includes(priceGroup)) {
+      current.priceGroup = priceGroup;
+    }
+    if (electricityPerUnit !== undefined) {
+      const parsedElec = parseFloat(electricityPerUnit);
+      if (!isNaN(parsedElec)) current.electricityPerUnit = parsedElec;
+    }
+    if (status && ['available', 'occupied', 'reserved'].includes(status)) {
+      current.status = status;
+      current.statusUpdatedAt = new Date().toISOString();
+    }
+    if (landlordAtPG !== undefined) current.landlordAtPG = landlordAtPG === true || landlordAtPG === 'true';
+    if (landlordName !== undefined) current.landlordName = String(landlordName).trim();
+    if (landlordPhone !== undefined) current.landlordPhone = String(landlordPhone).trim();
+    if (electricityBackup !== undefined) current.electricityBackup = electricityBackup === true || electricityBackup === 'true';
+    if (acRoom !== undefined) current.acRoom = acRoom === true || acRoom === 'true';
+    if (waterGeyser !== undefined) current.waterGeyser = waterGeyser === true || waterGeyser === 'true';
+    if (latitude !== undefined && !isNaN(parseFloat(latitude))) current.latitude = parseFloat(latitude);
+    if (longitude !== undefined && !isNaN(parseFloat(longitude))) current.longitude = parseFloat(longitude);
+    if (address !== undefined) current.address = String(address).trim();
+    if (Array.isArray(customCategories)) current.customCategories = customCategories;
+    
+    current.updatedAt = new Date().toISOString();
+
+    listings[index] = current;
+    writeJsonFile(listingsFilePath, listings);
+
+    res.json({
+      success: true,
+      message: 'Room details updated successfully',
+      data: current
+    });
+  } catch (err) {
+    console.error('Error updating listing details:', err);
+    res.status(500).json({ success: false, message: 'Error updating room details', error: err.message });
+  }
+});
+
+
 // POST new listing with video, photo, and Landlord Contact info
 app.post(
   '/api/listings',

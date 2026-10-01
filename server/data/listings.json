@@ -1,7 +1,7 @@
 [
   {
     "id": "house-cloud-1790007525000-1",
-    "title": "Scholar's Comfort AC Studio #1",
+    "title": "Law Gate Executive AC Studio #1",
     "description": "Verified student room tour with 3-part walkthrough tree (Sleeping room, Kitchen, and Washing room). Quiet study atmosphere, verified amenities, independent access.",
     "rentAmount": 6500,
     "electricityPerUnit": 8,
@@ -15,7 +15,7 @@
     "waterGeyser": true,
     "latitude": 28.5175,
     "longitude": 77.191,
-    "address": "Sector 4, Student Enclave, Near Student University Campus",
+    "address": "Law Gate, Near LPU Campus Gate 1, Phagwara, Punjab",
     "videoUrl": "https://res.cloudinary.com/v1iyctik/video/upload/ac_none,q_auto/v1790007525/unistay_rooms/videos/vmaxvqkkhyitd0yosg5j.mp4",
     "videoTree": {
       "root": {
@@ -49,7 +49,8 @@
     "agentId": "user-admin-1",
     "agentName": "UniStay Housing Desk",
     "agentPhone": "9041543868",
-    "createdAt": "2026-09-21T16:18:45Z"
+    "createdAt": "2026-09-21T16:18:45Z",
+    "updatedAt": "2026-10-01T08:36:50.545Z"
   },
   {
     "id": "house-cloud-1790014696000-2",

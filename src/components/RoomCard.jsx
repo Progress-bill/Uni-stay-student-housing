@@ -16,7 +16,8 @@ import {
   Lock,
   AlertTriangle,
   Clock,
-  Compass
+  Compass,
+  Edit3
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
@@ -27,6 +28,7 @@ export default function RoomCard({
   onDeleteListing,
   onRequestDeleteListing,
   onUpdateStatus,
+  onEditRoom,
   isSelected 
 }) {
   const { user, isAdmin, isAgent } = useAuth();
@@ -369,6 +371,17 @@ export default function RoomCard({
             <MessageCircle className="w-3.5 h-3.5" />
             <span>{isAgent ? 'Inquire for Client' : 'WhatsApp Agent'}</span>
           </a>
+
+          {/* Edit Listing Details Action */}
+          {canManageListing && onEditRoom && (
+            <button
+              onClick={() => onEditRoom(room)}
+              className="p-2 rounded-xl text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-colors cursor-pointer"
+              title="Edit Room Details & Labeling"
+            >
+              <Edit3 className="w-3.5 h-3.5" />
+            </button>
+          )}
 
           {/* Delete Listing Action */}
           {isAdmin && (

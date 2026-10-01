@@ -10,6 +10,7 @@ import AuthModal from './components/AuthModal';
 import BecomeAgentModal from './components/BecomeAgentModal';
 import AdminPanelModal from './components/AdminPanelModal';
 import DeleteRequestModal from './components/DeleteRequestModal';
+import EditRoomModal from './components/EditRoomModal';
 import { useAuth } from './context/AuthContext';
 import { Home, AlertCircle, RefreshCw, Sparkles, Filter, ShieldAlert, MessageCircle } from 'lucide-react';
 
@@ -43,6 +44,12 @@ export default function App() {
   const [isBecomeAgentOpen, setIsBecomeAgentOpen] = useState(false);
   const [isAdminPanelOpen, setIsAdminPanelOpen] = useState(false);
   const [roomToDeleteRequest, setRoomToDeleteRequest] = useState(null);
+  const [roomToEdit, setRoomToEdit] = useState(null);
+
+  // Handle room update from Edit modal
+  const handleRoomUpdated = (updatedRoom) => {
+    setListings(prev => prev.map(l => l.id === updatedRoom.id ? updatedRoom : l));
+  };
 
   // Pending agent applications & deletion requests count for Admin badge
   const [pendingAppsCount, setPendingAppsCount] = useState(0);
@@ -411,6 +418,7 @@ export default function App() {
                   onDeleteListing={handleDeleteListing}
                   onRequestDeleteListing={handleOpenDeleteRequest}
                   onUpdateStatus={handleUpdateRoomStatus}
+                  onEditRoom={(r) => setRoomToEdit(r)}
                 />
               ))}
             </div>
@@ -435,6 +443,7 @@ export default function App() {
                   onDeleteListing={handleDeleteListing}
                   onRequestDeleteListing={handleOpenDeleteRequest}
                   onUpdateStatus={handleUpdateRoomStatus}
+                  onEditRoom={(r) => setRoomToEdit(r)}
                 />
               ))}
             </div>
@@ -544,6 +553,16 @@ export default function App() {
         room={roomToDeleteRequest}
         onRequestSubmitted={handleDeleteRequestSubmitted}
       />
+
+      {/* Edit Room Details Modal */}
+      {roomToEdit && (
+        <EditRoomModal
+          isOpen={Boolean(roomToEdit)}
+          room={roomToEdit}
+          onClose={() => setRoomToEdit(null)}
+          onRoomUpdated={handleRoomUpdated}
+        />
+      )}
 
       {/* Instant Session Revocation & Auto-Logout Modal */}
       {revocationNotice && (

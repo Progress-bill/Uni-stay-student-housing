@@ -24,8 +24,10 @@ import {
   HardDrive,
   ExternalLink,
   BarChart3,
-  Database
+  Database,
+  Edit3
 } from 'lucide-react';
+import EditRoomModal from './EditRoomModal';
 
 export default function AdminPanelModal({ 
   isOpen, 
@@ -37,6 +39,7 @@ export default function AdminPanelModal({
   if (!isOpen) return null;
 
   const [activeTab, setActiveTab] = useState('applications'); // 'applications' | 'manage_agents' | 'del_requests' | 'rooms'
+  const [editingRoom, setEditingRoom] = useState(null);
   const [applications, setApplications] = useState([]);
   const [loadingApps, setLoadingApps] = useState(false);
   const [appError, setAppError] = useState('');
@@ -1054,24 +1057,36 @@ export default function AdminPanelModal({
                         </div>
                       </div>
 
-                      {/* Right: Change Status Dropdown */}
-                      <div className="flex items-center gap-2 self-end md:self-center shrink-0">
-                        <span className="text-[11px] font-semibold text-slate-500">Live Status:</span>
-                        <select
-                          value={currentStatus}
-                          onChange={(e) => onUpdateRoomStatus(room.id, e.target.value)}
-                          className={`text-xs font-bold rounded-xl px-3 py-1.5 border outline-none cursor-pointer transition-all ${
-                            currentStatus === 'available'
-                              ? 'bg-emerald-50 border-emerald-300 text-emerald-800'
-                              : currentStatus === 'occupied'
-                              ? 'bg-rose-50 border-rose-300 text-rose-800'
-                              : 'bg-amber-50 border-amber-300 text-amber-800'
-                          }`}
+                      {/* Right: Actions (Edit Details & Change Status Dropdown) */}
+                      <div className="flex flex-wrap items-center gap-2 self-start md:self-center shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => setEditingRoom(room)}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-bold transition-all cursor-pointer border border-blue-200"
+                          title="Edit room title, rent, location, and landlord details"
                         >
-                          <option value="available">🟢 Available</option>
-                          <option value="occupied">🔴 Booked</option>
-                          <option value="reserved">🟡 Reserved</option>
-                        </select>
+                          <Edit3 className="w-3.5 h-3.5" />
+                          <span>Edit Details</span>
+                        </button>
+
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[11px] font-semibold text-slate-500">Status:</span>
+                          <select
+                            value={currentStatus}
+                            onChange={(e) => onUpdateRoomStatus(room.id, e.target.value)}
+                            className={`text-xs font-bold rounded-xl px-2.5 py-1.5 border outline-none cursor-pointer transition-all ${
+                              currentStatus === 'available'
+                                ? 'bg-emerald-50 border-emerald-300 text-emerald-800'
+                                : currentStatus === 'occupied'
+                                ? 'bg-rose-50 border-rose-300 text-rose-800'
+                                : 'bg-amber-50 border-amber-300 text-amber-800'
+                            }`}
+                          >
+                            <option value="available">🟢 Available</option>
+                            <option value="occupied">🔴 Booked</option>
+                            <option value="reserved">🟡 Reserved</option>
+                          </select>
+                        </div>
                       </div>
 
                     </div>
@@ -1462,6 +1477,21 @@ export default function AdminPanelModal({
             </div>
           </div>
         </div>
+      )}
+
+      {/* Edit Room Details Modal */}
+      {editingRoom && (
+        <EditRoomModal
+          isOpen={Boolean(editingRoom)}
+          room={editingRoom}
+          onClose={() => setEditingRoom(null)}
+          onRoomUpdated={(updated) => {
+            setEditingRoom(null);
+            if (onRefreshListings) {
+              onRefreshListings();
+            }
+          }}
+        />
       )}
 
     </div>
