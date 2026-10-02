@@ -12,7 +12,18 @@ import AdminPanelModal from './components/AdminPanelModal';
 import DeleteRequestModal from './components/DeleteRequestModal';
 import EditRoomModal from './components/EditRoomModal';
 import { useAuth } from './context/AuthContext';
-import { Home, AlertCircle, RefreshCw, Sparkles, Filter, ShieldAlert, MessageCircle } from 'lucide-react';
+import { 
+  Home, 
+  AlertCircle, 
+  RefreshCw, 
+  Sparkles, 
+  Filter, 
+  ShieldAlert, 
+  MessageCircle,
+  ArrowUpDown,
+  ArrowUpNarrowWide,
+  ArrowDownWideNarrow
+} from 'lucide-react';
 
 export default function App() {
   const { user, isAdmin, isAgent, revocationNotice, clearRevocationNotice } = useAuth();
@@ -26,6 +37,26 @@ export default function App() {
   const [statusFilter, setStatusFilter] = useState('all'); // 'all' | 'available' | 'occupied'
   const [searchQuery, setSearchQuery] = useState('');
   const [priceSearch, setPriceSearch] = useState('');
+  const [sortBy, setSortBy] = useState('price-asc'); // 'price-asc' (Price: Low to High) | 'price-desc' | 'default'
+
+  // Function for arranging rooms in ascending order of prices
+  const sortRoomsByPriceAsc = (roomsList) => {
+    return [...roomsList].sort((a, b) => {
+      const rentA = Number(a.rentAmount) || 0;
+      const rentB = Number(b.rentAmount) || 0;
+      return rentA - rentB;
+    });
+  };
+
+  // Function for arranging rooms in descending order of prices
+  const sortRoomsByPriceDesc = (roomsList) => {
+    return [...roomsList].sort((a, b) => {
+      const rentA = Number(a.rentAmount) || 0;
+      const rentB = Number(b.rentAmount) || 0;
+      return rentB - rentA;
+    });
+  };
+
   const [filters, setFilters] = useState({
     noLandlordOnly: false,
     electricityBackup: false,
@@ -214,6 +245,7 @@ export default function App() {
     setStatusFilter('all');
     setSearchQuery('');
     setPriceSearch('');
+    setSortBy('price-asc');
     setFilters({
       noLandlordOnly: false,
       electricityBackup: false,
@@ -222,9 +254,9 @@ export default function App() {
     });
   };
 
-  // Filtered listings
+  // Filtered and sorted listings
   const filteredListings = useMemo(() => {
-    return listings.filter(room => {
+    const filtered = listings.filter(room => {
       const roomRent = Number(room.rentAmount) || 0;
 
       // 1. Price Range Search filtering & boundary handling
@@ -290,6 +322,15 @@ export default function App() {
 
       return true;
     });
+
+    // Apply ascending/descending order of price function
+    if (sortBy === 'price-asc') {
+      return sortRoomsByPriceAsc(filtered);
+    }
+    if (sortBy === 'price-desc') {
+      return sortRoomsByPriceDesc(filtered);
+    }
+    return filtered;
   }, [
     listings,
     parsedPriceRange,
@@ -299,7 +340,8 @@ export default function App() {
     selectedBudget,
     statusFilter,
     filters,
-    searchQuery
+    searchQuery,
+    sortBy
   ]);
 
   // Handler when new room is added
@@ -445,6 +487,8 @@ export default function App() {
         priceBoundaryMessage={boundaryMessage}
         minListingRent={minListingRent}
         maxListingRent={maxListingRent}
+        sortBy={sortBy}
+        setSortBy={setSortBy}
         onResetFilters={handleResetFilters}
         activeFilterCount={activeFilterCount}
       />
@@ -522,13 +566,44 @@ export default function App() {
         {/* Listings Display: GRID VIEW */}
         {!loading && !error && filteredListings.length > 0 && effectiveViewMode === 'grid' && (
           <div>
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
               <p className="text-xs font-semibold text-slate-500">
                 Showing <strong className="text-slate-800">{filteredListings.length}</strong> verified rooms
                 {statusFilter !== 'all' && (
                   <span className="ml-1 text-blue-600 font-bold">({statusFilter.toUpperCase()})</span>
                 )}
               </p>
+
+              {/* Price Sort Controls */}
+              <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 px-1.5 flex items-center gap-1">
+                  Sort:
+                </span>
+                <button
+                  onClick={() => setSortBy('price-asc')}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${
+                    sortBy === 'price-asc'
+                      ? 'bg-blue-600 text-white shadow-xs'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                  title="Arrange rooms in ascending order of price (Low to High)"
+                >
+                  <ArrowUpNarrowWide className="w-3.5 h-3.5" />
+                  <span>Price: Low to High</span>
+                </button>
+                <button
+                  onClick={() => setSortBy('price-desc')}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${
+                    sortBy === 'price-desc'
+                      ? 'bg-blue-600 text-white shadow-xs'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                  title="Arrange rooms in descending order of price (High to Low)"
+                >
+                  <ArrowDownWideNarrow className="w-3.5 h-3.5" />
+                  <span>Price: High to Low</span>
+                </button>
+              </div>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredListings.map(room => (
@@ -553,9 +628,19 @@ export default function App() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-[calc(100vh-220px)] min-h-[500px]">
             {/* Scrollable Room Cards (Left) */}
             <div className="lg:col-span-6 overflow-y-auto pr-2 space-y-4">
-              <p className="text-xs font-semibold text-slate-500 mb-2">
-                Showing <strong className="text-slate-800">{filteredListings.length}</strong> rooms with GPS pins
-              </p>
+              <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+                <p className="text-xs font-semibold text-slate-500">
+                  Showing <strong className="text-slate-800">{filteredListings.length}</strong> rooms with GPS pins
+                </p>
+                <button
+                  onClick={() => setSortBy(prev => prev === 'price-asc' ? 'price-desc' : 'price-asc')}
+                  className="px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center gap-1 cursor-pointer transition-colors"
+                  title="Toggle price order"
+                >
+                  <ArrowUpDown className="w-3 h-3 text-blue-600" />
+                  <span>{sortBy === 'price-asc' ? 'Price: Low → High' : 'Price: High → Low'}</span>
+                </button>
+              </div>
               {filteredListings.map(room => (
                 <RoomCard
                   key={room.id}

@@ -11,7 +11,9 @@ import {
   CheckCircle,
   Clock,
   AlertCircle,
-  X
+  X,
+  ArrowUpDown,
+  ArrowUpNarrowWide
 } from 'lucide-react';
 
 export default function FilterBar({
@@ -26,6 +28,8 @@ export default function FilterBar({
   priceBoundaryMessage,
   minListingRent,
   maxListingRent,
+  sortBy,
+  setSortBy,
   onResetFilters,
   activeFilterCount
 }) {
@@ -188,8 +192,25 @@ export default function FilterBar({
 
           </div>
 
-          {/* Price Range Search Bar */}
+          {/* Price Range Search Bar & Ascending Price Sorting */}
           <div className="flex flex-col sm:flex-row sm:items-center gap-2 ml-auto w-full sm:w-auto">
+            {/* Price Sort Order Toggle */}
+            <button
+              type="button"
+              onClick={() => setSortBy(prev => prev === 'price-asc' ? 'price-desc' : 'price-asc')}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold border flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap shadow-2xs ${
+                sortBy === 'price-asc'
+                  ? 'bg-blue-50 border-blue-300 text-blue-700 ring-2 ring-blue-500/20'
+                  : sortBy === 'price-desc'
+                  ? 'bg-purple-50 border-purple-300 text-purple-700 ring-2 ring-purple-500/20'
+                  : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
+              }`}
+              title="Arrange rooms by price"
+            >
+              <ArrowUpDown className="w-3.5 h-3.5 text-blue-600" />
+              <span>{sortBy === 'price-asc' ? 'Price: Low → High' : sortBy === 'price-desc' ? 'Price: High → Low' : 'Sort by Price'}</span>
+            </button>
+
             <div className="relative flex items-center w-full sm:w-auto">
               <span className="absolute left-2.5 text-slate-400 font-bold text-xs pointer-events-none flex items-center">
                 <IndianRupee className="w-3.5 h-3.5 text-slate-400" />
@@ -199,7 +220,7 @@ export default function FilterBar({
                 value={priceSearch}
                 onChange={(e) => setPriceSearch(e.target.value)}
                 placeholder="Search price range (e.g. 7000 or 5k-8k)"
-                className="pl-7 pr-7 py-1.5 bg-slate-50 hover:bg-slate-100/80 focus:bg-white border border-slate-200 focus:border-blue-500 rounded-xl text-xs font-semibold text-slate-800 placeholder-slate-400 outline-none w-full sm:w-64 transition-all shadow-2xs focus:ring-2 focus:ring-blue-500/20"
+                className="pl-7 pr-7 py-1.5 bg-slate-50 hover:bg-slate-100/80 focus:bg-white border border-slate-200 focus:border-blue-500 rounded-xl text-xs font-semibold text-slate-800 placeholder-slate-400 outline-none w-full sm:w-60 transition-all shadow-2xs focus:ring-2 focus:ring-blue-500/20"
               />
               {priceSearch && (
                 <button
