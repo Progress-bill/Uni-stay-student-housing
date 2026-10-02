@@ -42,20 +42,20 @@ export default function Navbar({
         : 'bg-white/95 border-slate-200/80'
     }`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-20">
+        <div className="flex items-center justify-between h-20 sm:h-22">
           
           {/* Logo & Agent Branding */}
-          <div className="flex items-center gap-3">
-            <div className="h-11 w-11 rounded-2xl bg-white border border-slate-200/90 shadow-md shadow-blue-500/10 flex items-center justify-center overflow-hidden p-1">
+          <div className="flex items-center gap-3.5">
+            <div className="h-14 w-14 sm:h-16 sm:w-16 rounded-2xl bg-white border border-slate-200/90 shadow-md shadow-blue-500/15 flex items-center justify-center overflow-hidden shrink-0">
               <img 
                 src="/off-campus-logo.jpg" 
                 alt="Off-Campus Logo" 
-                className="h-full w-full object-contain"
+                className="h-full w-full object-cover scale-110"
               />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-xl font-extrabold tracking-tight bg-gradient-to-r from-slate-900 via-blue-900 to-indigo-900 bg-clip-text text-transparent">
+                <span className="text-xl sm:text-2xl font-black tracking-tight bg-gradient-to-r from-slate-900 via-blue-900 to-indigo-900 bg-clip-text text-transparent">
                   Off-Campus
                 </span>
                 <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
