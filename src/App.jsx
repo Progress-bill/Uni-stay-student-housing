@@ -25,7 +25,7 @@ export default function App() {
   const [selectedBudget, setSelectedBudget] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all'); // 'all' | 'available' | 'occupied'
   const [searchQuery, setSearchQuery] = useState('');
-  const [maxRent, setMaxRent] = useState(12000);
+  const [priceSearch, setPriceSearch] = useState('');
   const [filters, setFilters] = useState({
     noLandlordOnly: false,
     electricityBackup: false,
@@ -108,19 +108,91 @@ export default function App() {
     }
   }, [isAdmin, isAdminPanelOpen]);
 
-  // Compute maximum available rent for the slider
-  const maxAvailableRent = useMemo(() => {
-    if (listings.length === 0) return 15000;
-    const maxVal = Math.max(...listings.map(l => l.rentAmount || 0));
-    return Math.ceil(maxVal / 1000) * 1000;
+  // Compute minimum and maximum listing rent
+  const { minListingRent, maxListingRent } = useMemo(() => {
+    if (!listings || listings.length === 0) {
+      return { minListingRent: 0, maxListingRent: 0 };
+    }
+    const validRents = listings
+      .map(l => Number(l.rentAmount))
+      .filter(r => !isNaN(r) && r > 0);
+    if (validRents.length === 0) {
+      return { minListingRent: 0, maxListingRent: 0 };
+    }
+    return {
+      minListingRent: Math.min(...validRents),
+      maxListingRent: Math.max(...validRents)
+    };
   }, [listings]);
 
-  // Adjust maxRent when maxAvailableRent changes
-  useEffect(() => {
-    if (maxAvailableRent > 0 && maxRent < maxAvailableRent) {
-      setMaxRent(maxAvailableRent);
+  // Parse price search input (supports exact numbers, "k" suffix, ranges like 5000-8000)
+  const parsedPriceRange = useMemo(() => {
+    const raw = (priceSearch || '').trim();
+    if (!raw) return null;
+
+    let clean = raw.toLowerCase().replace(/₹/g, '').replace(/,/g, '').trim();
+    clean = clean.replace(/(\d+(?:\.\d+)?)k\b/g, (match, p1) => String(parseFloat(p1) * 1000));
+
+    // Range: "5000-8000" or "5000 to 8000"
+    const rangeMatch = clean.match(/^(\d+(?:\.\d+)?)\s*(?:-|to|\.\.)\s*(\d+(?:\.\d+)?)$/);
+    if (rangeMatch) {
+      const v1 = parseFloat(rangeMatch[1]);
+      const v2 = parseFloat(rangeMatch[2]);
+      return {
+        type: 'range',
+        min: Math.min(v1, v2),
+        max: Math.max(v1, v2)
+      };
     }
-  }, [maxAvailableRent]);
+
+    // Single number with optional words: "<=8000", "8000", "under 8000"
+    const singleMatch = clean.match(/^(?:<=?|<|under|max|around|approx)?\s*(\d+(?:\.\d+)?)$/);
+    if (singleMatch) {
+      return {
+        type: 'single',
+        value: parseFloat(singleMatch[1])
+      };
+    }
+
+    const nums = clean.match(/\d+(?:\.\d+)?/g);
+    if (nums && nums.length >= 2) {
+      const v1 = parseFloat(nums[0]);
+      const v2 = parseFloat(nums[1]);
+      return {
+        type: 'range',
+        min: Math.min(v1, v2),
+        max: Math.max(v1, v2)
+      };
+    } else if (nums && nums.length === 1) {
+      return {
+        type: 'single',
+        value: parseFloat(nums[0])
+      };
+    }
+
+    return null;
+  }, [priceSearch]);
+
+  // Dynamic boundary message calculation
+  const boundaryMessage = useMemo(() => {
+    if (!parsedPriceRange || listings.length === 0 || maxListingRent === 0) return '';
+    if (parsedPriceRange.type === 'single') {
+      if (parsedPriceRange.value > maxListingRent) {
+        return 'max range of house is current listing shown';
+      }
+      if (parsedPriceRange.value < minListingRent) {
+        return 'the minimum range of listing is current housing shown';
+      }
+    } else if (parsedPriceRange.type === 'range') {
+      if (parsedPriceRange.min > maxListingRent || parsedPriceRange.max > maxListingRent) {
+        return 'max range of house is current listing shown';
+      }
+      if (parsedPriceRange.max < minListingRent || parsedPriceRange.min < minListingRent) {
+        return 'the minimum range of listing is current housing shown';
+      }
+    }
+    return '';
+  }, [parsedPriceRange, minListingRent, maxListingRent, listings.length]);
 
   // Count active filters
   const activeFilterCount = useMemo(() => {
@@ -132,16 +204,16 @@ export default function App() {
     if (filters.acRoom) count++;
     if (filters.waterGeyser) count++;
     if (searchQuery.trim()) count++;
-    if (maxRent < maxAvailableRent) count++;
+    if (priceSearch.trim()) count++;
     return count;
-  }, [selectedBudget, statusFilter, filters, searchQuery, maxRent, maxAvailableRent]);
+  }, [selectedBudget, statusFilter, filters, searchQuery, priceSearch]);
 
   // Reset filters
   const handleResetFilters = () => {
     setSelectedBudget('all');
     setStatusFilter('all');
     setSearchQuery('');
-    setMaxRent(maxAvailableRent);
+    setPriceSearch('');
     setFilters({
       noLandlordOnly: false,
       electricityBackup: false,
@@ -153,26 +225,36 @@ export default function App() {
   // Filtered listings
   const filteredListings = useMemo(() => {
     return listings.filter(room => {
-      // 1. Budget tier: Standard (<= 8000), Comfort / AC (> 8000)
-      if (selectedBudget === 'standard') {
-        const rent = Number(room.rentAmount) || 0;
-        if (rent > 8000) return false;
-      } else if (selectedBudget === 'premium') {
-        const rent = Number(room.rentAmount) || 0;
-        if (rent <= 8000) return false;
+      const roomRent = Number(room.rentAmount) || 0;
+
+      // 1. Price Range Search filtering & boundary handling
+      if (parsedPriceRange) {
+        if (boundaryMessage === 'max range of house is current listing shown') {
+          // User entered price greater than max listing -> show max rent house instead
+          if (roomRent !== maxListingRent) return false;
+        } else if (boundaryMessage === 'the minimum range of listing is current housing shown') {
+          // User entered price below least budget range -> show least housing
+          if (roomRent !== minListingRent) return false;
+        } else if (parsedPriceRange.type === 'single') {
+          if (roomRent > parsedPriceRange.value) return false;
+        } else if (parsedPriceRange.type === 'range') {
+          if (roomRent < parsedPriceRange.min || roomRent > parsedPriceRange.max) return false;
+        }
       }
 
-      // 2. Status filter
+      // 2. Budget tier: Standard (<= 8000), Comfort / AC (> 8000)
+      if (selectedBudget === 'standard') {
+        if (roomRent > 8000) return false;
+      } else if (selectedBudget === 'premium') {
+        if (roomRent <= 8000) return false;
+      }
+
+      // 3. Status filter
       const roomStatus = room.status || 'available';
       if (statusFilter === 'available' && roomStatus !== 'available') {
         return false;
       }
       if (statusFilter === 'occupied' && roomStatus !== 'occupied' && roomStatus !== 'reserved') {
-        return false;
-      }
-
-      // 3. Max Rent slider
-      if (room.rentAmount > maxRent) {
         return false;
       }
 
@@ -208,7 +290,17 @@ export default function App() {
 
       return true;
     });
-  }, [listings, selectedBudget, statusFilter, filters, maxRent, searchQuery]);
+  }, [
+    listings,
+    parsedPriceRange,
+    boundaryMessage,
+    maxListingRent,
+    minListingRent,
+    selectedBudget,
+    statusFilter,
+    filters,
+    searchQuery
+  ]);
 
   // Handler when new room is added
   const handleRoomAdded = (newRoom) => {
@@ -348,15 +440,42 @@ export default function App() {
         setStatusFilter={setStatusFilter}
         filters={filters}
         setFilters={setFilters}
-        maxRent={maxRent}
-        setMaxRent={setMaxRent}
-        maxAvailableRent={maxAvailableRent}
+        priceSearch={priceSearch}
+        setPriceSearch={setPriceSearch}
+        priceBoundaryMessage={boundaryMessage}
+        minListingRent={minListingRent}
+        maxListingRent={maxListingRent}
         onResetFilters={handleResetFilters}
         activeFilterCount={activeFilterCount}
       />
 
       {/* Main Content Area */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        
+        {/* Dynamic Boundary Notice when price search exceeds max or min listing */}
+        {boundaryMessage && (
+          <div className="mb-5 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-300 rounded-2xl p-4 flex items-center justify-between gap-3 text-amber-950 shadow-xs">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="h-9 w-9 rounded-xl bg-amber-100 flex items-center justify-center shrink-0 text-amber-700 shadow-2xs">
+                <AlertCircle className="w-5 h-5" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs sm:text-sm font-bold capitalize text-amber-900">
+                  {boundaryMessage}
+                </p>
+                <p className="text-[11px] text-amber-700 font-medium mt-0.5">
+                  Available listing prices range from ₹{minListingRent.toLocaleString()} to ₹{maxListingRent.toLocaleString()} / month.
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => setPriceSearch('')}
+              className="text-xs font-bold text-amber-800 hover:text-amber-950 bg-amber-100 hover:bg-amber-200 px-3 py-1.5 rounded-xl shrink-0 transition-colors cursor-pointer"
+            >
+              Reset Price
+            </button>
+          </div>
+        )}
         
         {/* Loading State */}
         {loading && (
