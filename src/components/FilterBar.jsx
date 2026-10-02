@@ -27,8 +27,7 @@ export default function FilterBar({
 }) {
   const budgetTiers = [
     { id: 'all', label: 'All Budgets', sub: 'Show all' },
-    { id: 'budget', label: 'Pocket-Friendly', sub: '≤ ₹6,000/mo' },
-    { id: 'standard', label: 'Standard PG', sub: '₹6,000 - ₹8,000' },
+    { id: 'standard', label: 'Standard PG', sub: '≤ ₹8,000/mo' },
     { id: 'premium', label: 'Comfort / AC', sub: '> ₹8,000/mo' }
   ];
 

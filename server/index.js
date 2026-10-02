@@ -1419,15 +1419,16 @@ app.put('/api/listings/:id', requireAuth, (req, res) => {
       if (!isNaN(parsedRent) && parsedRent > 0) {
         current.rentAmount = parsedRent;
         // Auto-compute priceGroup if not provided explicitly
-        if (!priceGroup) {
-          if (parsedRent <= 6000) current.priceGroup = 'budget';
-          else if (parsedRent <= 8000) current.priceGroup = 'standard';
+        if (!priceGroup || priceGroup === 'budget') {
+          if (parsedRent <= 8000) current.priceGroup = 'standard';
           else current.priceGroup = 'premium';
         }
       }
     }
-    if (priceGroup && ['budget', 'standard', 'premium'].includes(priceGroup)) {
+    if (priceGroup && ['standard', 'premium'].includes(priceGroup)) {
       current.priceGroup = priceGroup;
+    } else if (priceGroup === 'budget') {
+      current.priceGroup = 'standard';
     }
     if (electricityPerUnit !== undefined) {
       const parsedElec = parseFloat(electricityPerUnit);
@@ -1604,9 +1605,8 @@ app.post(
 
       const rentNum = parseFloat(rentAmount);
       let calculatedPriceGroup = priceGroup;
-      if (!calculatedPriceGroup || calculatedPriceGroup === 'auto') {
-        if (rentNum <= 6000) calculatedPriceGroup = 'budget';
-        else if (rentNum <= 8000) calculatedPriceGroup = 'standard';
+      if (!calculatedPriceGroup || calculatedPriceGroup === 'auto' || calculatedPriceGroup === 'budget') {
+        if (rentNum <= 8000) calculatedPriceGroup = 'standard';
         else calculatedPriceGroup = 'premium';
       }
 

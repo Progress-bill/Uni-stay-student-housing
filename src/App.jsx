@@ -153,13 +153,10 @@ export default function App() {
   // Filtered listings
   const filteredListings = useMemo(() => {
     return listings.filter(room => {
-      // 1. Budget tier: Pocket-Friendly (<= 6000), Standard (<= 8000), Comfort / AC (> 8000)
-      if (selectedBudget === 'budget') {
+      // 1. Budget tier: Standard (<= 8000), Comfort / AC (> 8000)
+      if (selectedBudget === 'standard') {
         const rent = Number(room.rentAmount) || 0;
-        if (rent > 6000) return false;
-      } else if (selectedBudget === 'standard') {
-        const rent = Number(room.rentAmount) || 0;
-        if (rent <= 6000 || rent > 8000) return false;
+        if (rent > 8000) return false;
       } else if (selectedBudget === 'premium') {
         const rent = Number(room.rentAmount) || 0;
         if (rent <= 8000) return false;

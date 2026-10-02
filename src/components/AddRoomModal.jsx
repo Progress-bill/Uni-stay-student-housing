@@ -374,11 +374,10 @@ export default function AddRoomModal({ isOpen, onClose, onRoomAdded }) {
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
                   Pricing Tier Group
                 </label>
-                <div className="grid grid-cols-3 gap-1.5">
+                <div className="grid grid-cols-2 gap-2">
                   {[
-                    { id: 'budget', label: '< ₹4k' },
-                    { id: 'standard', label: '₹4k-7k' },
-                    { id: 'premium', label: '> ₹7k' }
+                    { id: 'standard', label: 'Standard (≤ ₹8k)' },
+                    { id: 'premium', label: 'Comfort / AC (> ₹8k)' }
                   ].map((tier) => (
                     <button
                       key={tier.id}
