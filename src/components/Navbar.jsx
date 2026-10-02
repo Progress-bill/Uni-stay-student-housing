@@ -46,13 +46,17 @@ export default function Navbar({
           
           {/* Logo & Agent Branding */}
           <div className="flex items-center gap-3">
-            <div className="h-11 w-11 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-violet-600 flex items-center justify-center text-white shadow-md shadow-blue-500/20">
-              <Home className="h-6 w-6" />
+            <div className="h-11 w-11 rounded-2xl bg-white border border-slate-200/90 shadow-md shadow-blue-500/10 flex items-center justify-center overflow-hidden p-1">
+              <img 
+                src="/off-campus-logo.jpg" 
+                alt="Off-Campus Logo" 
+                className="h-full w-full object-contain"
+              />
             </div>
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-xl font-extrabold tracking-tight bg-gradient-to-r from-slate-900 via-blue-900 to-indigo-900 bg-clip-text text-transparent">
-                  UniStay
+                  Off-Campus
                 </span>
                 <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
                   <ShieldCheck className="w-3 h-3 mr-1 text-emerald-600" />

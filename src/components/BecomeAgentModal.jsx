@@ -106,7 +106,7 @@ export default function BecomeAgentModal({ isOpen, onClose, onApplicationSubmitt
     onClose();
   };
 
-  const draftMessageText = `Hello Admin! I have registered as a House Agent on UniStay and submitted my credentials.\n\nName: ${fullName}\nPhone: ${phone}\nOperating Area: ${area || 'Student PG Hub'}\nExperience: ${experience || 'PG Manager'}\n\nPlease review and approve my account credentials for faster confirmation.`;
+  const draftMessageText = `Hello Admin! I have registered as a House Agent on Off-Campus and submitted my credentials.\n\nName: ${fullName}\nPhone: ${phone}\nOperating Area: ${area || 'Student PG Hub'}\nExperience: ${experience || 'PG Manager'}\n\nPlease review and approve my account credentials for faster confirmation.`;
 
   const getAdminWhatsAppFastTrack = () => {
     return `https://wa.me/919041543868?text=${encodeURIComponent(draftMessageText)}`;
@@ -271,7 +271,7 @@ export default function BecomeAgentModal({ isOpen, onClose, onApplicationSubmitt
             )}
 
             <div className="p-3 bg-blue-50/70 border border-blue-100 rounded-2xl text-xs text-blue-900 leading-relaxed">
-              💡 <strong>Join the UniStay Agent Network:</strong> Upload room walkthrough videos, drop private GPS pins, and connect directly with verified students looking for budget rooms.
+              💡 <strong>Join the Off-Campus Agent Network:</strong> Upload room walkthrough videos, drop private GPS pins, and connect directly with verified students looking for budget rooms.
             </div>
 
             {/* Full Name */}

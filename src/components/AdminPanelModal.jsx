@@ -402,7 +402,7 @@ export default function AdminPanelModal({
     if (!app?.phone) return '#';
     const cleanDigits = app.phone.replace(/[^\d]/g, '');
     const message = encodeURIComponent(
-      `Hello ${app.fullName}! 🎉\n\nYour House Agent application for UniStay has been APPROVED by the Main Admin. Your account credentials are now active.\n\nYou can now sign in at the portal with your phone number (${app.phone}) to list student PG rooms and manage walkthrough video tours.`
+      `Hello ${app.fullName}! 🎉\n\nYour House Agent application for Off-Campus has been APPROVED by the Main Admin. Your account credentials are now active.\n\nYou can now sign in at the portal with your phone number (${app.phone}) to list student PG rooms and manage walkthrough video tours.`
     );
     return `https://wa.me/${cleanDigits}?text=${message}`;
   };
@@ -413,9 +413,9 @@ export default function AdminPanelModal({
     const cleanDigits = agent.phone.replace(/[^\d]/g, '');
     let msg = '';
     if (actionType === 'suspend') {
-      msg = `Hello ${agent.name}. Notice: Your UniStay House Agent account has been temporarily suspended until ${agent.suspendedUntil ? new Date(agent.suspendedUntil).toLocaleString() : ''} for: "${agent.suspensionReason || 'Violation of portal guidelines'}". Please contact Main Admin (+91 9041543868) if you wish to appeal.`;
+      msg = `Hello ${agent.name}. Notice: Your Off-Campus House Agent account has been temporarily suspended until ${agent.suspendedUntil ? new Date(agent.suspendedUntil).toLocaleString() : ''} for: "${agent.suspensionReason || 'Violation of portal guidelines'}". Please contact Main Admin (+91 9041543868) if you wish to appeal.`;
     } else {
-      msg = `Hello ${agent.name}, this is the Main Admin from UniStay regarding your House Agent account.`;
+      msg = `Hello ${agent.name}, this is the Main Admin from Off-Campus regarding your House Agent account.`;
     }
     return `https://wa.me/${cleanDigits}?text=${encodeURIComponent(msg)}`;
   };
@@ -1629,7 +1629,7 @@ export default function AdminPanelModal({
             </p>
 
             <div className="p-2.5 bg-rose-50 border border-rose-200 rounded-xl text-[11px] text-rose-800 text-left leading-tight font-medium">
-              ⚠️ This will permanently remove their credentials and access from UniStay. They will no longer be able to log in or manage listings.
+              ⚠️ This will permanently remove their credentials and access from Off-Campus. They will no longer be able to log in or manage listings.
             </div>
 
             <div className="flex items-center justify-center gap-2 pt-2">

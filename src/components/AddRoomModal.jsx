@@ -240,7 +240,7 @@ export default function AddRoomModal({ isOpen, onClose, onRoomAdded }) {
       formData.append('customCategories', tags.join(','));
       formData.append('status', status);
       formData.append('agentId', user?.id || 'user-admin-1');
-      formData.append('agentName', user?.name || 'UniStay Housing Desk');
+      formData.append('agentName', user?.name || 'Off-Campus Housing Desk');
 
       // Append 3-part video tree files or URLs
       if (videoSleepingFile) {

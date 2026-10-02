@@ -58,7 +58,7 @@ export default function AuthModal({ isOpen, onClose, onOpenBecomeAgent }) {
               <KeyRound className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-base font-bold text-slate-900">Sign In to UniStay</h2>
+              <h2 className="text-base font-bold text-slate-900">Sign In to Off-Campus</h2>
               <p className="text-xs text-slate-500">Main Admin & House Agent Access</p>
             </div>
           </div>
@@ -119,7 +119,7 @@ export default function AuthModal({ isOpen, onClose, onOpenBecomeAgent }) {
               </div>
               <a
                 href={`https://wa.me/919041543868?text=${encodeURIComponent(
-                  `Hello Admin! I have submitted my application to become a House Agent on UniStay (Phone: ${phone}). Please review and approve my account credentials.`
+                  `Hello Admin! I have submitted my application to become a House Agent on Off-Campus (Phone: ${phone}). Please review and approve my account credentials.`
                 )}`}
                 target="_blank"
                 rel="noopener noreferrer"
@@ -184,7 +184,7 @@ export default function AuthModal({ isOpen, onClose, onOpenBecomeAgent }) {
           </button>
 
           <div className="pt-2 text-center text-xs text-slate-500">
-            Want to list rooms on UniStay?{' '}
+            Want to list rooms on Off-Campus?{' '}
             <button
               type="button"
               onClick={() => {

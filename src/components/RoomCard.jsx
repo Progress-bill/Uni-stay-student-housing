@@ -61,7 +61,7 @@ export default function RoomCard({
   const getLandlordWhatsAppUrl = () => {
     if (!room.landlordPhone) return '#';
     const cleanDigits = room.landlordPhone.replace(/[^\d]/g, '');
-    const text = encodeURIComponent(`Hello ${room.landlordName || 'Landlord'}, regarding your room listing "${room.title}" on UniStay:`);
+    const text = encodeURIComponent(`Hello ${room.landlordName || 'Landlord'}, regarding your room listing "${room.title}" on Off-Campus:`);
     return `https://wa.me/${cleanDigits}?text=${text}`;
   };
 
