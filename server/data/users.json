@@ -6,9 +6,9 @@
     "password": "admin123",
     "role": "admin",
     "createdAt": "2026-09-01T00:00:00.000Z",
-    "tokenVersion": 5,
-    "sessionToken": "agt_sess_user-admin-1_v5_1790845059486_w3iw1otuchdpzl2m1uxs",
-    "lastLoginAt": "2026-10-01T08:57:39.486Z"
+    "tokenVersion": 7,
+    "sessionToken": "agt_sess_user-admin-1_v7_1790918501350_58m9ul09tupv318kjn07",
+    "lastLoginAt": "2026-10-02T05:21:41.350Z"
   },
   {
     "id": "user-agent-1789392143703",

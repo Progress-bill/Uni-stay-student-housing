@@ -320,9 +320,9 @@ export default function EditRoomModal({ isOpen, onClose, room, onRoomUpdated }) 
                   onChange={(e) => setPriceGroup(e.target.value)}
                   className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 outline-none focus:bg-white focus:border-blue-500 cursor-pointer"
                 >
-                  <option value="budget">Budget (Under ₹4,000)</option>
-                  <option value="standard">Standard (₹4,000 - ₹7,000)</option>
-                  <option value="premium">Premium (Above ₹7,000)</option>
+                  <option value="budget">Pocket-Friendly (≤ ₹6,000)</option>
+                  <option value="standard">Standard PG (₹6,000 - ₹8,000)</option>
+                  <option value="premium">Comfort / AC (&gt; ₹8,000)</option>
                 </select>
               </div>
             </div>

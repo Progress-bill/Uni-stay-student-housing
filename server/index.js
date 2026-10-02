@@ -1420,8 +1420,8 @@ app.put('/api/listings/:id', requireAuth, (req, res) => {
         current.rentAmount = parsedRent;
         // Auto-compute priceGroup if not provided explicitly
         if (!priceGroup) {
-          if (parsedRent <= 4000) current.priceGroup = 'budget';
-          else if (parsedRent <= 7000) current.priceGroup = 'standard';
+          if (parsedRent <= 6000) current.priceGroup = 'budget';
+          else if (parsedRent <= 8000) current.priceGroup = 'standard';
           else current.priceGroup = 'premium';
         }
       }
@@ -1605,8 +1605,8 @@ app.post(
       const rentNum = parseFloat(rentAmount);
       let calculatedPriceGroup = priceGroup;
       if (!calculatedPriceGroup || calculatedPriceGroup === 'auto') {
-        if (rentNum < 4000) calculatedPriceGroup = 'budget';
-        else if (rentNum <= 7000) calculatedPriceGroup = 'standard';
+        if (rentNum <= 6000) calculatedPriceGroup = 'budget';
+        else if (rentNum <= 8000) calculatedPriceGroup = 'standard';
         else calculatedPriceGroup = 'premium';
       }
 
