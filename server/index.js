@@ -16,21 +16,31 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Configure Cloudinary for permanent cloud video & image storage
+// Configure Cloudinary for permanent cloud video & image storage (active account: zz1bajze)
+const CLOUDINARY_CLOUD_NAME = (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_CLOUD_NAME !== 'v1iyctik')
+  ? process.env.CLOUDINARY_CLOUD_NAME
+  : 'zz1bajze';
+const CLOUDINARY_API_KEY = (process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_CLOUD_NAME !== 'v1iyctik')
+  ? process.env.CLOUDINARY_API_KEY
+  : '656856145872676';
+const CLOUDINARY_API_SECRET = (process.env.CLOUDINARY_API_SECRET && process.env.CLOUDINARY_CLOUD_NAME !== 'v1iyctik')
+  ? process.env.CLOUDINARY_API_SECRET
+  : 'WgH67g0OGYIohET2k63OUhMQ-1U';
+
 const isCloudinaryConfigured = Boolean(
-  process.env.CLOUDINARY_CLOUD_NAME &&
-  process.env.CLOUDINARY_API_KEY &&
-  process.env.CLOUDINARY_API_SECRET
+  CLOUDINARY_CLOUD_NAME &&
+  CLOUDINARY_API_KEY &&
+  CLOUDINARY_API_SECRET
 );
 
 if (isCloudinaryConfigured) {
   cloudinary.config({
-    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-    api_key: process.env.CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_API_SECRET,
+    cloud_name: CLOUDINARY_CLOUD_NAME,
+    api_key: CLOUDINARY_API_KEY,
+    api_secret: CLOUDINARY_API_SECRET,
     secure: true
   });
-  console.log(`[Cloudinary] Connected to cloud: ${process.env.CLOUDINARY_CLOUD_NAME}`);
+  console.log(`[Cloudinary] Connected to cloud: ${CLOUDINARY_CLOUD_NAME}`);
 } else {
   console.log('[Cloudinary] Missing credentials, using local disk uploads.');
 }
@@ -1828,7 +1838,7 @@ app.get('/api/admin/cloudinary/usage', requireAdmin, async (req, res) => {
     res.json({
       success: true,
       data: {
-        cloudName: process.env.CLOUDINARY_CLOUD_NAME,
+        cloudName: CLOUDINARY_CLOUD_NAME,
         plan: usageData.plan || 'Free',
         lastUpdated: usageData.last_updated,
         credits: {
