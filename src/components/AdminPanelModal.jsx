@@ -1202,7 +1202,7 @@ export default function AdminPanelModal({
                       </span>
                     </div>
                     <p className="text-xs text-sky-200">
-                      Cloud Name: <span className="font-mono font-bold text-white">{cloudinaryUsage?.cloudName || 'v1iyctik'}</span> • Plan: <span className="font-bold text-amber-300">{cloudinaryUsage?.plan || 'Free'} (25 Credits / 25 GB)</span>
+                      Cloud Name: <span className="font-mono font-bold text-white">{cloudinaryUsage?.cloudName || 'zz1bajze'}</span> • Plan: <span className="font-bold text-amber-300">{cloudinaryUsage?.plan || 'Free'} (25 Credits / 25 GB)</span>
                     </p>
                   </div>
                 </div>
@@ -1255,7 +1255,7 @@ export default function AdminPanelModal({
                       </span>
                     </div>
                     <p className="text-xs text-blue-200/90 leading-relaxed mt-1">
-                      All video walkthroughs and photo assets are securely stored in your Cloudinary cloud (<strong className="text-white">v1iyctik</strong>). The database is automatically backed up and synced with Cloudinary so your rooms never get lost on server restarts.
+                      All video walkthroughs and photo assets are securely stored in your Cloudinary cloud (<strong className="text-white">{cloudinaryUsage?.cloudName || 'zz1bajze'}</strong>). The database is automatically backed up and synced with Cloudinary so your rooms never get lost on server restarts.
                     </p>
                     {reconnectResult && (
                       <p className="mt-2 text-xs font-bold text-emerald-300 flex items-center gap-1.5 bg-emerald-500/10 py-1 px-2.5 rounded-lg border border-emerald-500/20 w-fit">
